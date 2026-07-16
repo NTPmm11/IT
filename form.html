@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHANGE REQUEST FORM (CR)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/form.css">
+</head>
+
+<body>
+
+  <!-- id="app" = พื้นที่ที่ Vue ควบคุม -->
+  <div class="container" id="app">
+    <div class="header-section">
+      <h1>CHANGE REQUEST FORM (CR)</h1>
+      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+    </div>
+
+    <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก handleSubmit() โดยไม่ reload หน้า -->
+    <form @submit.prevent="handleSubmit">
+
+      <!-- [ 1. ข้อมูลทั่วไป ] -->
+      <div class="section-title">
+        <div>1. ข้อมูลทั่วไป (General Information)</div>
+      </div>
+
+      <div class="grid-2col">
+
+        <div class="form-group">
+          <label for="cr-id">เลขที่เอกสาร (CR ID):</label>
+          <!-- v-model = ผูกช่องกรอกเข้ากับตัวแปรใน data() ของ form.js -->
+          <input type="text" id="cr-id" v-model="form.crId" placeholder="ระบุเลขที่เอกสาร เช่น CR6908001">
+        </div>
+
+        <div class="form-group">
+          <label for="cr-request-date">วันที่ร้องขอ:</label>
+          <input type="date" id="cr-request-date" v-model="form.requestDate">
+        </div>
+
+        <div class="form-group">
+          <label for="cr-requester">ผู้ร้องขอ (Requester):</label>
+          <input type="text" id="cr-requester" v-model="form.requester" placeholder="ชื่อ-สกุลผู้ร้องขอ">
+        </div>
+
+        <div class="form-group">
+          <label for="cr-department">แผนก/ฝ่าย:</label>
+          <input type="text" id="cr-department" v-model="form.department" placeholder="ระบุแผนก/ฝ่าย">
+        </div>
+
+        <div class="form-group">
+          <label for="cr-system">ระบบที่เกี่ยวข้อง:</label>
+          <select id="cr-system" v-model="form.system" required>
+            <option value="">-- เลือกโครงการ/ระบบงาน --</option>
+            <option value="web-portal">Web Portal Schema</option>
+            <option value="mobile-app">Mobile Application</option>
+            <option value="sap">SAP / ERP System</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cr-contact">อีเมล/เบอร์โทร:</label>
+          <input type="text" id="cr-contact" v-model="form.contact" placeholder="ระบุอีเมลหรือเบอร์โทรติดต่อ">
+        </div>
+
+      </div>
+
+      <div class="form-group" style="margin-top: 10px;">
+        <label>ระดับความสำคัญ (Priority):</label>
+        <div class="options-group">
+          <!-- radio ทุกอันผูกกับ form.priority ตัวเดียว เลือกได้ทีละอัน -->
+          <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low (ไม่กระทบงานหลัก)</label>
+          <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium (มีระบบสำรอง)</label>
+          <label class="option-item"><input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)</label>
+          <label class="option-item"><input type="radio" value="Critical" v-model="form.priority"> Critical (ระบบหยุดทำงาน)</label>
+        </div>
+      </div>
+
+      <!-- [ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
+      <div class="section-title">
+        <div>2. รายละเอียดการขอเปลี่ยนระบบ (Change Details)</div>
+        <span class="note">*ส่วนสำหรับผู้ร้องขอกรอก</span>
+      </div>
+
+      <div class="form-group">
+        <label for="cr-subject">หัวข้อการเปลี่ยน (Subject):</label>
+        <input type="text" id="cr-subject" v-model="form.subject"
+          placeholder="ระบุชื่อเรื่อง เช่น เพิ่มปุ่มดาวน์โหลดรายงาน PDF ในหน้า Dashboard..." required>
+      </div>
+
+      <div class="form-group align-top">
+        <label for="cr-problem">สถานะปัจจุบัน / ปัญหาที่พบ:</label>
+        <textarea id="cr-problem" v-model="form.problem" rows="3"
+          placeholder="อธิบายสภาพปัญหาปัจจุบัน หรือเหตุผลความจำเป็น..."></textarea>
+      </div>
+
+      <div class="form-group align-top">
+        <label for="cr-request">สิ่งที่ต้องการให้ปรับปรุง:</label>
+        <textarea id="cr-request" v-model="form.request" rows="3"
+          placeholder="ระบุรายละเอียด เงื่อนไข หรือขั้นตอนของระบบใหม่ที่ต้องการให้พัฒนา..."></textarea>
+      </div>
+
+      <!-- [ 3. การประเมินผลกระทบ ] -->
+      <div class="section-title">
+        <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
+        <span class="note">*เฉพาะสิทธิ์ IT / Admin</span>
+      </div>
+
+      <div class="form-group">
+        <label>ประเภทการเปลี่ยน:</label>
+        <div class="options-group">
+          <!-- checkbox หลายอันผูกกับ array เดียว ติ๊กอันไหนค่าเข้า array -->
+          <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application / Software</label>
+          <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database Schema</label>
+          <label class="option-item"><input type="checkbox" value="Infra" v-model="form.changeTypes"> Infrastructure</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ผลกระทบระบบ:</label>
+        <div class="options-group">
+          <label class="option-item"><input type="radio" value="none" v-model="form.impact"> ไม่มีผลกระทบส่วนอื่น</label>
+          <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น (ระบุ):</label>
+          <!-- ช่องนี้เปิดใช้เฉพาะตอนเลือก "กระทบระบบอื่น" -->
+          <input type="text" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
+            placeholder="ระบุระบบที่ได้รับผลกระทบ...">
+          <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว (Downtime)</label>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top: 10px;">
+        <div class="form-group">
+          <label for="cr-duration">ระยะเวลาที่คาดใช้:</label>
+          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน">
+        </div>
+        <div class="form-group">
+          <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
+          <input type="date" id="cr-deploy-date" v-model="form.deployDate">
+        </div>
+      </div>
+
+      <!-- [ 4. แผนดำเนินงาน ] -->
+      <div class="section-title">
+        <div>4. แผนดำเนินงาน (Action Plan)</div>
+        <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="action-table">
+          <thead>
+            <tr>
+              <th style="width:60px;">ลำดับ</th>
+              <th>ขั้นตอนงาน</th>
+              <th style="width:150px;">วันที่เริ่ม</th>
+              <th style="width:150px;">วันที่สิ้นสุด</th>
+              <th>ผู้รับผิดชอบ</th>
+              <th>หมายเหตุ</th>
+              <th style="width:60px;">ลบ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- v-for = วนสร้าง <tr> ตามจำนวนแถวใน rows (ดู form.js) -->
+            <tr v-for="(row, index) in rows" :key="index">
+              <td class="text-center">{{ index + 1 }}</td>
+              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td><input type="date" v-model="row.start" required></td>
+              <td><input type="date" v-model="row.end" required></td>
+              <td><input type="text" v-model="row.owner" placeholder="ผู้รับผิดชอบ"></td>
+              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+              <td class="text-center">
+                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- @click = กดปุ่มแล้วเรียก method ใน form.js -->
+        <button type="button" class="btn-add-row" @click="addRow">
+          + เพิ่มขั้นตอนงาน
+        </button>
+      </div>
+
+      <div class="ui-action-buttons">
+        <button type="button" class="btn btn-cancel" @click="cancelForm">
+          <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
+        </button>
+
+        <button type="button" class="btn btn-draft" @click="saveDraft">
+          <i class="fa-solid fa-floppy-disk"></i> บันทึกร่าง (Save Draft)
+        </button>
+
+        <button type="button" class="btn btn-pdf" @click="generatePDF">
+          <i class="fa-solid fa-file-pdf"></i> พิมพ์เอกสาร (PDF)
+        </button>
+
+        <button type="submit" class="btn btn-submit">
+          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- โหลด Vue จาก CDN ก่อน > common.js (ของใช้ร่วม) > โค้ดของหน้านี้ -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/form.js"></script>
+</body>
+
+</html>

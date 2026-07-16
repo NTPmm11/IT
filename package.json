@@ -1,0 +1,8 @@
+{
+  "name": "it-change-request",
+  "version": "1.0.0",
+  "description": "Change Request (CR) form — HTML + CSS + Vue 3 via CDN",
+  "scripts": {
+    "dev": "npx -y serve -l 3000 ."
+  }
+}

@@ -1,168 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Change Request</title>
-    <link rel="stylesheet" href="css/style.css">
-     <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      background: linear-gradient(135deg, #5a0000, #00075a); 
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 400px;
-      padding: 40px;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgb(231, 182, 182);
-      box-sizing: border-box;
-    }
-
-    h1 {
-      color: #000000;
-      font-size: 32px;
-      margin: 0 0 8px 0;
-      text-align: center;
-  
-    }
-
-    .register-link {
-      font-size: 13px;
-      color: #000000;
-      margin-bottom: 24px;
-    }
-
-
-    .input-group {
-      position: relative;
-      margin-bottom: 16px;
-    }
-
-
-    .input-group i {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #3a3a81;
-      font-size: 18px;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 14px 14px 14px 45px; 
-      border: 1px solid #535375;
-      border-radius: 50px;
-      box-sizing: border-box;
-      font-size: 15px;
-      outline: none;
-    }
-
-    .input-group input::placeholder {
-      color: #454555;
-    }
-
-
-    .flex-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
-
-    .remember-me {
-      color: #333335;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .forgot-pass {
-      color: #550707;
-      text-decoration: none;
-    }
-
-    button {
-      width: 100%;
-      background: #000815;
-      color: rgb(218, 218, 218);
-      border: none;
-      padding: 14px;
-      border-radius: 50px;
-      font-size: 18px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    button:hover {
-      background: #2a2c30;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Change Request System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
 </head>
+
 <body>
-    <div class="card">
-   <h1> Login</h1>  
-   <br>
 
+  <!-- id="app" = พื้นที่ที่ Vue ควบคุม -->
+  <div class="card" id="app">
+    <h1>Login</h1>
 
-    <form onsubmit="return login(event)">
-        
+    <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก login() โดยไม่ reload หน้า -->
+    <form @submit.prevent="login">
 
       <div class="input-group">
-        <i class="fa-regular fa-user"></i> 
-        <input type="text" placeholder="Username" id="usernameInput" required>
+        <i class="fa-regular fa-user"></i>
+        <!-- v-model = ผูกช่องกรอกเข้ากับตัวแปรใน data() -->
+        <input type="text" v-model="username" placeholder="Username" required>
       </div>
 
-   
       <div class="input-group">
         <i class="fa-solid fa-key"></i>
-        <input type="password" placeholder="Password" id="passwordInput" required>
+        <input type="password" v-model="password" placeholder="Password" required>
       </div>
 
       <div class="flex-row">
         <div class="remember-me">
-          <input type="checkbox" id="remember">
+          <input type="checkbox" id="remember" v-model="remember">
           <label for="remember">Remember Me</label>
         </div>
-    
       </div>
 
-      <script>
-       function login(event) {
- 
-      event.preventDefault();
-
-       var username = document.getElementById('usernameInput').value;
-       var password = document.getElementById('passwordInput').value;
-
-      if (username === "admin" && password === "1234") {
-      alert("Login successful!");
-
-      window.location.href = "Form.html"; 
-      } else {
-      alert("Invalid username or password.");
-  }
-  
-  return false;
-}
-
-
-
-      </script>
-
-
-        <button type="submit" onclick="login()">Sign in</button>
+      <button type="submit" class="btn-login">Sign in</button>
 
     </form>
   </div>
+
+  <!-- โหลด Vue จาก CDN ก่อน แล้วค่อยโหลดโค้ดของเรา -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="js/login.js"></script>
 </body>
+
 </html>

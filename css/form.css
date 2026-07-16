@@ -1,0 +1,215 @@
+/* ============================================
+   form.css — form.html and approve.html
+   ============================================ */
+
+.container {
+  background: #ffffff;
+  width: 100%;
+  max-width: 950px;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Header ===== */
+.header-section {
+  text-align: center;
+  border-bottom: 3px solid #00075a;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
+
+.header-section h1 {
+  color: #00112c;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.header-section p {
+  margin-top: 5px;
+  color: #3b3b3b;
+  font-size: 13px;
+}
+
+/* ===== Section title ===== */
+.section-title {
+  background: #e5e7eb;
+  color: #00075a;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 6px;
+  margin: 25px 0 15px 0;
+  border-left: 5px solid #5a0000;
+  display: flex;
+  justify-content: space-between;
+}
+
+.section-title span.note {
+  font-size: 11px;
+  color: #353535;
+  font-weight: normal;
+}
+
+/* ===== Form layout ===== */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 25px;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-group.align-top {
+  align-items: flex-start;
+}
+
+.form-group.align-top label {
+  margin-top: 8px;
+}
+
+label {
+  font-weight: 600;
+  color: #000000;
+  text-align: right;
+  font-size: 13.5px;
+}
+
+/* ===== Inputs ===== */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13.5px;
+  background-color: #f9fafb;
+  transition: all 0.3s;
+}
+
+input[readonly] {
+  background-color: #eaedf2;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #00075a;
+  background-color: #fff;
+  outline: none;
+}
+
+/* ===== Radio / checkbox groups ===== */
+.options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.options-group input[type="text"] {
+  width: 200px;
+  padding: 5px 10px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.option-item input {
+  width: 15px;
+  height: 15px;
+  accent-color: #00075a;
+}
+
+/* ===== Action plan table ===== */
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.action-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.action-table th,
+.action-table td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.action-table th {
+  background: #e5e7eb;
+  color: #00075a;
+  text-align: center;
+}
+
+.action-table .text-center {
+  text-align: center;
+}
+
+.btn-add-row {
+  background: #00075a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn-add-row:hover {
+  background: #00112c;
+}
+
+.btn-delete-row {
+  background: #5a0000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.btn-delete-row:hover {
+  background: #7a1a1a;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-group {
+    grid-template-columns: 1fr;
+  }
+
+  label {
+    text-align: left;
+  }
+}
