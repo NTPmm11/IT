@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHANGE REQUEST FORM (CR)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #5a0000, #00075a); 
+      margin: 0;
+      padding: 30px 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background: rgb(212, 209, 209);
+      width: 100%;
+      height: 100%;
+      max-width: 950px;
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgb(243, 242, 242);
+    }
+
+    /* Header */
+    .header-section {
+      text-align: center;
+      border-bottom: 3px solid #00075a;
+      padding-bottom: 30px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .header-section h1 {
+      margin: 0;
+      color: #00112c;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .header-section p {
+      margin: 5px 0 0 0;
+      color: #3b3b3b;
+      font-size: 13px;
+    }
+
+
+    /* Section Title */
+    .section-title {
+      background: #e5e7eb;
+      color: #00075a;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 6px;
+      margin: 25px 0 15px 0;
+      border-left: 5px solid #5a0000;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .section-title span.note {
+      font-size: 11px;
+      color: #353535;
+      font-weight: normal;
+    }
+
+    /* Form Grid Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 25px;
+    }
+
+    .form-group {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group.full-width {
+      grid-template-columns: 140px 1fr;
+      display: grid;
+    }
+
+    label {
+      font-weight: 600;
+      color: #000000;
+      text-align: right;
+      font-size: 13.5px;
+    }
+
+    /* Input Styling */
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 13.5px;
+      background-color: #f9fafb;
+      transition: all 0.3s;
+    }
+
+    input[readonly] {
+      background-color: #eaedf2;
+      color: #6b7280;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #00075a;
+      background-color: #fff;
+      outline: none;
+    }
+
+    /* Options (Radio/Checkbox) */
+    .options-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      color: #4b5563;
+      cursor: pointer;
+    }
+
+    .option-item input {
+      width: 15px;
+      height: 15px;
+      accent-color: #00075a;
+    }
+
+    /* Buttons */
+    .ui-action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 35px;
+      border-top: 2px dashed #e5e7eb;
+      padding-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #4b5563;
+    }
+
+    .btn-cancel:hover { background: #d1d5db; }
+
+    .btn-draft {
+      background: #fff;
+      color: #00075a;
+      border: 1.5px solid #00075a;
+    }
+
+    .btn-draft:hover { background: #f0f4ff; }
+
+    .btn-submit {
+      background: #00075a;
+      color: #fff;
+    }
+
+    .btn-submit:hover {
+      background: #00112c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .form-container {
+    width: 100%;
+    max-width: 95%; /* หรือปรับเป็น 1200px / 1400px ตามความต้องการ */
+    box-sizing: border-box;
+}
+.btn{
+  white-space: nowrap;
+}
+
+/* บังคับให้ตารางและส่วนแสดงผลเคลียร์ตัวเอง ไม่ให้ดันปุ่ม */
+table, .form-container {
+  margin-bottom: 20px;
+  overflow-x: auto; /* หากตารางกว้างเกินไป ให้เลื่อนสไลด์เฉพาะในตาราง ไม่ให้ดันหน้าเว็บเบี้ยว */
+}
+
+.ui-action-buttons {
+  display: flex;
+  justify-content: center; /* เปลี่ยนจาก flex-end เป็น center เพื่อให้อยู่ตรงกลาง หรือใช้ flex-start ถ้าอยากให้อยู่ซ้าย */
+  align-items: center;
+  gap: 15px;
+  margin-top: 35px;
+  border-top: 2px dashed #e5e7eb;
+  padding-top: 20px;
+  /* 🌟 เพิ่ม 2 บรรทัดนี้เพื่อแก้ปัญหาปุ่มทับซ้อนและดึงลงมาข้างล่าง */
+  clear: both; 
+  width: 100%; 
+  box-sizing: border-box;
+}
+    /* Responsive */
+    @media (max-width: 768px) {
+      .grid-2col { grid-template-columns: 1fr; gap: 0; }
+      .form-group, .form-group.full-width { grid-template-columns: 1fr; }
+      label { text-align: left; }
+      .ui-action-buttons { flex-direction: column-reverse; }
+      .btn { justify-content: center; width: 100%; }
+    }
+   
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-section">
+      <h1>CHANGE REQUEST FORM (CR)</h1>
+      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+      </div>
+
+      <form onsubmit="handleSubmit(event)">
+      
+      
+      <!-- [ ส่วนที่ 1. ข้อมูลทั่วไป ] -->
+      <div class="section-title">
+        <div>1. ข้อมูลทั่วไป (General Information)</div>
+      </div>
+
+
+
+      <div class="grid-2col">
+        
+        <div class="form-group">
+         <label>เลขที่เอกสาร (CR ID):</label>
+         <input type="text" id="cr-id" placeholder="ระบุเลขที่เอกสาร เช่น CR6908001">
+
+        </div>
+
+
+
+        <div class="form-group">
+          <label>วันที่ร้องขอ:</label>
+          <input type="text" id="cr-request-date" placeholder="ระบุวันที่ร้องขอ เช่น 2024-08-01">
+         
+        </div>
+
+
+
+        <div class="form-group">
+          <label>ผู้ร้องขอ (Requester):</label>
+          <input type="text" id="cr-requester" placeholder="ชื่อ-สกุลผู้ร้องขอ">
+        </div>
+
+
+        <div class="form-group">
+          <label>แผนก/ฝ่าย:</label>
+          <input type="text" id="cr-department" placeholder="ระบุแผนก/ฝ่าย">
+        </div>
+
+
+        <div class="form-group">
+          <label>ระบบที่เกี่ยวข้อง:</label>
+
+          <select required>
+            <option value="">-- เลือกโครงการ/ระบบงาน --</option>
+            <option value="web-portal">Web Portal Schema</option>
+            <option value="mobile-app">Mobile Application</option>
+            <option value="sap">SAP / ERP System</option>
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+          <label>อีเมล/เบอร์โทร:</label>
+          <input type="text" id="cr-contact" placeholder="ระบุอีเมลหรือเบอร์โทรติดต่อ">
+        </div>
+      </div>
+
+      <div class="form-group full-width" style="margin-top: 10px;">
+        <label style="margin-right: 10px;">ระดับความสำคัญ (Priority):</label>
+        
+        <div class="options-group">
+          <label class="option-item"><input type="radio" name="priority" value="Low" checked> Low (ไม่กระทบงานหลัก)</label>
+          <label class="option-item"><input type="radio" name="priority" value="Medium"> Medium (มีระบบสำรอง)</label>
+          <label class="option-item"><input type="radio" name="priority" value="High"> High (เร่งด่วน)</label>
+          <label class="option-item"><input type="radio" name="priority" value="Critical"> Critical (ระบบหยุดทำงาน)</label>
+        </div>
+      </div>
+
+
+
+
+      <!-- [ ส่วนที่ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
+      <div class="section-title">
+        <div>2. รายละเอียดการขอเปลี่ยนระบบ (Change Details)</div>
+        <span class="note">*ส่วนสำหรับผู้ร้องขอกรอก</span>
+      </div>
+
+
+
+
+      <div class="form-group full-width">
+        <label>หัวข้อการเปลี่ยน (Subject):</label>
+        <input type="text" placeholder="ระบุชื่อเรื่อง เช่น เพิ่มปุ่มดาวน์โหลดรายงาน PDF ในหน้า Dashboard..." required>
+      </div>
+
+
+
+      <div class="form-group full-width" style="align-items: flex-start;">
+        <label style="margin-top: 8px;">สถานะปัจจุบัน / ปัญหาที่พบ:</label>
+        <textarea rows="3" placeholder="อธิบายสภาพปัญหาปัจจุบัน หรือเหตุผลความจำเป็น..."></textarea>
+      </div>
+
+
+
+      <div class="form-group full-width" style="align-items: flex-start;">
+        <label style="margin-top: 8px;">สิ่งที่ต้องการให้ปรับปรุง:</label>
+        <textarea rows="3" placeholder="ระบุรายละเอียด เงื่อนไข หรือขั้นตอนของระบบใหม่ที่ต้องการให้พัฒนา..."></textarea>
+      </div>
+
+
+
+
+      <!-- [ ส่วนที่ 3. การประเมินผลกระทบ ] -->
+      <div class="section-title">
+        <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
+        <span class="note">*เฉพาะสิทธิ์ IT / Admin</span>
+      </div>
+
+
+    
+      <div class="form-group full-width">
+        <label style="margin-right: 10px;">ประเภทการเปลี่ยน:</label>
+        <div class="options-group">
+          <label class="option-item"><input type="checkbox" value="App"> Application / Software</label>
+          <label class="option-item"><input type="checkbox" value="DB"> Database Schema</label>
+          <label class="option-item"><input type="checkbox" value="Infra"> Infrastructure</label>
+        </div>
+      </div>
+
+
+      <div class="form-group full-width">
+        <label style="margin-right: 10px;">ผลกระทบระบบ:</label>
+        <div class="options-group">
+          <label class="option-item"><input type="radio" name="impact" value="none" checked> ไม่มีผลกระทบส่วนอื่น</label>
+          <label class="option-item"><input type="radio" name="impact" value="other"> กระทบระบบอื่น (ระบุ):</label>
+          <input type="text" placeholder="ระบุระบบที่ได้รับผลกระทบ..." style="width: 200px; padding: 5px 10px;">
+          <label class="option-item"><input type="checkbox" value="downtime"> ต้องปิดระบบชั่วคราว (Downtime)</label>
+        </div>
+      </div>
+
+
+      <div class="grid-2col" style="margin-top: 10px;">
+        <div class="form-group">
+          <label>ระยะเวลาที่คาดใช้:</label>
+          <input type="text" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน">
+        </div>
+        <div class="form-group">
+          <label>เป้าหมาย Deploy:</label>
+          <input type="date">
+        </div>
+      </div>
+
+
+      <!-- [ ส่วนที่ 4. แผนดำเนินงาน ] -->
+<div class="section-title">
+  <div>แผนดำเนินงาน (Action Plan)</div>
+  <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
+</div>
+
+<div class="form-group ">
+
+    <div class="section-title"></div>
+
+    <div style="overflow-x:auto;">
+
+        <table id="actionPlanTable" class="action-table">
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:60px;">ลำดับ</th>
+
+                    <th>ขั้นตอนงาน</th>
+
+                    <th style="width:150px;">วันที่เริ่ม</th>
+
+                    <th style="width:150px;">วันที่สิ้นสุด</th>
+
+                    <th>หมายเหตุ / ผู้รับผิดชอบ</th>
+
+                    <th style="width:90px;">หมายเหตุ</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="actionPlanBody">
+
+            </tbody>
+
+        </table>
+
+        <br>
+
+        <button type="button"
+                class="btn-add-row"
+                onclick="addRow()">
+
+            + เพิ่มขั้นตอนงาน
+
+        </button>
+
+    </div>
+
+</div>
+
+<div class="ui-action-buttons">
+        <!-- ปุ่มยกเลิก -->
+        <button type="button" class="btn btn-cancel" onclick="alert('ยกเลิกทำรายการ')">
+          <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
+        </button>
+        
+        <!-- ปุ่มบันทึกร่าง -->
+        <button type="button" class="btn btn-draft" onclick="alert('บันทึกแบบร่างสำเร็จ')">
+          <i class="fa-solid fa-floppy-disk"></i> บันทึกร่าง (Save Draft)
+        </button>
+
+        <button type="button" class="btn btn-pdf" onclick="generatePDF()">
+          <i class="fa-solid fa-file-pdf"></i> พิมพ์เอกสาร (PDF)
+        </button>
+        
+        <!-- ปุ่มส่งข้อมูล -->
+        <button type="submit" class="btn btn-submit">
+          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
+        </button>
+      </div>
+
+<script>
+  // ฟังก์ชันเพิ่มแถวในตาราง
+  function addRow() {
+    const table = document.getElementById("actionPlanTable").getElementsByTagName('tbody')[0];
+    const rowCount = table.rows.length;
+    const row = table.insertRow(rowCount);
+
+    row.innerHTML = `
+      <td class="row-number text-center">${rowCount + 1}</td>
+      <td><input type="text" placeholder="ระบุขั้นตอนงาน" required></td>
+      <td><input type="date" required></td>
+      <td><input type="time" required></td>
+      <td><input type="time" required></td>
+      <td><input type="text" placeholder="หมายเหตุ"></td>
+      <td class="text-center">
+        <button type="button" class="btn-delete-row" onclick="deleteRow(this)">ลบ</button>
+      </td>
+    `;
+    updateRowNumbers();
+  
+
+
+  function deleteRow(button) {
+    const table = document.getElementById("actionPlanTable").getElementsByTagName('tbody')[0];
+    if (table.rows.length > 1) {
+      const row = button.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      updateRowNumbers();
+    } else {
+      alert("ต้องมีแผนดำเนินงานอย่างน้อย 1 ขั้นตอน");
+    }
+  }
+
+  // ฟังก์ชันอัปเดตรันเลขลำดับใหม่หลังจากมีการเพิ่มหรือลบ
+  function updateRowNumbers() {
+    const rows = document.getElementById("actionPlanTable").getElementsByTagName('tbody')[0].rows;
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].getElementsByClassName('row-number')[0].innerText = i + 1;
+    }
+  }
+</script>
+
+    </form>
+  </div>
+
+  <script>
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
+    }
+
+    // ฟังก์ชั่นสำหรับเปิดหน้าพิมพ์รูปฟอร์มเพื่อบันทึกเป็น PDF สวยๆ ทันที
+    function generatePDF() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

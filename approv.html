@@ -1,0 +1,288 @@
+ <!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHANGE REQUEST FORM (CR)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #5a0000, #00075a); 
+      margin: 0;
+      padding: 30px 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background: rgb(255, 255, 255);
+      width: 100%;
+      max-width: 850px;
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgb(235, 235, 236);
+    }
+
+    /* Header */
+    .header-section {
+      text-align: center;
+      border-bottom: 3px solid #00075a;
+      padding-bottom: 30px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .header-section h1 {
+      margin: 0;
+      color: #00112c;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .header-section p {
+      margin: 5px 0 0 0;
+      color: #470000;
+      font-size: 13px;
+    }
+
+
+    /* Section Title */
+    .section-title {
+      background: #e5e7eb;
+      color: #28293f;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 6px;
+      margin: 25px 0 15px 0;
+      border-left: 5px solid #030636;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .section-title span.note {
+      font-size: 11px;
+      color: #353535;
+      font-weight: normal;
+    }
+
+    /* Form Grid Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 25px;
+    }
+
+    .form-group {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group.full-width {
+      grid-template-columns: 140px 1fr;
+      display: grid;
+    }
+
+    label {
+      font-weight: 600;
+      color: #000000;
+      text-align: left;
+      font-size: 13.5px;
+    }
+
+    /* Input Styling */
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 13.5px;
+      background-color: #f9fafb;
+      transition: all 0.3s;
+    }
+
+    input[readonly] {
+      background-color: #eaedf2;
+      color: #14171b;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #00075a;
+      background-color: #fff;
+      outline: none;
+    }
+
+    /* Options (Radio/Checkbox) */
+    .options-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      color: #272727;
+      cursor: pointer;
+    }
+
+    .option-item input {
+      width: 15px;
+      height: 15px;
+      accent-color: #00075a;
+    }
+
+    /* Buttons */
+    .ui-action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 35px;
+      border-top: 2px dashed #2600ff;
+      padding-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #3b0d19;
+    }
+
+    .btn-cancel:hover { background: #505152; }
+
+    .btn-draft {
+      background: #fff;
+      color: #00075a;
+      border: 1.5px solid #00075a;
+    }
+
+    .btn-draft:hover { background: #f0f4ff; }
+
+    .btn-submit {
+      background: #00075a;
+      color: #fff;
+    }
+
+    .btn-submit:hover {
+      background: #00112c;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .grid-2col { grid-template-columns: 1fr; gap: 0; }
+      .form-group, .form-group.full-width { grid-template-columns: 1fr; }
+      label { text-align: left; }
+      .ui-action-buttons { flex-direction: column-reverse; }
+      .btn { justify-content: center; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-section">
+      <h1>CHANGE REQUEST FORM (CR)</h1>
+      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+      </div>
+
+      <form onsubmit="handleSubmit(event)">
+      
+      <form onsubmit="handleSubmit(event)"><div class="section-title" style="background: #cfd0d8; border-left-color: #010253;">
+        <div>4. ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
+        <span class="note" style="color: #010631;">*เฉพาะสิทธิ์ Approver / PM</span>
+      </div>
+
+      <div class="form-group full-width" style="align-items: flex-start;">
+        <label style="margin-top: 8px;">ความเห็นทีมพัฒนา
+/ผู้ประเมิน:</label>
+        <textarea rows="2" placeholder="บันทึกข้อเสนอแนะเพิ่มเติมทางเทคนิค..."></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label style="margin-right: 10px;">ผลการพิจารณา:</label>
+        <div class="options-group">
+          <label class="option-item"><input type="radio" name="approval" value="approved"> อนุมัติ (Approved)</label>
+          <label class="option-item"><input type="radio" name="approval" value="rejected"> ไม่อนุมัติ (Rejected)</label>
+          <label class="option-item"><input type="radio" name="approval" value="more-info"> ขอข้อมูลเพิ่ม (More Info)</label>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top: 10px;">
+        <div class="form-group">
+          <label>ผู้อนุมัติ (Approver):</label>
+          <input type="text" placeholder="ชื่อผู้มีสิทธิ์อนุมัติ">
+        </div>
+        <div class="form-group">
+          <label>วันที่พิจารณา:</label>
+          <input type="date">
+        </div>
+      </div>
+
+
+      <!-- [ ส่วนจัดวาง Component ปุ่มบนหน้าเว็บไซต์ - UI Action Buttons ] -->
+      <div class="ui-action-buttons">
+        <!-- ปุ่มยกเลิก -->
+        <button type="button" class="btn btn-cancel" onclick="alert('ยกเลิกทำรายการ')">
+          <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
+        </button>
+        
+        <!-- ปุ่มบันทึกร่าง -->
+        <button type="button" class="btn btn-draft" onclick="alert('บันทึกแบบร่างสำเร็จ')">
+          <i class="fa-solid fa-floppy-disk"></i> บันทึกร่าง (Save Draft)
+        </button>
+        
+        <!-- เพิ่มปุ่มพิเศษ!! กดส่งฟอร์มแล้วสร้างเป็นเอกสาร PDF สวยๆ ทันทีตามที่เขียนระบุไว้ -->
+        <button type="button" class="btn btn-pdf" onclick="generatePDF()">
+          <i class="fa-solid fa-file-pdf"></i> พิมพ์เอกสาร (PDF)
+        </button>
+        
+        <!-- ปุ่มส่งข้อมูล -->
+        <button type="submit" class="btn btn-submit">
+          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
+    }
+
+    // ฟังก์ชั่นสำหรับเปิดหน้าพิมพ์รูปฟอร์มเพื่อบันทึกเป็น PDF สวยๆ ทันที
+    function generatePDF() {
+      window.print();
+    }
+  </script>
+</body>
+</html>
