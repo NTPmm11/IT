@@ -2,35 +2,39 @@
 // routes/systems.js — GET /api/systems (dropdown ในฟอร์ม)
 // ============================================
 //
-// route ที่สั้นสุดในโปรเจค — เหมาะเอาไว้ดูเป็นแบบตอนจะเพิ่ม API ใหม่
+// ★ LAB 1 — โจทย์แรก ง่ายสุด: query ตารางเดียว ไม่มีเงื่อนไขซับซ้อน
 //
-// หน้าที่: ส่งรายชื่อระบบจากตาราง systems ให้หน้าฟอร์ม
+// เป้าหมาย: ส่งรายชื่อระบบจากตาราง systems ให้หน้าฟอร์ม
 // เอาไปวาดเป็นตัวเลือกใน dropdown "ระบบที่เกี่ยวข้อง"
-// (form.js เรียกตอนหน้าเปิด ใน mounted)
+// (frontend/js/form.js เรียกเส้นนี้ตอนหน้าเปิด)
 //
-// อยากเพิ่มตัวเลือกใน dropdown -> INSERT แถวใหม่ในตาราง systems
-// ไม่ต้องแตะโค้ดเลยสักบรรทัด
+// ทำเสร็จแล้วเช็คยังไง:
+// 1. npm run dev แล้วเปิด http://localhost:4000/api/systems ใน browser
+//    ต้องเห็น JSON array 3 ระบบจาก schema.sql
+// 2. เปิดหน้าฟอร์ม dropdown ต้องมีตัวเลือกโผล่
+//
+// ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/systems.js
 
 const express = require("express");
-const pool = require("../db");
+const pool = require("../db");   // ตัวคุยกับ MySQL — ใช้ผ่าน pool.query(...)
 
 const router = express.Router();
 
 // "/" ในไฟล์นี้ = URL จริงคือ /api/systems
 // (index.js เสียบไฟล์นี้ไว้ใต้ /api/systems)
-//
-// เส้นนี้ไม่ใส่ requireAuth — ยอมให้เรียกได้โดยไม่ต้อง login
-// เพราะรายชื่อระบบไม่ใช่ข้อมูลลับ
 router.get("/", async (req, res, next) => {
   try {
-    // ผลจาก pool.query เป็น array ซ้อน: [แถวข้อมูล, ข้อมูลเทคนิคของ column]
-    // const [rows] = ... คือหยิบเฉพาะก้อนแรก (แถวข้อมูล) มาใช้
-    const [rows] = await pool.query(
-      "SELECT system_code, system_name FROM systems WHERE is_active = 1 ORDER BY system_name");
+    // TODO(LAB 1.1): query ตาราง systems
+    //   - เอา 2 column: system_code, system_name
+    //   - เอาเฉพาะแถวที่ is_active = 1
+    //   - เรียงตาม system_name
+    //
+    // hint: ผลของ pool.query ต้องรับแบบนี้ (วงเล็บเหลี่ยมสำคัญ):
+    //   const [rows] = await pool.query("SELECT ...");
 
-    // ตอบเป็น JSON array เช่น
-    // [{ system_code: "sap", system_name: "SAP / ERP System" }, ...]
-    res.json(rows);
+    // TODO(LAB 1.2): ตอบ rows กลับเป็น JSON ด้วย res.json(...)
+    // เสร็จแล้วลบบรรทัด placeholder ข้างล่างทิ้ง
+    res.status(501).json({ error: "Not implemented yet — ทำ LAB 1 ก่อน" });
   } catch (err) {
     // database พัง -> ส่งต่อให้ error handler กลางใน index.js
     next(err);

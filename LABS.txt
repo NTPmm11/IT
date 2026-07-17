@@ -1,0 +1,84 @@
+╔══════════════════════════════════════════════════════════╗
+║   LABS — โจทย์ฝึกต่อ backend เข้ากับระบบ CR                 ║
+╚══════════════════════════════════════════════════════════╝
+
+กติกา: โครงทุกไฟล์วางไว้ให้แล้ว หน้าที่เราคือเติมโค้ดตรง TODO
+แต่ละ TODO มี hint บอกทางเกือบหมด — พิมพ์เอง อย่าก็อป จำได้กว่ากันเยอะ
+
+เฉลยฉบับเต็มอยู่ branch ชื่อ solution:
+
+  ดูเฉลยไฟล์เดียว:   git diff main solution -- <path ไฟล์>
+  ดูเฉลยทั้งหมด:     git diff main solution
+  (ดูได้ไม่ผิดกติกา แต่ให้ลองสุดตัวก่อนค่อยเปิด)
+
+ก่อนเริ่ม ต้องผ่านของพวกนี้ก่อน:
+  1. อ่าน dev-guide.txt "ภาคพิเศษ 2: หลังบ้าน" ตอนที่ 1-2
+     (ตั้งค่า MySQL + .env + npm install ให้เสร็จ)
+  2. รัน database:  mysql -u root -p < database/schema.sql
+  3. server สตาร์ทได้: cd backend && npm run dev
+     เปิด http://localhost:4000/api/health เห็น {"ok":true}
+
+ทำเรียงตามลำดับ ห้ามข้าม — LAB หลังพึ่งของจาก LAB ก่อนหน้า
+เสร็จข้อไหน commit เก็บทีนึง (git add + git commit)
+
+
+
+── ฝั่ง backend ──────────────────────────────
+
+LAB 1: GET /api/systems                    [★ ง่าย]
+  ไฟล์: backend/src/routes/systems.js
+  ได้ฝึก: pool.query พื้นฐาน, res.json
+  เช็คผ่าน: เปิด /api/systems ใน browser เห็น 3 ระบบ
+
+LAB 2: POST /api/auth/login                [★★ กลาง]
+  ไฟล์: backend/src/routes/auth.js
+  ได้ฝึก: req.body, ? placeholder (กัน SQL injection),
+          bcrypt.compare, jwt.sign, status code 400/401
+  เช็คผ่าน: curl ตามตัวอย่างหัวไฟล์ ได้ token กลับมา
+
+LAB 3: ด่านตรวจ token                      [★★ กลาง]
+  ไฟล์: backend/src/middleware/auth.js
+  ได้ฝึก: middleware, req.headers, jwt.verify, 401 vs 403
+  ระวัง: มี placeholder user ปลอมค้างอยู่ เสร็จแล้วต้องลบ!
+  เช็คผ่าน: ยิง /api/change-requests ไม่แนบ token ต้องโดน 401
+
+LAB 4: CRUD ใบ CR                          [★★★ ยาก — จุดพีคของทั้งชุด]
+  ไฟล์: backend/src/routes/cr.js
+  (GET / เขียนให้ดูเป็นตัวอย่างแล้ว อ่านให้เข้าใจก่อน)
+  LAB 4A: GET /:id     — JOIN หลายตาราง, 404, ประกอบ JSON
+  LAB 4B: POST /       — transaction! (begin/commit/rollback),
+                         insertId, loop INSERT, 201/409
+  LAB 4C: POST /:id/approval — validate ค่า, UPDATE status
+  เช็คผ่าน: ยิงด้วย curl หรือรอทำ LAB 6 แล้วเทสผ่านหน้าเว็บ
+
+── ฝั่ง frontend ─────────────────────────────
+
+LAB 5: login จริง                          [★★ กลาง]
+  ไฟล์: frontend/js/login.js
+  ได้ฝึก: async/await, apiFetch, localStorage, try/catch
+  เช็คผ่าน: login ด้วย admin/1234 (ที่ hash ไว้) เข้าหน้าฟอร์มได้
+           รหัสมั่วต้อง alert error จาก server
+
+LAB 6: ส่งฟอร์มลง database                 [★★★ ยาก]
+  ไฟล์: frontend/js/form.js
+  ได้ฝึก: mounted, กันคนไม่ login, โหลด dropdown จาก API,
+          ประกอบ body ให้ตรงกับที่ backend รอรับ
+  เช็คผ่าน: กรอกฟอร์ม Submit แล้ว SELECT ดูใน MySQL ต้องมีข้อมูล:
+           SELECT * FROM change_requests;
+
+LAB 7: บันทึกผลอนุมัติ                     [★★ กลาง]
+  ไฟล์: frontend/js/approve.js
+  ได้ฝึก: URLSearchParams, template string, เช็ค role ผ่าน error
+  เช็คผ่าน: อนุมัติแล้ว status ใน change_requests ต้องเปลี่ยน
+           + login ด้วย somchai แล้วอนุมัติต้องโดน 403
+
+── โจทย์โบนัส (ไม่มีโครงให้ คิดเองหมด) ────────
+
+BONUS 1: ปุ่ม "บันทึกร่าง" ให้เก็บลง DB จริง (status draft)
+         backend รองรับอยู่แล้ว แก้แค่ฝั่ง frontend
+BONUS 2: หน้า list CR ทั้งหมด (GET / มีให้แล้ว — สร้างหน้า HTML ใหม่เลย)
+BONUS 3: API ลบ CR — DELETE /api/change-requests/:id
+         คิดเองว่า role ไหนควรลบได้ + ON DELETE CASCADE ช่วยอะไร
+
+ครบทุก LAB = เขียน full-stack ได้จริงทั้งเส้น
+จาก browser -> Express -> MySQL แล้วย้อนกลับมา 💪

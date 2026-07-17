@@ -2,17 +2,21 @@
 // routes/cr.js — CRUD change requests + approval
 // ============================================
 //
-// ไฟล์ใหญ่สุดของ backend — มี 4 เส้น:
-//   GET  /api/change-requests            ดูรายการ CR ทั้งหมด
-//   GET  /api/change-requests/:id        ดู CR ตัวเดียว (ครบทุกส่วน)
-//   POST /api/change-requests            บันทึก CR ใหม่ (จากหน้า form)
-//   POST /api/change-requests/:id/approval  บันทึกผลพิจารณา (จากหน้า approve)
+// ★ LAB 4 — ไฟล์ใหญ่สุด (ต้องผ่าน LAB 1-3 มาก่อน)
+//
+// มี 4 เส้น:
+//   GET  /api/change-requests            ดูรายการ CR ทั้งหมด   ← ทำให้ดูเป็นตัวอย่างแล้ว
+//   GET  /api/change-requests/:id        ดู CR ตัวเดียว          ← LAB 4A
+//   POST /api/change-requests            บันทึก CR ใหม่          ← LAB 4B (พีคสุด: transaction)
+//   POST /api/change-requests/:id/approval  บันทึกผลพิจารณา     ← LAB 4C
 //
 // mapping กับ database/schema.sql:
 //   change_requests  = ฟอร์ม section 1-3
 //   cr_change_types  = checkbox ประเภทการเปลี่ยน (หลายค่า)
 //   cr_action_plans  = ตารางแผนดำเนินงาน section 4
 //   cr_approvals     = ผลพิจารณา section 5 (approve.html)
+//
+// ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/cr.js
 
 const express = require("express");
 const pool = require("../db");
@@ -22,6 +26,7 @@ const router = express.Router();
 
 // ============================================
 // GET /api/change-requests — list ทั้งหมด
+// ★ เส้นนี้ทำให้ดูเป็นตัวอย่างเต็มๆ — อ่านให้เข้าใจก่อนทำเส้นอื่น
 // ============================================
 // สังเกต requireAuth คั่นกลาง = ต้องแนบ token มาถึงจะผ่านเข้ามาได้
 router.get("/", requireAuth, async (req, res, next) => {
@@ -46,7 +51,7 @@ router.get("/", requireAuth, async (req, res, next) => {
 });
 
 // ============================================
-// GET /api/change-requests/:id — CR ตัวเดียว ครบทุกส่วน
+// LAB 4A: GET /api/change-requests/:id — CR ตัวเดียว ครบทุกส่วน
 // ============================================
 // :id = ตัวแปรใน URL เช่นเรียก /api/change-requests/7
 // ค่า 7 จะโผล่ใน req.params.id
@@ -54,147 +59,91 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const crId = req.params.id;
 
-    // [[cr]] = วงเล็บซ้อน 2 ชั้น: ชั้นนอกหยิบก้อนแถวข้อมูล
-    // ชั้นในหยิบแถวแรกเลย (เพราะค้นด้วย id ได้แค่แถวเดียวอยู่แล้ว)
-    const [[cr]] = await pool.query(
-      `SELECT cr.*, u.full_name AS requester_name, s.system_name
-       FROM change_requests cr
-       JOIN users u   ON u.user_id = cr.requester_id
-       JOIN systems s ON s.system_id = cr.system_id
-       WHERE cr.cr_id = ?`,
-      [crId]
-    );
-    // ไม่เจอ = id นี้ไม่มีจริง -> 404
-    if (!cr) return res.status(404).json({ error: "CR not found" });
+    // TODO(LAB 4A.1): query ใบ CR หลักจาก change_requests (WHERE cr_id = ?)
+    //   JOIN users กับ systems เอาชื่อมาด้วย (ก็อปท่าจาก GET / ข้างบนได้เลย)
+    // hint รับผลแบบแถวเดียว: const [[cr]] = await pool.query(...)
+    //   (วงเล็บซ้อน 2 ชั้น = หยิบแถวแรกเลย)
 
-    // CR 1 ใบมีข้อมูลกระจายอยู่ 4 ตาราง — ดึงส่วนที่เหลือมาประกอบ
-    const [types] = await pool.query(
-      "SELECT change_type FROM cr_change_types WHERE cr_id = ?", [crId]);
-    const [plans] = await pool.query(
-      "SELECT seq_no, step, start_date, end_date, owner, note FROM cr_action_plans WHERE cr_id = ? ORDER BY seq_no", [crId]);
-    const [approvals] = await pool.query(
-      `SELECT a.result, a.comment, a.approval_date, u.full_name AS approver
-       FROM cr_approvals a JOIN users u ON u.user_id = a.approver_id
-       WHERE a.cr_id = ? ORDER BY a.created_at DESC`, [crId]);
+    // TODO(LAB 4A.2): ไม่เจอ (cr เป็น undefined) -> ตอบ 404
 
-    // ประกอบร่างตอบกลับเป็นก้อนเดียว
-    // ...cr = แผ่ทุก field ของ cr ออกมาวางตรงนี้
-    // types เป็น array ของ object [{change_type:"App"},...]
-    // .map แปลงให้เหลือ ["App", ...] เฉยๆ ให้ frontend ใช้ง่าย
-    res.json({
-      ...cr,
-      changeTypes: types.map(t => t.change_type),
-      plan: plans,
-      approvals
-    });
+    // TODO(LAB 4A.3): CR 1 ใบกระจายอยู่ 4 ตาราง — query อีก 3 ก้อน:
+    //   - cr_change_types  WHERE cr_id = ?
+    //   - cr_action_plans  WHERE cr_id = ?  ORDER BY seq_no
+    //   - cr_approvals     WHERE cr_id = ?  (JOIN users เอาชื่อผู้อนุมัติ)
+
+    // TODO(LAB 4A.4): ประกอบร่างตอบกลับก้อนเดียว
+    // hint:
+    //   res.json({
+    //     ...cr,                                        // แผ่ทุก field ออกมา
+    //     changeTypes: types.map(t => t.change_type),   // [{...}] -> ["App",...]
+    //     plan: plans,
+    //     approvals
+    //   });
+
+    res.status(501).json({ error: "Not implemented yet — ทำ LAB 4A ก่อน" });
   } catch (err) {
     next(err);
   }
 });
 
 // ============================================
-// POST /api/change-requests — บันทึก CR ใหม่
+// LAB 4B: POST /api/change-requests — บันทึก CR ใหม่ (โจทย์พีคสุด)
 // ============================================
-// body ที่รอรับ (frontend/js/form.js เป็นคนส่ง):
+// body ที่ frontend/js/form.js จะส่งมา:
 // { crNumber, requestDate, department, systemCode, contact, priority,
 //   subject, problem, requestDetail, impact, impactDetail, downtime,
 //   duration, deployDate, changeTypes: [], plan: [], status }
+//
+// ★ concept ใหม่: transaction
+// งานนี้ต้อง INSERT 3 ตาราง (CR + ประเภท + แผนงาน)
+// ถ้าตารางแรกสำเร็จแล้วตารางถัดไปพัง = ข้อมูลค้างครึ่งๆ กลางๆ
+// transaction = "ทำทั้งหมด หรือไม่ทำเลยสักอย่าง":
+//   conn.beginTransaction()  เริ่มจดแบบร่าง
+//   conn.commit()            พอใจแล้ว บันทึกจริงทั้งหมด
+//   conn.rollback()          พังกลางทาง ยกเลิกแบบร่างทั้งหมด
+// transaction ต้องอยู่บน connection เส้นเดียวกันตลอด
+// เลยต้องจองจากสระ: const conn = await pool.getConnection()
+// (แล้วใช้ conn.query แทน pool.query ทุกที่ในเส้นนี้)
 router.post("/", requireAuth, async (req, res, next) => {
-  // งานนี้ต้อง INSERT 3 ตาราง (CR + ประเภท + แผนงาน)
-  // ถ้าตารางแรกสำเร็จแล้วตารางถัดไปพัง = ข้อมูลค้างครึ่งๆ กลางๆ
-  //
-  // ทางแก้ = transaction: "ทำทั้งหมด หรือไม่ทำเลยสักอย่าง"
-  //   beginTransaction = เริ่มจดทุกอย่างแบบร่าง
-  //   commit           = พอใจแล้ว บันทึกจริงทั้งหมด
-  //   rollback         = พังกลางทาง ยกเลิกแบบร่างทั้งหมด
-  //
-  // transaction ต้องทำบน connection เส้นเดียวกันตลอด
-  // เลยหยิบมาจองจากสระ 1 เส้น (pool.query เฉยๆ ใช้เส้นไหนก็ได้ ใช้กับงานนี้ไม่ได้)
   const conn = await pool.getConnection();
   try {
-    const b = req.body;   // ตั้งชื่อสั้นๆ จะได้ไม่ต้องพิมพ์ req.body ยาวๆ ทุกที่
+    const b = req.body;
 
-    // เช็คของที่ขาดไม่ได้ก่อนเริ่มบันทึก
-    if (!b.crNumber || !b.subject || !b.systemCode) {
-      return res.status(400).json({ error: "crNumber, subject and systemCode are required" });
-    }
+    // TODO(LAB 4B.1): เช็คของที่ขาดไม่ได้ — crNumber, subject, systemCode
+    //   ขาด -> ตอบ 400
 
-    // dropdown ส่งมาเป็น code เช่น "web-portal"
-    // แต่ตาราง change_requests เก็บเป็นตัวเลข system_id -> แปลงก่อน
-    const [[system]] = await conn.query(
-      "SELECT system_id FROM systems WHERE system_code = ?", [b.systemCode]);
-    if (!system) return res.status(400).json({ error: "Unknown systemCode" });
+    // TODO(LAB 4B.2): แปลง systemCode ("web-portal") เป็น system_id (ตัวเลข)
+    //   query ตาราง systems — ไม่เจอ -> ตอบ 400 "Unknown systemCode"
 
-    // ── เริ่ม transaction ตรงนี้ ──
-    await conn.beginTransaction();
+    // TODO(LAB 4B.3): await conn.beginTransaction();
 
-    // ตารางที่ 1: ใบ CR หลัก
-    // || null = ช่องไหนไม่ได้กรอก เก็บเป็น NULL (ค่าว่างของ database)
-    const [result] = await conn.query(
-      `INSERT INTO change_requests
-        (cr_number, request_date, requester_id, department, system_id, contact,
-         priority, subject, problem, request_detail, impact, impact_detail,
-         downtime, duration, deploy_date, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        b.crNumber,
-        b.requestDate || new Date(),      // ไม่ระบุวันที่ = ใช้วันนี้
-        req.user.userId,                  // คนบันทึก = คนที่ login อยู่ (จาก token
-                                          // ไม่เชื่อค่าจาก body — ปลอมง่าย)
-        b.department || null,
-        system.system_id,
-        b.contact || null,
-        b.priority || "Low",
-        b.subject,
-        b.problem || null,
-        b.requestDetail || null,
-        b.impact || "none",
-        // เก็บรายละเอียดผลกระทบเฉพาะตอนเลือก "กระทบระบบอื่น"
-        b.impact === "other" ? b.impactDetail : null,
-        b.downtime ? 1 : 0,               // MySQL ไม่มี true/false ใช้ 1/0 แทน
-        b.duration || null,
-        b.deployDate || null,
-        // ปุ่มบันทึกร่างส่ง "draft" มา / ปุ่ม Submit = "submitted"
-        b.status === "draft" ? "draft" : "submitted"
-      ]
-    );
-    // insertId = เลข id ที่ database เพิ่งแจกให้แถวใหม่ (AUTO_INCREMENT)
-    // ตารางลูกทั้งหมดต้องใช้เลขนี้อ้างกลับมาหาใบ CR
-    const crId = result.insertId;
+    // TODO(LAB 4B.4): INSERT ตาราง change_requests (ใบ CR หลัก)
+    //   จุดสำคัญ:
+    //   - requester_id เอาจาก req.user.userId (จาก token)
+    //     ห้ามเชื่อค่าจาก body — ปลอมง่าย
+    //   - ช่องที่ไม่ได้กรอกเก็บ null: b.department || null
+    //   - downtime: MySQL ไม่มี true/false -> b.downtime ? 1 : 0
+    //   - status: b.status === "draft" ? "draft" : "submitted"
+    // hint เอา id แถวใหม่: const [result] = await conn.query("INSERT ...");
+    //   const crId = result.insertId;   // เลขที่ AUTO_INCREMENT เพิ่งแจก
 
-    // ตารางที่ 2: ประเภทการเปลี่ยน — ติ๊กกี่อันก็ INSERT เท่านั้นแถว
-    // (b.changeTypes || [] = เผื่อไม่ติ๊กเลย จะได้ array ว่าง วนศูนย์รอบ ไม่พัง)
-    for (const type of b.changeTypes || []) {
-      await conn.query(
-        "INSERT INTO cr_change_types (cr_id, change_type) VALUES (?, ?)",
-        [crId, type]);
-    }
+    // TODO(LAB 4B.5): วน loop INSERT cr_change_types ทีละค่า
+    // hint: for (const type of b.changeTypes || []) { ... }
+    //   (|| [] เผื่อไม่ติ๊กเลย — วนศูนย์รอบ ไม่พัง)
 
-    // ตารางที่ 3: แผนดำเนินงาน — 1 แถวบนหน้าเว็บ = 1 record
-    // seq++ = ใช้ค่าแล้วค่อยบวก: แถวแรกได้ 1, แถวต่อไป 2, 3, ...
-    let seq = 1;
-    for (const row of b.plan || []) {
-      await conn.query(
-        `INSERT INTO cr_action_plans (cr_id, seq_no, step, start_date, end_date, owner, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [crId, seq++, row.step, row.start, row.end, row.owner || null, row.note || null]);
-    }
+    // TODO(LAB 4B.6): วน loop INSERT cr_action_plans ทีละแถว
+    //   ใส่ seq_no เป็นลำดับ 1, 2, 3, ...
+    // hint: let seq = 1; แล้วใช้ seq++ (ใช้ค่าแล้วค่อยบวก)
 
-    // ── ทุกอย่างรอด บันทึกจริงทั้งหมด ──
-    await conn.commit();
+    // TODO(LAB 4B.7): await conn.commit();
+    //   แล้วตอบ 201 พร้อม { crId, crNumber }
+    //   (201 = สร้างของใหม่สำเร็จ / frontend เอา crId ไปเปิดหน้า approve ต่อ)
 
-    // 201 = "สร้างของใหม่สำเร็จ" — ตอบ crId กลับไป
-    // (form.js เอาไปต่อท้าย URL หน้า approve: approve.html?crId=...)
-    res.status(201).json({ crId, crNumber: b.crNumber });
+    res.status(501).json({ error: "Not implemented yet — ทำ LAB 4B ก่อน" });
   } catch (err) {
-    // พังตรงไหนก็ตาม -> ยกเลิกทุก INSERT ที่ทำไปใน transaction นี้
-    await conn.rollback();
-
-    // ER_DUP_ENTRY = ชนกฎ UNIQUE ของ cr_number (เลขเอกสารซ้ำกับใบเก่า)
-    // 409 = "ข้อมูลชนกับของที่มีอยู่"
-    if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ error: "CR number already exists" });
-    }
+    // TODO(LAB 4B.8): await conn.rollback();  ← ยกเลิกทุก INSERT ใน transaction
+    //   แถม: ถ้า err.code === "ER_DUP_ENTRY" (เลข CR ซ้ำ เพราะ cr_number UNIQUE)
+    //   ตอบ 409 "CR number already exists" แทน
     next(err);
   } finally {
     // finally = ทำเสมอไม่ว่าสำเร็จหรือพัง
@@ -204,48 +153,35 @@ router.post("/", requireAuth, async (req, res, next) => {
 });
 
 // ============================================
-// POST /api/change-requests/:id/approval — บันทึกผลพิจารณา
+// LAB 4C: POST /api/change-requests/:id/approval — บันทึกผลพิจารณา
 // ============================================
-// สังเกตด่าน 2 ชั้น: requireAuth (login หรือยัง)
-// แล้วต่อด้วย requireRole (เป็น approver หรือ it_admin ไหม)
-// role requester หลุดมาถึงนี่จะโดน 403 เด้งกลับ
+// สังเกตด่าน 2 ชั้น: requireAuth แล้วต่อด้วย requireRole
+// role requester หลุดมาถึงนี่จะโดน 403 เด้งกลับ (ฝีมือ LAB 3.4)
 // body: { result: "approved"|"rejected"|"more-info", comment, approvalDate }
 router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
   async (req, res, next) => {
-    // เส้นนี้ก็แตะ 2 ตาราง (เพิ่มผลพิจารณา + อัปเดตสถานะใบ CR)
-    // เลยใช้ transaction เหมือนกัน
+    // เส้นนี้แตะ 2 ตาราง (เพิ่มผลพิจารณา + อัปเดตสถานะใบ CR)
+    // เลยใช้ transaction เหมือน LAB 4B
     const conn = await pool.getConnection();
     try {
       const crId = req.params.id;
       const { result, comment, approvalDate } = req.body;
 
-      // กันค่ามั่ว — result ต้องเป็น 1 ใน 3 ค่านี้เท่านั้น
-      if (!["approved", "rejected", "more-info"].includes(result)) {
-        return res.status(400).json({ error: "result must be approved, rejected or more-info" });
-      }
+      // TODO(LAB 4C.1): กันค่ามั่ว — result ต้องเป็น 1 ใน 3:
+      //   "approved" / "rejected" / "more-info"  ไม่ใช่ -> 400
+      // hint: ["approved", "rejected", "more-info"].includes(result)
 
-      // เช็คก่อนว่าใบ CR นี้มีจริง
-      const [[cr]] = await conn.query(
-        "SELECT cr_id FROM change_requests WHERE cr_id = ?", [crId]);
-      if (!cr) return res.status(404).json({ error: "CR not found" });
+      // TODO(LAB 4C.2): เช็คว่าใบ CR นี้มีจริง — ไม่มี -> 404
 
-      await conn.beginTransaction();
+      // TODO(LAB 4C.3): เริ่ม transaction แล้วทำ 2 อย่าง:
+      //   1. INSERT cr_approvals (คนอนุมัติ = req.user.userId จาก token)
+      //   2. UPDATE change_requests SET status = ? WHERE cr_id = ?
+      //      ระวัง: "more-info" ต้องแปลงเป็น "more_info"
+      //      (enum ใน schema ใช้ขีดล่าง แต่หน้าเว็บส่งขีดกลางมา)
 
-      // บันทึกผลพิจารณาเป็นแถวใหม่ (เก็บเป็นประวัติ — พิจารณากี่รอบก็เก็บหมด)
-      // คนอนุมัติ = คนที่ login อยู่ เอาจาก token เช่นเดิม
-      await conn.query(
-        `INSERT INTO cr_approvals (cr_id, approver_id, result, comment, approval_date)
-         VALUES (?, ?, ?, ?, ?)`,
-        [crId, req.user.userId, result, comment || null, approvalDate || new Date()]);
+      // TODO(LAB 4C.4): commit แล้วตอบ 201 { ok: true }
 
-      // อัปเดตสถานะบนใบ CR หลักให้ตรงกับผล
-      // (แปลง "more-info" เป็น "more_info" เพราะ enum ใน schema ใช้ขีดล่าง)
-      await conn.query(
-        "UPDATE change_requests SET status = ? WHERE cr_id = ?",
-        [result === "more-info" ? "more_info" : result, crId]);
-
-      await conn.commit();
-      res.status(201).json({ ok: true });
+      res.status(501).json({ error: "Not implemented yet — ทำ LAB 4C ก่อน" });
     } catch (err) {
       await conn.rollback();
       next(err);
