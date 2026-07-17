@@ -29,18 +29,28 @@ createApp({
 
     // ถูกเรียกตอนกดปุ่ม Sign in (จาก @submit.prevent="login" ใน HTML)
     // .prevent = กันไม่ให้ browser reload หน้าตอน submit ฟอร์ม
-    login() {
-      // this.username = ค่าที่ผู้ใช้พิมพ์ในช่อง Username ตอนนี้
-      // (this = ตัว app นี้เอง ใช้เข้าถึงตัวแปรใน data ได้ทุกตัว)
+    // async/await = รอคำตอบจาก server ก่อนค่อยทำบรรทัดถัดไป
+    async login() {
+      try {
+        // ส่ง username/password ไปให้ backend เช็คกับ DB
+        // (apiFetch มาจาก js/config.js)
+        const data = await apiFetch("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            username: this.username,
+            password: this.password
+          })
+        });
 
-      // NOTE: for learning only — real apps must verify passwords on the server
-      if (this.username === "admin" && this.password === "1234") {
-        alert("Login successful!");
+        // เก็บ token + ข้อมูล user ไว้ใช้ยิง API หน้าอื่นต่อ
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
         // สั่ง browser เปลี่ยนไปเปิดหน้า form.html
         window.location.href = "form.html";
-      } else {
-        alert("Invalid username or password.");
+      } catch (err) {
+        // backend ตอบ 401 = user/รหัสผิด — ข้อความอยู่ใน err.message
+        alert(err.message);
       }
     }
   }

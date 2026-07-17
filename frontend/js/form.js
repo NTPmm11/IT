@@ -44,8 +44,32 @@ createApp({
       // เริ่มต้นมี 1 แถวว่างให้กรอกเลย
       rows: [
         { step: "", start: "", end: "", owner: "", note: "" }
-      ]
+      ],
+
+      // ตัวเลือก dropdown ระบบ — โหลดจาก API ตอนหน้าเปิด (ดู mounted)
+      systems: []
     };
+  },
+
+  // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
+  async mounted() {
+    // ยังไม่ได้ login -> เด้งกลับหน้า login
+    if (!localStorage.getItem("token")) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    // เติมชื่อผู้ร้องขอ/แผนกจากข้อมูล user ที่ login ไว้
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    this.form.requester = user.fullName || "";
+    this.form.department = user.department || "";
+
+    // โหลดตัวเลือกระบบจาก DB มาใส่ dropdown
+    try {
+      this.systems = await apiFetch("/systems");
+    } catch (err) {
+      console.error("Load systems failed:", err.message);
+    }
   },
 
   methods: {
@@ -73,15 +97,39 @@ createApp({
     },
 
     // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
-    handleSubmit() {
-      // รวมข้อมูลฟอร์ม + แผนงาน แล้วพิมพ์ลง Console ให้ดู
-      // เปิด DevTools (F12) แท็บ Console จะเห็นข้อมูลทั้งหมดที่กรอก
-      console.log("CR data:", JSON.stringify({ ...this.form, plan: this.rows }, null, 2));
+    // ส่งข้อมูลฟอร์ม + แผนงานไปบันทึกลง DB ผ่าน backend
+    async handleSubmit() {
+      try {
+        // key ฝั่งซ้าย = ชื่อ field ที่ backend รอรับ (ดู backend/src/routes/cr.js)
+        const data = await apiFetch("/change-requests", {
+          method: "POST",
+          body: JSON.stringify({
+            crNumber: this.form.crId,
+            requestDate: this.form.requestDate,
+            department: this.form.department,
+            systemCode: this.form.system,
+            contact: this.form.contact,
+            priority: this.form.priority,
+            subject: this.form.subject,
+            problem: this.form.problem,
+            requestDetail: this.form.request,
+            impact: this.form.impact,
+            impactDetail: this.form.impactDetail,
+            downtime: this.form.downtime,
+            duration: this.form.duration,
+            deployDate: this.form.deployDate,
+            changeTypes: this.form.changeTypes,
+            plan: this.rows
+          })
+        });
 
-      alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
+        alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
 
-      // ไปหน้าอนุมัติต่อ
-      window.location.href = "approve.html";
+        // ไปหน้าอนุมัติต่อ พร้อมส่งเลข id ของ CR ที่เพิ่งบันทึกไปทาง URL
+        window.location.href = "approve.html?crId=" + data.crId;
+      } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+      }
     }
   }
 

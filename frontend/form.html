@@ -54,9 +54,10 @@
           <label for="cr-system">ระบบที่เกี่ยวข้อง:</label>
           <select id="cr-system" v-model="form.system" required>
             <option value="">-- เลือกโครงการ/ระบบงาน --</option>
-            <option value="web-portal">Web Portal Schema</option>
-            <option value="mobile-app">Mobile Application</option>
-            <option value="sap">SAP / ERP System</option>
+            <!-- ตัวเลือกโหลดจาก API (GET /api/systems) ตอนหน้าเปิด ดู mounted() ใน form.js -->
+            <option v-for="s in systems" :key="s.system_code" :value="s.system_code">
+              {{ s.system_name }}
+            </option>
           </select>
         </div>
 
@@ -205,6 +206,7 @@
 
   <!-- โหลด Vue จาก CDN ก่อน > common.js (ของใช้ร่วม) > โค้ดของหน้านี้ -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script src="js/form.js"></script>
 </body>
