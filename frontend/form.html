@@ -72,10 +72,13 @@
         <label>ระดับความสำคัญ (Priority):</label>
         <div class="options-group">
           <!-- radio ทุกอันผูกกับ form.priority ตัวเดียว เลือกได้ทีละอัน -->
-          <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low (ไม่กระทบงานหลัก)</label>
-          <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium (มีระบบสำรอง)</label>
+          <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low
+            (ไม่กระทบงานหลัก)</label>
+          <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium
+            (มีระบบสำรอง)</label>
           <label class="option-item"><input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)</label>
-          <label class="option-item"><input type="radio" value="Critical" v-model="form.priority"> Critical (ระบบหยุดทำงาน)</label>
+          <label class="option-item"><input type="radio" value="Critical" v-model="form.priority"> Critical
+            (ระบบหยุดทำงาน)</label>
         </div>
       </div>
 
@@ -113,21 +116,27 @@
         <label>ประเภทการเปลี่ยน:</label>
         <div class="options-group">
           <!-- checkbox หลายอันผูกกับ array เดียว ติ๊กอันไหนค่าเข้า array -->
-          <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application / Software</label>
-          <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database Schema</label>
-          <label class="option-item"><input type="checkbox" value="Infra" v-model="form.changeTypes"> Infrastructure</label>
+          <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application /
+            Software</label>
+          <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database
+            Schema</label>
+          <label class="option-item"><input type="checkbox" value="Infra" v-model="form.changeTypes">
+            Infrastructure</label>
         </div>
       </div>
 
       <div class="form-group">
         <label>ผลกระทบระบบ:</label>
         <div class="options-group">
-          <label class="option-item"><input type="radio" value="none" v-model="form.impact"> ไม่มีผลกระทบส่วนอื่น</label>
-          <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น (ระบุ):</label>
+          <label class="option-item"><input type="radio" value="none" v-model="form.impact">
+            ไม่มีผลกระทบส่วนอื่น</label>
+          <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น
+            (ระบุ):</label>
           <!-- ช่องนี้เปิดใช้เฉพาะตอนเลือก "กระทบระบบอื่น" -->
           <input type="text" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
             placeholder="ระบุระบบที่ได้รับผลกระทบ...">
-          <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว (Downtime)</label>
+          <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว
+            (Downtime)</label>
         </div>
       </div>
 
@@ -186,59 +195,54 @@
 
 
       <div class="section-title">
-       <div>แผนการดำเนินการ(Roll Back Plan)</div>
+        <div>แผนการกู้คืน(Roll Back Plan)</div>
       </div>
 
-       <div class="table-wrapper"></div>
-        <table class="action-table">
-          <thead>
-            <tr>
-              <th style="width:60px;">ลำดับ</th>
-              <th>ขั้นตอนงาน</th>
-              <th style="width:150px;">วัน/เดือน/ปี</th>
-              <th style="width:100px;">เวลาเริ่ม</th>
-              <th style="width:100px;">วันที่สิ้นสุด</th>
-              <th>หมายเหตุ</th>
-              <th style="width:60px;">ลบ</th>
-            </tr>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, index) in rows" :key="index">
-              <td class="text-center">{{ index + 1 }}</td>
-              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="row.start" required></td>
-              <td><input type="time" v-model="row.start" required></td>
-              <td><input type="time" v-model="row.end" required></td>
-              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
-              <td class="text-center">
-                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-wrapper"></div>
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th style="width:60px;">ลำดับ</th>
+            <th>ขั้นตอนงาน</th>
+            <th style="width:150px;">วัน/เดือน/ปี</th>
+            <th style="width:100px;">เวลาเริ่ม</th>
+            <th style="width:100px;">วันที่สิ้นสุด</th>
+            <th>หมายเหตุ</th>
+            <th style="width:60px;">ลบ</th>
+          </tr>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, index) in rows" :key="index">
+            <td class="text-center">{{ index + 1 }}</td>
+            <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+            <td><input type="date" v-model="row.start" required></td>
+            <td><input type="time" v-model="row.start" required></td>
+            <td><input type="time" v-model="row.end" required></td>
+            <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+            <td class="text-center">
+              <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-        <button type="button" class="btn-add-row" @click="addRow">
-          + เพิ่มขั้นตอนงาน
-        </button>
-      </div>
-    
-     
-        
+      <button type="button" class="btn-add-row" @click="addRow">
+        + เพิ่มขั้นตอนงาน
+      </button>
 
-      <div class="ui-action-buttons">
-        <button type="button" class="btn btn-cancel" @click="cancelForm">
-          <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
-        </button>
-        
+        <div class="ui-action-buttons">
+    <button type="button" class="btn btn-cancel" @click="cancelForm">
+      <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
+    </button>
 
-     
-        <button type="submit" class="btn btn-submit">
-          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
-        </button>
-      </div>
+    <button type="submit" class="btn btn-submit">
+      <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
+    </button>
+  </div>
+  </div>
 
-    </form>
+  </form>
   </div>
 
   <!-- โหลด Vue จาก CDN ก่อน > common.js (ของใช้ร่วม) > โค้ดของหน้านี้ -->
