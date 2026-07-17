@@ -30,7 +30,7 @@ createApp({
 
   // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
   mounted() {
-    // TODO(LAB 7.1): ไม่มี token -> เด้งกลับ index.html (ท่าเดียวกับ LAB 6.1)
+    // TODO(LAB 7.1): localStorage ไม่มี "user" -> เด้งกลับ index.html (ท่าเดียวกับ LAB 6.1)
 
     // TODO(LAB 7.2): อ่าน crId จาก URL
     // hint: this.crId = new URLSearchParams(window.location.search).get("crId");

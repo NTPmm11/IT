@@ -56,7 +56,8 @@ createApp({
   // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
   async mounted() {
     // TODO(LAB 6.1): กันคนไม่ได้ login แอบเข้าหน้านี้ตรงๆ
-    //   ถ้า localStorage ไม่มี "token" -> เด้งกลับ index.html แล้ว return
+    //   ถ้า localStorage ไม่มี "user" -> เด้งกลับ index.html แล้ว return
+    // hint: if (!localStorage.getItem("user")) { ... }
 
     // TODO(LAB 6.2): เติมชื่อผู้ร้องขอ/แผนกอัตโนมัติจากข้อมูลที่เก็บตอน login
     // hint:

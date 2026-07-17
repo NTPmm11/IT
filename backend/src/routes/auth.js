@@ -2,25 +2,25 @@
 // routes/auth.js — POST /api/auth/login
 // ============================================
 //
-// ★ LAB 2 — ระบบ login ของจริง (เช็คกับ database + แจก token)
+// ★ LAB 2 — ระบบ login ของจริง (เช็คกับ database)
 //
 // เส้นทางของการ login:
 // 1. หน้าเว็บ (frontend/js/login.js) ส่ง username/password มา
 // 2. ค้น user ในตาราง users
 // 3. เทียบรหัสผ่านกับ hash ใน database
-// 4. ถูก -> แจก token (บัตรผ่าน) กลับไป / ผิด -> ตอบ 401
+// 4. ถูก -> ตอบข้อมูล user กลับไป / ผิด -> ตอบ 401
+//    (หน้าเว็บเก็บข้อมูล user ไว้ แล้วใช้แนบ X-User-Id ทุก request หลังจากนี้)
 //
 // ทำเสร็จแล้วเช็คยังไง (ยังไม่ต้องแก้ frontend ก็เทสได้):
 //   curl -X POST http://localhost:4000/api/auth/login \
 //     -H "Content-Type: application/json" \
 //     -d '{"username":"admin","password":"1234"}'
-//   รหัสถูกต้องได้ token ยาวๆ กลับมา / รหัสผิดได้ 401
+//   รหัสถูกต้องได้ข้อมูล user กลับมา / รหัสผิดได้ 401
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/auth.js
 
 const express = require("express");
 const bcrypt = require("bcryptjs");     // ตัวเทียบรหัสผ่านกับ hash
-const jwt = require("jsonwebtoken");    // ตัวสร้าง token (บัตรผ่าน)
 const pool = require("../db");
 
 const router = express.Router();
@@ -40,7 +40,7 @@ router.post("/login", async (req, res, next) => {
     //   - ใช้ ? เป็นช่องเสียบค่า ห้ามต่อ string เด็ดขาด (SQL injection!)
     // hint:
     //   const [rows] = await pool.query(
-    //     "SELECT ... FROM users WHERE username = ? AND is_active = 1",
+    //     "SELECT user_id, username, password_hash, full_name, department, role FROM users WHERE username = ? AND is_active = 1",
     //     [username]);
     //   const user = rows[0];   // undefined ถ้าไม่เจอ
 
@@ -50,12 +50,18 @@ router.post("/login", async (req, res, next) => {
     //     (จงใจไม่แยก — กัน attacker ไล่เดาว่า username ไหนมีจริง)
     // hint: if (!user || !(await bcrypt.compare(password, user.password_hash)))
 
-    // TODO(LAB 2.5): สร้าง token แล้วตอบกลับ
-    //   - jwt.sign(ข้อมูลที่ฝังในบัตร, กุญแจ, ตัวเลือก)
-    //   - ฝัง: userId, username, role (แค่นี้พอ อย่าฝังของลับ)
-    //   - กุญแจ: process.env.JWT_SECRET
-    //   - อายุบัตร: { expiresIn: "8h" }
-    //   - ตอบ: res.json({ token, user: {...ข้อมูลไว้โชว์บนเว็บ...} })
+    // TODO(LAB 2.5): login ถูกต้อง — ตอบข้อมูล user กลับไป
+    //   (frontend เก็บลง localStorage แล้วใช้ userId แนบทุก request ต่อจากนี้)
+    // hint:
+    //   res.json({
+    //     user: {
+    //       userId: user.user_id,
+    //       username: user.username,
+    //       fullName: user.full_name,
+    //       department: user.department,
+    //       role: user.role
+    //     }
+    //   });
 
     // เสร็จแล้วลบ placeholder นี้ทิ้ง
     res.status(501).json({ error: "Not implemented yet — ทำ LAB 2 ก่อน" });

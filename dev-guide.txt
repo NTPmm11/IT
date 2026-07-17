@@ -577,9 +577,10 @@ Vue "เฝ้าดู" มันตลอดเวลา ค่าเปลี
   route     = กติกาว่า URL ไหนให้ function ไหนทำงาน
               (อยู่ใน backend/src/routes/)
   middleware = ด่านตรวจก่อนถึง route จริง
-              ของเราคือด่านเช็ค token (ยังไม่ login ห้ามผ่าน)
-  token (JWT) = บัตรผ่านที่ server แจกตอน login สำเร็จ
-              หน้าเว็บเก็บไว้ แล้วแนบมากับทุก request หลังจากนั้น
+              ของเราคือด่านเช็คว่าคนยิงเป็น user ไหน (ยังไม่ login ห้ามผ่าน)
+  X-User-Id = "ป้ายชื่อ" ที่หน้าเว็บแนบมากับทุก request หลัง login
+              บอก server ว่าคนยิงคือ user เลขไหน
+              (แบบง่ายไว้หัดเขียน — งานจริงใช้ token/session ที่ปลอมไม่ได้)
 
 
 ▶ Backend ตอนที่ 2: ตั้งค่าครั้งแรก (ทำครั้งเดียวจบ)
@@ -607,9 +608,8 @@ Vue "เฝ้าดู" มันตลอดเวลา ค่าเปลี
 
        cp .env.example .env
 
-     แล้วเปิดไฟล์ .env แก้ 2 ที่:
+     แล้วเปิดไฟล์ .env แก้ 1 ที่:
        DB_PASSWORD=   ใส่รหัส root ของ MySQL
-       JWT_SECRET=    พิมพ์ข้อความมั่วๆ ยาวๆ อะไรก็ได้
 
   4. ตั้งรหัสผ่านให้ user ตัวอย่าง:
      รหัสผ่านห้ามเก็บดิบๆ ต้องแปลงเป็น hash ก่อน
@@ -660,14 +660,14 @@ login ได้ 3 user (รหัส 1234 ทั้งหมด):
      - ไปค้น username นี้ในตาราง users
      - เอารหัสที่กรอกมาเทียบกับ hash ใน DB (bcrypt.compare)
      - ผิด -> ตอบ 401 กลับไป (หน้าเว็บ alert แจ้ง)
-     - ถูก -> สร้าง token (บัตรผ่าน) ตอบกลับพร้อมข้อมูล user
+     - ถูก -> ตอบข้อมูล user กลับไป (ชื่อ แผนก role)
 
   4. กลับมาฝั่ง login.js:
-     เก็บ token ลง localStorage แล้วพาไป form.html
+     เก็บข้อมูล user ลง localStorage แล้วพาไป form.html
 
   5. หลังจากนี้ทุกครั้งที่ยิง API
-     apiFetch (ใน config.js) แนบ token ไปให้เองอัตโนมัติ
-     middleware ฝั่ง server เช็คบัตรก่อนปล่อยเข้า route ทุกที
+     apiFetch (ใน config.js) แนบป้ายชื่อ X-User-Id ไปให้เองอัตโนมัติ
+     middleware ฝั่ง server เอาเลขไปเช็คในตาราง users ก่อนปล่อยเข้า route
 
 เส้น Submit CR ก็ท่าเดียวกัน แค่ปลายทางคือ routes/cr.js
 ที่พิเศษคือมันบันทึก 3 ตารางรวดเดียว (CR + ประเภท + แผนงาน)
@@ -717,8 +717,8 @@ login ได้ 3 user (รหัส 1234 ทั้งหมด):
   "Unknown database 'it_change_request'"
     = ยังไม่ได้รัน schema.sql (ตอนที่ 2 ข้อ 1)
 
-  หน้าเว็บ alert "Invalid or expired token"
-    = token หมดอายุ (8 ชม.) -> login ใหม่
+  หน้าเว็บ alert "Missing X-User-Id header"
+    = ยังไม่ได้ login (หรือ localStorage โดนล้าง) -> login ใหม่
 
   หน้าเว็บ alert "Forbidden: insufficient role"
     = user นี้ไม่มีสิทธิ์ทำสิ่งนั้น (ดูโจทย์ B3)

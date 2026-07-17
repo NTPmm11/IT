@@ -33,14 +33,15 @@ LAB 1: GET /api/systems                    [★ ง่าย]
 LAB 2: POST /api/auth/login                [★★ กลาง]
   ไฟล์: backend/src/routes/auth.js
   ได้ฝึก: req.body, ? placeholder (กัน SQL injection),
-          bcrypt.compare, jwt.sign, status code 400/401
-  เช็คผ่าน: curl ตามตัวอย่างหัวไฟล์ ได้ token กลับมา
+          bcrypt.compare, status code 400/401
+  เช็คผ่าน: curl ตามตัวอย่างหัวไฟล์ ได้ข้อมูล user กลับมา
 
-LAB 3: ด่านตรวจ token                      [★★ กลาง]
+LAB 3: ด่านเช็คว่าใครยิง request           [★★ กลาง]
   ไฟล์: backend/src/middleware/auth.js
-  ได้ฝึก: middleware, req.headers, jwt.verify, 401 vs 403
+  ได้ฝึก: middleware, req.headers (X-User-Id), 401 vs 403
   ระวัง: มี placeholder user ปลอมค้างอยู่ เสร็จแล้วต้องลบ!
-  เช็คผ่าน: ยิง /api/change-requests ไม่แนบ token ต้องโดน 401
+  เช็คผ่าน: ยิง /api/change-requests ไม่แนบ header ต้องโดน 401
+           แนบ -H "X-User-Id: 1" ต้องผ่าน
 
 LAB 4: CRUD ใบ CR                          [★★★ ยาก — จุดพีคของทั้งชุด]
   ไฟล์: backend/src/routes/cr.js

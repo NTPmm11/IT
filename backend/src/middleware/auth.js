@@ -1,48 +1,63 @@
 // ============================================
-// middleware/auth.js — ด่านเช็ค token ก่อนเข้า route ที่ต้อง login
+// middleware/auth.js — ด่านเช็คว่าใครยิง request มา
 // ============================================
 //
-// ★ LAB 3 — สร้างด่านตรวจบัตร (ต้องผ่าน LAB 2 มาก่อน ถึงจะมี token ให้ตรวจ)
+// ★ LAB 3 — สร้างด่านตรวจ (ต้องผ่าน LAB 2 มาก่อน ถึงจะ login ได้)
 //
 // middleware = function ที่ยืนขวาง"ก่อนถึง" route จริง
 // ลำดับการเดินของ request:
 //
-//   request -> requireAuth (มีบัตรไหม?) -> requireRole (สิทธิ์ถึงไหม?) -> route จริง
+//   request -> requireAuth (เป็น user ไหน?) -> requireRole (สิทธิ์ถึงไหม?) -> route จริง
 //
-// ฝั่ง frontend แนบบัตรมาใน header แบบนี้:
-//   Authorization: Bearer <token>
+// วิธีบอกตัวตนของโปรเจคนี้ (แบบง่ายสำหรับหัดเขียน):
+// หลัง login สำเร็จ หน้าเว็บจะแนบ "ป้ายชื่อ" มากับทุก request
+// เป็น header ชื่อ X-User-Id = เลข user_id ของคนที่ login
 // (apiFetch ใน frontend/js/config.js แนบให้อัตโนมัติอยู่แล้ว)
 //
+// ⚠ ซื่อสัตย์กันไว้ก่อน: วิธีนี้ใครก็ปลอม header ได้ ไม่ปลอดภัยจริง
+// งานจริงใช้ token/session ที่ปลอมไม่ได้ — เก็บไว้เรียนขั้นถัดไป
+// ตอนนี้เอา "แนวคิด middleware" ให้แน่นก่อนพอ
+//
 // ทำเสร็จแล้วเช็คยังไง:
-//   ยิง GET http://localhost:4000/api/change-requests แบบไม่แนบ token
-//   ต้องได้ 401 / แนบ token จาก LAB 2 ต้องผ่าน (ได้ 501 ของ LAB 4 แทน)
+//   ยิง GET http://localhost:4000/api/change-requests แบบไม่แนบ header
+//   ต้องได้ 401 / แนบ -H "X-User-Id: 1" ต้องผ่าน
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/middleware/auth.js
 
-const jwt = require("jsonwebtoken");
+const pool = require("../db");
 
-// ── ด่าน 1: requireAuth = เช็คว่ามีบัตรผ่าน (token) และบัตรไม่ปลอม ──
-function requireAuth(req, res, next) {
-  // TODO(LAB 3.1): อ่าน header แล้วแกะ token ออกมา
-  //   header หน้าตา: "Bearer eyJhbGciOi..." (คำว่า Bearer + เว้นวรรค + token)
-  // hint:
-  //   const header = req.headers.authorization || "";
-  //   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  //   (slice(7) = ตัด "Bearer " 7 ตัวอักษรทิ้ง)
+// ── ด่าน 1: requireAuth = ดูป้ายชื่อ แล้วเช็คว่า user นี้มีจริงใน database ──
+// (async เพราะข้างในต้องรอ database ตอบ)
+async function requireAuth(req, res, next) {
+  try {
+    // TODO(LAB 3.1): อ่านป้ายชื่อจาก header
+    // hint: const userId = req.headers["x-user-id"];
+    //   (ชื่อ header ใน req.headers เป็นตัวเล็กเสมอ Express แปลงให้)
 
-  // TODO(LAB 3.2): ไม่มี token -> ตอบ 401 { error: "Missing token" }
+    // TODO(LAB 3.2): ไม่มี header -> ตอบ 401 { error: "Missing X-User-Id header" }
+    //   (401 = "ยังไม่รู้ว่าเป็นใคร / ยังไม่ login")
 
-  // TODO(LAB 3.3): ตรวจบัตรด้วย jwt.verify(token, process.env.JWT_SECRET)
-  //   - ผ่าน -> ได้ข้อมูลที่ฝังไว้คืนมา เก็บใส่ req.user (route ถัดไปใช้ต่อ)
-  //     แล้วเรียก next() = "ผ่านด่าน เชิญไปต่อ"
-  //   - verify โยน error (บัตรปลอม/หมดอายุ) -> ตอบ 401
-  // hint: ครอบด้วย try/catch — verify พังจะ throw ไม่ใช่ return null
+    // TODO(LAB 3.3): เอาเลขไปเช็คในตาราง users ว่ามี user นี้จริงไหม
+    //   - WHERE user_id = ? AND is_active = 1
+    //   - ไม่เจอ -> ตอบ 401 { error: "Unknown user" }
+    //   - เจอ -> เก็บข้อมูลไว้ที่ req.user ให้ route ถัดไปใช้ แล้ว next()
+    // hint:
+    //   const [rows] = await pool.query(
+    //     "SELECT user_id, username, full_name, role FROM users WHERE user_id = ? AND is_active = 1",
+    //     [userId]);
+    //   const user = rows[0];
+    //   ...
+    //   req.user = { userId: user.user_id, username: user.username, role: user.role };
+    //   next();   // = "ด่านนี้ผ่าน เชิญไปต่อ"
 
-  // placeholder: ตอนนี้ปล่อยผ่านทุกคนไปก่อน (ยังไม่ปลอดภัย!)
-  // ใส่ user ปลอมไว้ให้ LAB 4 เทสได้ระหว่างที่ LAB นี้ยังไม่เสร็จ
-  // เสร็จ LAB 3 แล้วลบ 2 บรรทัดนี้ทิ้ง
-  req.user = { userId: 1, username: "admin", role: "it_admin" };
-  next();
+    // placeholder: ตอนนี้ปล่อยผ่านทุกคนเป็น admin ไปก่อน
+    // ใส่ไว้ให้ LAB 4 เทสได้ระหว่างที่ LAB นี้ยังไม่เสร็จ
+    // เสร็จ LAB 3 แล้วลบ 2 บรรทัดนี้ทิ้ง
+    req.user = { userId: 1, username: "admin", role: "it_admin" };
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── ด่าน 2: requireRole = เช็คว่า role ของ user มีสิทธิ์ทำสิ่งนี้ไหม ──
@@ -59,7 +74,7 @@ function requireRole(...roles) {
   return (req, res, next) => {
     // TODO(LAB 3.4): เช็คว่า req.user.role อยู่ในรายชื่อ roles ไหม
     //   - ไม่อยู่ -> ตอบ 403 { error: "Forbidden: insufficient role" }
-    //     (403 = รู้ว่าเป็นใคร แต่สิทธิ์ไม่ถึง / 401 = ยังไม่ login)
+    //     (403 = รู้ว่าเป็นใคร แต่สิทธิ์ไม่ถึง / 401 = ยังไม่รู้ว่าเป็นใคร)
     //   - อยู่ -> next()
     // hint: roles.includes(req.user.role)
 

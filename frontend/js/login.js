@@ -6,10 +6,10 @@
 //
 // ตอนนี้: เช็ครหัสแบบ hardcode ฝั่ง browser (ใครกด F12 ก็เห็นรหัส!)
 // เป้าหมาย: ส่ง username/password ไปให้ backend เช็คกับ database
-//           แล้วเก็บ token (บัตรผ่าน) ที่ได้กลับมา
+//           แล้วเก็บข้อมูล user ที่ได้กลับมาไว้ใช้หน้าอื่น
 //
 // ตัวช่วยที่มีให้แล้ว: apiFetch(...) ใน js/config.js
-//   - ยิง request + แนบ token อัตโนมัติ + โยน Error ถ้า server ตอบ error
+//   - ยิง request + แนบ X-User-Id อัตโนมัติ + โยน Error ถ้า server ตอบ error
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- frontend/js/login.js
 
@@ -42,9 +42,9 @@ createApp({
       //          body: JSON.stringify({ username: this.username,
       //                                 password: this.password })
       //        });
-      //   2. เก็บบัตรผ่านไว้ใช้หน้าอื่น:
-      //        localStorage.setItem("token", data.token);
+      //   2. เก็บข้อมูล user ไว้ใช้หน้าอื่น (apiFetch อ่านจากตรงนี้):
       //        localStorage.setItem("user", JSON.stringify(data.user));
+      //      (localStorage เก็บได้แต่ string เลยต้อง JSON.stringify ก่อน)
       //   3. ไปหน้าฟอร์ม: window.location.href = "form.html";
       //
       //   ใน catch: backend ตอบ 401 (รหัสผิด) ข้อความอยู่ใน err.message

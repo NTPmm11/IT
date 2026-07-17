@@ -61,7 +61,7 @@ IT/
 │   └── src/
 │       ├── index.js       จุดสตาร์ท server (port 4000)
 │       ├── db.js          ตัวต่อ MySQL (pool)
-│       ├── middleware/    ด่านเช็ค token   ← LAB 3
+│       ├── middleware/    ด่านเช็ค user    ← LAB 3
 │       └── routes/
 │           ├── systems.js   dropdown ระบบ   ← LAB 1
 │           ├── auth.js      login           ← LAB 2
