@@ -144,7 +144,7 @@
 
       <!-- [ 4. แผนดำเนินงาน ] -->
       <div class="section-title">
-        <div>4. แผนดำเนินงาน (Action Plan)</div>
+        <div>แผนดำเนินงาน (Action Plan)</div>
         <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
       </div>
 
@@ -154,9 +154,9 @@
             <tr>
               <th style="width:60px;">ลำดับ</th>
               <th>ขั้นตอนงาน</th>
-              <th style="width:150px;">วันที่เริ่ม</th>
-              <th style="width:150px;">วันที่สิ้นสุด</th>
-              <th>ผู้รับผิดชอบ</th>
+              <th style="width:150px;">วัน/เดือน/ปี</th>
+              <th style="width:100px;">เวลาเริ่ม</th>
+              <th style="width:100px;">วันที่สิ้นสุด</th>
               <th>หมายเหตุ</th>
               <th style="width:60px;">ลบ</th>
             </tr>
@@ -167,8 +167,8 @@
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
               <td><input type="date" v-model="row.start" required></td>
-              <td><input type="date" v-model="row.end" required></td>
-              <td><input type="text" v-model="row.owner" placeholder="ผู้รับผิดชอบ"></td>
+              <td><input type="time" v-model="row.start" required></td>
+              <td><input type="time" v-model="row.end" required></td>
               <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
                 <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
@@ -183,19 +183,56 @@
         </button>
       </div>
 
+
+
+      <div class="section-title">
+       <div>แผนการดำเนินการ(Roll Back Plan)</div>
+      </div>
+
+       <div class="table-wrapper"></div>
+        <table class="action-table">
+          <thead>
+            <tr>
+              <th style="width:60px;">ลำดับ</th>
+              <th>ขั้นตอนงาน</th>
+              <th style="width:150px;">วัน/เดือน/ปี</th>
+              <th style="width:100px;">เวลาเริ่ม</th>
+              <th style="width:100px;">วันที่สิ้นสุด</th>
+              <th>หมายเหตุ</th>
+              <th style="width:60px;">ลบ</th>
+            </tr>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in rows" :key="index">
+              <td class="text-center">{{ index + 1 }}</td>
+              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td><input type="date" v-model="row.start" required></td>
+              <td><input type="time" v-model="row.start" required></td>
+              <td><input type="time" v-model="row.end" required></td>
+              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+              <td class="text-center">
+                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <button type="button" class="btn-add-row" @click="addRow">
+          + เพิ่มขั้นตอนงาน
+        </button>
+      </div>
+    
+     
+        
+
       <div class="ui-action-buttons">
         <button type="button" class="btn btn-cancel" @click="cancelForm">
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
+        
 
-        <button type="button" class="btn btn-draft" @click="saveDraft">
-          <i class="fa-solid fa-floppy-disk"></i> บันทึกร่าง (Save Draft)
-        </button>
-
-        <button type="button" class="btn btn-pdf" @click="generatePDF">
-          <i class="fa-solid fa-file-pdf"></i> พิมพ์เอกสาร (PDF)
-        </button>
-
+     
         <button type="submit" class="btn btn-submit">
           <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
         </button>

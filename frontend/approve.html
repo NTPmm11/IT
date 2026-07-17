@@ -23,16 +23,14 @@
 
       <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
       <div class="section-title">
-        <div>5. ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
+        <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
         <span class="note">*เฉพาะสิทธิ์ Approver / PM</span>
       </div>
 
-      <div class="form-group align-top">
-        <label for="approval-comment">ความเห็นทีมพัฒนา/ผู้ประเมิน:</label>
-        <textarea id="approval-comment" v-model="form.comment" rows="2"
-          placeholder="บันทึกข้อเสนอแนะเพิ่มเติมทางเทคนิค..."></textarea>
-      </div>
-
+       <div class="form-group">
+          <label for="cr-department">ความเห็นของผู้ประเมิน:</label>
+          <input type="text" id="cr-department" v-model="form.department" placeholder="บันทึกข้อเสนอแนะเพิ่มเติม....">
+        </div>
       <div class="form-group">
         <label>ผลการพิจารณา:</label>
         <div class="options-group">
@@ -58,14 +56,7 @@
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 
-        <button type="button" class="btn btn-draft" @click="saveDraft">
-          <i class="fa-solid fa-floppy-disk"></i> บันทึกร่าง (Save Draft)
-        </button>
-
-        <button type="button" class="btn btn-pdf" @click="generatePDF">
-          <i class="fa-solid fa-file-pdf"></i> พิมพ์เอกสาร (PDF)
-        </button>
-
+    
         <button type="submit" class="btn btn-submit">
           <i class="fa-solid fa-paper-plane"></i> บันทึกผลอนุมัติ (Submit)
         </button>
@@ -76,7 +67,6 @@
 
   <!-- โหลด Vue จาก CDN ก่อน > common.js (ของใช้ร่วม) > โค้ดของหน้านี้ -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script src="js/approve.js"></script>
 </body>
