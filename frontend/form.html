@@ -54,10 +54,12 @@
           <label for="cr-system">ระบบที่เกี่ยวข้อง:</label>
           <select id="cr-system" v-model="form.system" required>
             <option value="">-- เลือกโครงการ/ระบบงาน --</option>
-            <!-- ตัวเลือกโหลดจาก API (GET /api/systems) ตอนหน้าเปิด ดู mounted() ใน form.js -->
-            <option v-for="s in systems" :key="s.system_code" :value="s.system_code">
-              {{ s.system_name }}
-            </option>
+               <option value="web-portal">Server</option>
+            <option value="mobile-app">Network</option>
+            <option value="sap">Database</option>
+               <option value="sap">Application</option>
+                  <option value="sap">Backup</option>
+                     <option value="sap">UPS</option>
           </select>
         </div>
 
@@ -215,11 +217,11 @@
         <tbody>
           <tr v-for="(row, index) in rows" :key="index">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row.start" required></td>
-            <td><input type="time" v-model="row.start" required></td>
-            <td><input type="time" v-model="row.end" required></td>
-            <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+            <td><input type="text" v-model="row.step2 placeholder="ระบุขั้นตอนงาน" required></td>
+            <td><input type="date" v-model="row.start2" required></td>
+            <td><input type="time" v-model="row.start2" required></td>
+            <td><input type="time" v-model="row.end2" required></td>
+            <td><input type="text" v-model="row.note2" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
             </td>
@@ -227,7 +229,7 @@
         </tbody>
       </table>
 
-      <button type="button" class="btn-add-row" @click="addRow">
+      <button type="button" class="btn-add-row" @click="addRow3">
         + เพิ่มขั้นตอนงาน
       </button>
 
@@ -250,6 +252,7 @@
   <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script src="js/form.js"></script>
+  
 </body>
 
 </html>
