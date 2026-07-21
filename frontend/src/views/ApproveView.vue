@@ -11,6 +11,7 @@
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- frontend/js/approve.js
 
+import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
 
 export default {
@@ -30,13 +31,15 @@ export default {
 
   // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
   mounted() {
-    // TODO(LAB 7.1): localStorage ไม่มี "user" -> เด้งกลับหน้า login (path "/") (ท่าเดียวกับ LAB 6.1)
+    if (!localStorage.getItem("user")) {
+      this.$router.push("/");
+      return;
+    }
 
-    // TODO(LAB 7.2): อ่าน crId จาก query string
-    // hint: this.crId = this.$route.query.crId;
-    //   (this.$route.query = ตัวแกะของหลัง ? ใน URL ให้เรา — เทียบเท่า URLSearchParams เดิม)
+    this.crId = this.$route.query.crId;
 
-    // TODO(LAB 7.3): เติมชื่อผู้อนุมัติจาก localStorage (ท่าเดียวกับ LAB 6.2)
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    this.form.approver = user.fullName || "";
   },
 
   methods: {
@@ -44,34 +47,29 @@ export default {
     ...commonMethods,
 
     // ถูกเรียกตอนกดปุ่ม "บันทึกผลอนุมัติ" (@submit.prevent="handleSubmit")
-    //
-    // TODO(LAB 7.4): เติม async -> async handleSubmit()
-    handleSubmit() {
-      // TODO(LAB 7.5): เช็คของก่อนส่ง
-      //   - this.crId ว่าง -> alert บอกให้เข้าหน้านี้ผ่านการ Submit ฟอร์ม แล้ว return
-      //   - this.form.result ว่าง (ยังไม่เลือก radio) -> alert แล้ว return
+    async handleSubmit() {
+      if (!this.crId) {
+        alert("ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์มก่อน");
+        return;
+      }
+      if (!this.form.result) {
+        alert("กรุณาเลือกผลการพิจารณา");
+        return;
+      }
 
-      // TODO(LAB 7.6): ยิง API บันทึกผล (ครอบ try/catch)
-      // hint:
-      //   await apiFetch(`/change-requests/${this.crId}/approval`, {
-      //     method: "POST",
-      //     body: JSON.stringify({
-      //       result: this.form.result,
-      //       comment: this.form.comment,
-      //       approvalDate: this.form.date
-      //     })
-      //   });
-      //   (`...${...}...` = template string — แทนค่าตัวแปรกลาง string ได้)
-      //
-      //   สำเร็จ -> alert("บันทึกผลการพิจารณาเรียบร้อยแล้ว!")
-      //   catch  -> alert("บันทึกไม่สำเร็จ: " + err.message)
-      //
-      //   โจทย์แถม: ลอง login ด้วย somchai (role requester) แล้วกดบันทึก
-      //   ต้องเจอ "Forbidden: insufficient role" — นั่นคือฝีมือ LAB 3.4
-
-      // ⛔ ของเก่า — LAB 7 ให้แทนที่ทั้งก้อนนี้
-      console.log("Approval data:", JSON.stringify(this.form, null, 2));
-      alert("บันทึกผลการพิจารณาเรียบร้อยแล้ว! (โหมดปลอม — ยังไม่ลง database)");
+      try {
+        await apiFetch(`/change-requests/${this.crId}/approval`, {
+          method: "POST",
+          body: JSON.stringify({
+            result: this.form.result,
+            comment: this.form.comment,
+            approvalDate: this.form.date
+          })
+        });
+        alert("บันทึกผลการพิจารณาเรียบร้อยแล้ว!");
+      } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+      }
     }
   }
 };

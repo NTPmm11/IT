@@ -24,17 +24,11 @@ const router = express.Router();
 // (index.js เสียบไฟล์นี้ไว้ใต้ /api/systems)
 router.get("/", async (req, res, next) => {
   try {
-    // TODO(LAB 1.1): query ตาราง systems
-    //   - เอา 2 column: system_code, system_name
-    //   - เอาเฉพาะแถวที่ is_active = 1
-    //   - เรียงตาม system_name
-    //
-    // hint: ผลของ pool.query ต้องรับแบบนี้ (วงเล็บเหลี่ยมสำคัญ):
-    //   const [rows] = await pool.query("SELECT ...");
+    const [rows] = await pool.query(
+      "SELECT system_code, system_name FROM systems WHERE is_active = 1 ORDER BY system_name"
+    );
 
-    // TODO(LAB 1.2): ตอบ rows กลับเป็น JSON ด้วย res.json(...)
-    // เสร็จแล้วลบบรรทัด placeholder ข้างล่างทิ้ง
-    res.status(501).json({ error: "Not implemented yet — ทำ LAB 1 ก่อน" });
+    res.json(rows);
   } catch (err) {
     // database พัง -> ส่งต่อให้ error handler กลางใน index.js
     next(err);

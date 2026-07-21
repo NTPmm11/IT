@@ -30,31 +30,24 @@ const pool = require("../db");
 // (async เพราะข้างในต้องรอ database ตอบ)
 async function requireAuth(req, res, next) {
   try {
-    // TODO(LAB 3.1): อ่านป้ายชื่อจาก header
-    // hint: const userId = req.headers["x-user-id"];
-    //   (ชื่อ header ใน req.headers เป็นตัวเล็กเสมอ Express แปลงให้)
+    const userId = req.headers["x-user-id"];
 
-    // TODO(LAB 3.2): ไม่มี header -> ตอบ 401 { error: "Missing X-User-Id header" }
-    //   (401 = "ยังไม่รู้ว่าเป็นใคร / ยังไม่ login")
+    if (!userId) {
+      return res.status(401).json({ error: "Missing X-User-Id header" });
+    }
 
-    // TODO(LAB 3.3): เอาเลขไปเช็คในตาราง users ว่ามี user นี้จริงไหม
-    //   - WHERE user_id = ? AND is_active = 1
-    //   - ไม่เจอ -> ตอบ 401 { error: "Unknown user" }
-    //   - เจอ -> เก็บข้อมูลไว้ที่ req.user ให้ route ถัดไปใช้ แล้ว next()
-    // hint:
-    //   const [rows] = await pool.query(
-    //     "SELECT user_id, username, full_name, role FROM users WHERE user_id = ? AND is_active = 1",
-    //     [userId]);
-    //   const user = rows[0];
-    //   ...
-    //   req.user = { userId: user.user_id, username: user.username, role: user.role };
-    //   next();   // = "ด่านนี้ผ่าน เชิญไปต่อ"
+    const [rows] = await pool.query(
+      "SELECT user_id, username, full_name, role FROM users WHERE user_id = ? AND is_active = 1",
+      [userId]
+    );
+    const user = rows[0];
 
-    // placeholder: ตอนนี้ปล่อยผ่านทุกคนเป็น admin ไปก่อน
-    // ใส่ไว้ให้ LAB 4 เทสได้ระหว่างที่ LAB นี้ยังไม่เสร็จ
-    // เสร็จ LAB 3 แล้วลบ 2 บรรทัดนี้ทิ้ง
-    req.user = { userId: 1, username: "admin", role: "it_admin" };
-    next();
+    if (!user) {
+      return res.status(401).json({ error: "Unknown user" });
+    }
+
+    req.user = { userId: user.user_id, username: user.username, role: user.role };
+    next();   // = "ด่านนี้ผ่าน เชิญไปต่อ"
   } catch (err) {
     next(err);
   }
@@ -72,13 +65,9 @@ function requireRole(...roles) {
   // เพราะ Express ต้องการ middleware หน้าตา (req, res, next)
   // ตัวนอกมีไว้รับรายชื่อ role ตอนตั้งค่า route เฉยๆ
   return (req, res, next) => {
-    // TODO(LAB 3.4): เช็คว่า req.user.role อยู่ในรายชื่อ roles ไหม
-    //   - ไม่อยู่ -> ตอบ 403 { error: "Forbidden: insufficient role" }
-    //     (403 = รู้ว่าเป็นใคร แต่สิทธิ์ไม่ถึง / 401 = ยังไม่รู้ว่าเป็นใคร)
-    //   - อยู่ -> next()
-    // hint: roles.includes(req.user.role)
-
-    // placeholder: ปล่อยผ่านไปก่อน เสร็จแล้วลบทิ้ง
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: "Forbidden: insufficient role" });
+    }
     next();
   };
 }

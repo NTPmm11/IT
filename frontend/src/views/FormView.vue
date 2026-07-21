@@ -59,19 +59,20 @@ export default {
 
   // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
   async mounted() {
-    // TODO(LAB 6.1): กันคนไม่ได้ login แอบเข้าหน้านี้ตรงๆ
-    //   ถ้า localStorage ไม่มี "user" -> เด้งกลับหน้า login (path "/") แล้ว return
-    // hint: if (!localStorage.getItem("user")) { this.$router.push("/"); return; }
+    if (!localStorage.getItem("user")) {
+      this.$router.push("/");
+      return;
+    }
 
-    // TODO(LAB 6.2): เติมชื่อผู้ร้องขอ/แผนกอัตโนมัติจากข้อมูลที่เก็บตอน login
-    // hint:
-    //   const user = JSON.parse(localStorage.getItem("user") || "{}");
-    //   this.form.requester = user.fullName || "";
-    //   this.form.department = user.department || "";
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    this.form.requester = user.fullName || "";
+    this.form.department = user.department || "";
 
-    // TODO(LAB 6.3): โหลดตัวเลือก dropdown จาก API
-    //   this.systems = await apiFetch("/systems");
-    //   ครอบ try/catch — โหลดพลาดอย่าให้ทั้งหน้าพัง แค่ console.error พอ
+    try {
+      this.systems = await apiFetch("/systems");
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   methods: {
@@ -106,43 +107,35 @@ export default {
     },
 
     // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
-    //
-    // TODO(LAB 6.4): เติม async ข้างหน้า -> async handleSubmit()
-    handleSubmit() {
-      // TODO(LAB 6.5): เปลี่ยนจาก console.log เป็นยิง API จริง
-      //   ครอบ try/catch แล้วใน try:
-      //
-      //   const data = await apiFetch("/change-requests", {
-      //     method: "POST",
-      //     body: JSON.stringify({
-      //       crNumber: this.form.crId,        // ← ชื่อฝั่งซ้ายต้องตรงกับ
-      //       requestDate: this.form.requestDate,  //   ที่ backend รอรับ (LAB 4B)
-      //       department: this.form.department,
-      //       systemCode: this.form.system,
-      //       contact: this.form.contact,
-      //       priority: this.form.priority,
-      //       subject: this.form.subject,
-      //       problem: this.form.problem,
-      //       requestDetail: this.form.request,
-      //       impact: this.form.impact,
-      //       impactDetail: this.form.impactDetail,
-      //       downtime: this.form.downtime,
-      //       duration: this.form.duration,
-      //       deployDate: this.form.deployDate,
-      //       changeTypes: this.form.changeTypes,
-      //       plan: this.rows
-      //     })
-      //   });
-      //
-      //   สำเร็จ -> alert แล้วพาไปหน้าอนุมัติพร้อมแนบเลข CR:
-      //   this.$router.push("/approve?crId=" + data.crId);
-      //
-      //   catch -> alert("บันทึกไม่สำเร็จ: " + err.message);
+    async handleSubmit() {
+      try {
+        const data = await apiFetch("/change-requests", {
+          method: "POST",
+          body: JSON.stringify({
+            crNumber: this.form.crId,
+            requestDate: this.form.requestDate,
+            department: this.form.department,
+            systemCode: this.form.system,
+            contact: this.form.contact,
+            priority: this.form.priority,
+            subject: this.form.subject,
+            problem: this.form.problem,
+            requestDetail: this.form.request,
+            impact: this.form.impact,
+            impactDetail: this.form.impactDetail,
+            downtime: this.form.downtime,
+            duration: this.form.duration,
+            deployDate: this.form.deployDate,
+            changeTypes: this.form.changeTypes,
+            plan: this.rows
+          })
+        });
 
-      // ⛔ ของเก่า (แค่พิมพ์ลง Console) — LAB 6 ให้แทนที่ทั้งก้อนนี้
-      console.log("CR data:", JSON.stringify({ ...this.form, plan: this.rows }, null, 2));
-      alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว! (โหมดปลอม — ยังไม่ลง database)");
-      this.$router.push("/approve");
+        alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
+        this.$router.push("/approve?crId=" + data.crId);
+      } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+      }
     }
   }
 };

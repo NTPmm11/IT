@@ -2,6 +2,8 @@
 // ============================================
 // LoginView.vue — เดิมคือ index.html + js/login.js
 // ============================================
+import { apiFetch } from "../services/api.js";
+
 export default {
   data() {
     return {
@@ -11,24 +13,23 @@ export default {
   },
 
   methods: {
-    login() {
-
-          console.log(this.username);
-          console.log(this.password);
-          console.log(this.remember);
-
+    async login() {
         if (this.username === "" || this.password === "") {
             alert("กรุณากรอกข้อมูล");
             return;
         }
 
-        // ชั่วคราว — ล็อค admin/1234 ไว้ก่อน รอ LAB 5 ต่อ backend จริง
-        if (this.username !== "admin" || this.password !== "1234") {
-            alert("Username หรือ Password ไม่ถูกต้อง");
-            return;
-        }
+        try {
+          const data = await apiFetch("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ username: this.username, password: this.password })
+          });
 
-        this.$router.push("/form");
+          localStorage.setItem("user", JSON.stringify(data.user));
+          this.$router.push("/form");
+        } catch (err) {
+          alert("เข้าสู่ระบบไม่สำเร็จ: " + err.message);
+        }
     }
   }
 };

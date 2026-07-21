@@ -59,28 +59,45 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const crId = req.params.id;
 
-    // TODO(LAB 4A.1): query ใบ CR หลักจาก change_requests (WHERE cr_id = ?)
-    //   JOIN users กับ systems เอาชื่อมาด้วย (ก็อปท่าจาก GET / ข้างบนได้เลย)
-    // hint รับผลแบบแถวเดียว: const [[cr]] = await pool.query(...)
-    //   (วงเล็บซ้อน 2 ชั้น = หยิบแถวแรกเลย)
+    const [[cr]] = await pool.query(
+      `SELECT cr.cr_id, cr.cr_number, cr.request_date, cr.department, cr.contact,
+              cr.priority, cr.subject, cr.problem, cr.request_detail,
+              cr.impact, cr.impact_detail, cr.downtime, cr.duration, cr.deploy_date,
+              cr.status, cr.created_at,
+              u.full_name AS requester, s.system_name
+       FROM change_requests cr
+       JOIN users u   ON u.user_id = cr.requester_id
+       JOIN systems s ON s.system_id = cr.system_id
+       WHERE cr.cr_id = ?`,
+      [crId]
+    );
 
-    // TODO(LAB 4A.2): ไม่เจอ (cr เป็น undefined) -> ตอบ 404
+    if (!cr) {
+      return res.status(404).json({ error: "CR not found" });
+    }
 
-    // TODO(LAB 4A.3): CR 1 ใบกระจายอยู่ 4 ตาราง — query อีก 3 ก้อน:
-    //   - cr_change_types  WHERE cr_id = ?
-    //   - cr_action_plans  WHERE cr_id = ?  ORDER BY seq_no
-    //   - cr_approvals     WHERE cr_id = ?  (JOIN users เอาชื่อผู้อนุมัติ)
+    const [types] = await pool.query(
+      "SELECT change_type FROM cr_change_types WHERE cr_id = ?",
+      [crId]
+    );
+    const [plans] = await pool.query(
+      "SELECT step, start_date, end_date, owner, note FROM cr_action_plans WHERE cr_id = ? ORDER BY seq_no",
+      [crId]
+    );
+    const [approvals] = await pool.query(
+      `SELECT a.result, a.comment, a.approval_date, u.full_name AS approver
+       FROM cr_approvals a
+       JOIN users u ON u.user_id = a.approver_id
+       WHERE a.cr_id = ?`,
+      [crId]
+    );
 
-    // TODO(LAB 4A.4): ประกอบร่างตอบกลับก้อนเดียว
-    // hint:
-    //   res.json({
-    //     ...cr,                                        // แผ่ทุก field ออกมา
-    //     changeTypes: types.map(t => t.change_type),   // [{...}] -> ["App",...]
-    //     plan: plans,
-    //     approvals
-    //   });
-
-    res.status(501).json({ error: "Not implemented yet — ทำ LAB 4A ก่อน" });
+    res.json({
+      ...cr,
+      changeTypes: types.map(t => t.change_type),
+      plan: plans,
+      approvals
+    });
   } catch (err) {
     next(err);
   }
@@ -109,41 +126,71 @@ router.post("/", requireAuth, async (req, res, next) => {
   try {
     const b = req.body;
 
-    // TODO(LAB 4B.1): เช็คของที่ขาดไม่ได้ — crNumber, subject, systemCode
-    //   ขาด -> ตอบ 400
+    if (!b.crNumber || !b.subject || !b.systemCode) {
+      return res.status(400).json({ error: "ต้องมี crNumber, subject, systemCode" });
+    }
 
-    // TODO(LAB 4B.2): แปลง systemCode ("web-portal") เป็น system_id (ตัวเลข)
-    //   query ตาราง systems — ไม่เจอ -> ตอบ 400 "Unknown systemCode"
+    const [systemRows] = await conn.query(
+      "SELECT system_id FROM systems WHERE system_code = ?",
+      [b.systemCode]
+    );
+    if (!systemRows[0]) {
+      return res.status(400).json({ error: "Unknown systemCode" });
+    }
+    const systemId = systemRows[0].system_id;
 
-    // TODO(LAB 4B.3): await conn.beginTransaction();
+    await conn.beginTransaction();
 
-    // TODO(LAB 4B.4): INSERT ตาราง change_requests (ใบ CR หลัก)
-    //   จุดสำคัญ:
-    //   - requester_id เอาจาก req.user.userId (จาก token)
-    //     ห้ามเชื่อค่าจาก body — ปลอมง่าย
-    //   - ช่องที่ไม่ได้กรอกเก็บ null: b.department || null
-    //   - downtime: column เป็น BIT -> ส่ง 1/0 ชัดๆ ดีกว่า: b.downtime ? 1 : 0
-    //   - status: b.status === "draft" ? "draft" : "submitted"
-    // hint เอา id แถวใหม่: const [result] = await conn.query("INSERT ...");
-    //   const crId = result.insertId;   // เลขที่ AUTO_INCREMENT เพิ่งแจก
+    const [result] = await conn.query(
+      `INSERT INTO change_requests
+        (cr_number, request_date, requester_id, department, system_id, contact,
+         priority, subject, problem, request_detail, impact, impact_detail,
+         downtime, duration, deploy_date, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        b.crNumber,
+        b.requestDate,
+        req.user.userId,
+        b.department || null,
+        systemId,
+        b.contact || null,
+        b.priority || "Low",
+        b.subject,
+        b.problem || null,
+        b.requestDetail || null,
+        b.impact || "none",
+        b.impactDetail || null,
+        b.downtime ? 1 : 0,
+        b.duration || null,
+        b.deployDate || null,
+        b.status === "draft" ? "draft" : "submitted"
+      ]
+    );
+    const crId = result.insertId;   // เลขที่ IDENTITY เพิ่งแจก
 
-    // TODO(LAB 4B.5): วน loop INSERT cr_change_types ทีละค่า
-    // hint: for (const type of b.changeTypes || []) { ... }
-    //   (|| [] เผื่อไม่ติ๊กเลย — วนศูนย์รอบ ไม่พัง)
+    for (const type of b.changeTypes || []) {
+      await conn.query(
+        "INSERT INTO cr_change_types (cr_id, change_type) VALUES (?, ?)",
+        [crId, type]
+      );
+    }
 
-    // TODO(LAB 4B.6): วน loop INSERT cr_action_plans ทีละแถว
-    //   ใส่ seq_no เป็นลำดับ 1, 2, 3, ...
-    // hint: let seq = 1; แล้วใช้ seq++ (ใช้ค่าแล้วค่อยบวก)
+    let seq = 1;
+    for (const row of b.plan || []) {
+      await conn.query(
+        `INSERT INTO cr_action_plans (cr_id, seq_no, step, start_date, end_date, owner, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [crId, seq++, row.step, row.start, row.end, row.owner || null, row.note || null]
+      );
+    }
 
-    // TODO(LAB 4B.7): await conn.commit();
-    //   แล้วตอบ 201 พร้อม { crId, crNumber }
-    //   (201 = สร้างของใหม่สำเร็จ / frontend เอา crId ไปเปิดหน้า approve ต่อ)
-
-    res.status(501).json({ error: "Not implemented yet — ทำ LAB 4B ก่อน" });
+    await conn.commit();
+    res.status(201).json({ crId, crNumber: b.crNumber });
   } catch (err) {
-    // TODO(LAB 4B.8): await conn.rollback();  ← ยกเลิกทุก INSERT ใน transaction
-    //   แถม: ถ้า err.code === "ER_DUP_ENTRY" (เลข CR ซ้ำ เพราะ cr_number UNIQUE)
-    //   ตอบ 409 "CR number already exists" แทน
+    await conn.rollback();   // ยกเลิกทุก INSERT ใน transaction
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ error: "CR number already exists" });
+    }
     next(err);
   } finally {
     // finally = ทำเสมอไม่ว่าสำเร็จหรือพัง
@@ -167,21 +214,35 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       const crId = req.params.id;
       const { result, comment, approvalDate } = req.body;
 
-      // TODO(LAB 4C.1): กันค่ามั่ว — result ต้องเป็น 1 ใน 3:
-      //   "approved" / "rejected" / "more-info"  ไม่ใช่ -> 400
-      // hint: ["approved", "rejected", "more-info"].includes(result)
+      if (!["approved", "rejected", "more-info"].includes(result)) {
+        return res.status(400).json({ error: "result ต้องเป็น approved/rejected/more-info" });
+      }
 
-      // TODO(LAB 4C.2): เช็คว่าใบ CR นี้มีจริง — ไม่มี -> 404
+      const [crRows] = await conn.query(
+        "SELECT cr_id FROM change_requests WHERE cr_id = ?",
+        [crId]
+      );
+      if (!crRows[0]) {
+        return res.status(404).json({ error: "CR not found" });
+      }
 
-      // TODO(LAB 4C.3): เริ่ม transaction แล้วทำ 2 อย่าง:
-      //   1. INSERT cr_approvals (คนอนุมัติ = req.user.userId จาก token)
-      //   2. UPDATE change_requests SET status = ? WHERE cr_id = ?
-      //      ระวัง: "more-info" ต้องแปลงเป็น "more_info"
-      //      (enum ใน schema ใช้ขีดล่าง แต่หน้าเว็บส่งขีดกลางมา)
+      await conn.beginTransaction();
 
-      // TODO(LAB 4C.4): commit แล้วตอบ 201 { ok: true }
+      await conn.query(
+        `INSERT INTO cr_approvals (cr_id, approver_id, result, comment, approval_date)
+         VALUES (?, ?, ?, ?, ?)`,
+        [crId, req.user.userId, result, comment || null, approvalDate]
+      );
 
-      res.status(501).json({ error: "Not implemented yet — ทำ LAB 4C ก่อน" });
+      // enum ใน schema ใช้ขีดล่าง แต่หน้าเว็บส่งขีดกลางมา (more-info -> more_info)
+      const statusValue = result === "more-info" ? "more_info" : result;
+      await conn.query(
+        "UPDATE change_requests SET status = ?, updated_at = GETDATE() WHERE cr_id = ?",
+        [statusValue, crId]
+      );
+
+      await conn.commit();
+      res.status(201).json({ ok: true });
     } catch (err) {
       await conn.rollback();
       next(err);
