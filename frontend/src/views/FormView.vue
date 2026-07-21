@@ -189,12 +189,9 @@ export default {
           <label for="cr-system">ระบบที่เกี่ยวข้อง:</label>
           <select id="cr-system" v-model="form.system" required>
             <option value="">-- เลือกโครงการ/ระบบงาน --</option>
-               <option value="web-portal">Server</option>
-            <option value="mobile-app">Network</option>
-            <option value="sap">Database</option>
-               <option value="sap">Application</option>
-                  <option value="sap">Backup</option>
-                     <option value="sap">UPS</option>
+            <option v-for="s in systems" :key="s.system_code" :value="s.system_code">
+              {{ s.system_name }}
+            </option>
           </select>
         </div>
 

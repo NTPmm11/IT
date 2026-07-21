@@ -40,6 +40,13 @@ const config = {
 // เปิด connection pool ไว้รอ (ต่อครั้งเดียวตอน server สตาร์ท)
 const poolPromise = new sql.ConnectionPool(config).connect();
 
+// ต่อไม่ติด (SQL Server ยังไม่รัน / รหัสผิด) ไม่ควรทำให้ Express ทั้งตัวล้ม —
+// ดัก error ตรงนี้ไว้ก่อน (route ที่ใช้ query()/getConnection() จะเจอ error
+// ตอนเรียกจริงแทน ส่วน /api/health ยังตอบได้ปกติ)
+poolPromise.catch((err) => {
+  console.error("SQL Server connect failed:", err.message);
+});
+
 // ── ตัวแปลง ? (สไตล์ mysql2) -> @p0, @p1, ... (สไตล์ mssql) ──
 // ไล่ทีละตัวอักษร ข้าม ? ที่อยู่ใน string literal (คั่นด้วย ' ') ไป
 function bindParams(request, text, params) {
