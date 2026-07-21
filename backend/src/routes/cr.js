@@ -122,7 +122,7 @@ router.post("/", requireAuth, async (req, res, next) => {
     //   - requester_id เอาจาก req.user.userId (จาก token)
     //     ห้ามเชื่อค่าจาก body — ปลอมง่าย
     //   - ช่องที่ไม่ได้กรอกเก็บ null: b.department || null
-    //   - downtime: MySQL ไม่มี true/false -> b.downtime ? 1 : 0
+    //   - downtime: column เป็น BIT -> ส่ง 1/0 ชัดๆ ดีกว่า: b.downtime ? 1 : 0
     //   - status: b.status === "draft" ? "draft" : "submitted"
     // hint เอา id แถวใหม่: const [result] = await conn.query("INSERT ...");
     //   const crId = result.insertId;   // เลขที่ AUTO_INCREMENT เพิ่งแจก

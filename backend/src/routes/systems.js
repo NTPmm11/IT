@@ -16,7 +16,7 @@
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/systems.js
 
 const express = require("express");
-const pool = require("../db");   // ตัวคุยกับ MySQL — ใช้ผ่าน pool.query(...)
+const pool = require("../db");   // ตัวคุยกับ SQL Server — ใช้ผ่าน pool.query(...)
 
 const router = express.Router();
 
