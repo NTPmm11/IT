@@ -1,18 +1,154 @@
-<!DOCTYPE html>
-<html lang="th">
+<script>
+// ============================================
+// FormView.vue — เดิมคือ form.html + js/form.js
+// ============================================
+//
+// ★ LAB 6 — ส่งฟอร์มลง database จริง (ต้องผ่าน LAB 1, 4B ฝั่ง backend ก่อน)
+//
+// ภาพรวมการทำงาน (ของเดิมที่ยังใช้อยู่):
+// 1. ทุกช่องกรอกผูกกับตัวแปรใน form ผ่าน v-model
+// 2. ตาราง action plan เก็บเป็น array ชื่อ rows แล้วให้ v-for วาดแถวตามข้อมูล
+//    - เพิ่มแถว = push เข้า array / ลบแถว = splice ออก -> Vue วาดจอให้เอง
+//
+// ของใหม่ที่ LAB นี้ต้องทำ:
+// - โหลด dropdown ระบบจาก API ตอนหน้าเปิด (mounted)
+// - กด Submit แล้วส่งข้อมูลทั้งฟอร์มไปเก็บลง database
+//
+// ติดตรงไหนดูเฉลย:  git diff main solution -- frontend/js/form.js
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHANGE REQUEST FORM (CR)</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/form.css">
-</head>
+import { apiFetch } from "../services/api.js";
+import { commonMethods } from "../services/commonActions.js";
 
-<body>
+export default {
+  data() {
+    return {
 
-  <!-- id="app" = พื้นที่ที่ Vue ควบคุม -->
+      // ข้อมูลฟอร์มหลัก — 1 ตัวแปรต่อ 1 ช่องกรอก (ผูกด้วย v-model)
+      form: {
+        crId: "",           // เลขที่เอกสาร
+        requestDate: "",    // วันที่ร้องขอ
+        requester: "",      // ชื่อผู้ร้องขอ
+        department: "",     // แผนก/ฝ่าย
+        system: "",         // dropdown ระบบที่เกี่ยวข้อง
+        contact: "",        // อีเมล/เบอร์โทร
+        priority: "Low",    // radio — ค่าเริ่มต้นเลือก Low ไว้ก่อน
+        subject: "",        // หัวข้อการเปลี่ยน
+        problem: "",        // ปัญหาที่พบ
+        request: "",        // สิ่งที่ต้องการให้ปรับปรุง
+        changeTypes: [],    // checkbox หลายอัน — ติ๊กอันไหน ค่าเข้า array นี้
+        impact: "none",     // radio ผลกระทบ — เริ่มที่ "ไม่มีผลกระทบ"
+        impactDetail: "",   // ช่องระบุระบบที่กระทบ (เปิดใช้เมื่อ impact = "other")
+        downtime: false,    // checkbox เดี่ยว — ติ๊ก = true
+        duration: "",       // ระยะเวลาที่คาดใช้
+        deployDate: ""      // เป้าหมาย deploy
+      },
+
+      // ตาราง action plan — 1 object ใน array = 1 แถวในตาราง
+      rows: [
+        { step: "", Date:"", start: "", Date:"", end: "", owner: "", note: "" }
+      ],
+        rows2: [
+        { step2: "", Date2:"",start2: "", Date2:"", end2: "", owner2: "", note2: "" }
+      ],
+
+      // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
+      // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
+      systems: []
+    };
+  },
+
+  // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
+  async mounted() {
+    // TODO(LAB 6.1): กันคนไม่ได้ login แอบเข้าหน้านี้ตรงๆ
+    //   ถ้า localStorage ไม่มี "user" -> เด้งกลับหน้า login (path "/") แล้ว return
+    // hint: if (!localStorage.getItem("user")) { this.$router.push("/"); return; }
+
+    // TODO(LAB 6.2): เติมชื่อผู้ร้องขอ/แผนกอัตโนมัติจากข้อมูลที่เก็บตอน login
+    // hint:
+    //   const user = JSON.parse(localStorage.getItem("user") || "{}");
+    //   this.form.requester = user.fullName || "";
+    //   this.form.department = user.department || "";
+
+    // TODO(LAB 6.3): โหลดตัวเลือก dropdown จาก API
+    //   this.systems = await apiFetch("/systems");
+    //   ครอบ try/catch — โหลดพลาดอย่าให้ทั้งหน้าพัง แค่ console.error พอ
+  },
+
+  methods: {
+    // ดึงปุ่มร่วม (ยกเลิก / บันทึกร่าง / PDF) มาจาก services/commonActions.js
+    ...commonMethods,
+
+    // ปุ่ม "+ เพิ่มขั้นตอนงาน" (@click="addRow")
+    addRow() {
+      this.rows.push({ step: "", start: "", end: "", owner: "", note: "" });
+    },
+
+    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow(index)")
+    deleteRow(index) {
+      if (this.rows.length > 1) {
+        this.rows.splice(index, 1);
+      } else {
+        alert("ต้องมีแผนดำเนินงานอย่างน้อย 1 ขั้นตอน");
+      }
+    },
+
+    addRow2() {
+      this.rows2.push({ step2: "", start2: "", Date2:"", end2: "", owner2: "", note2: "" });
+    },
+
+    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
+    deleteRow2(index) {
+      if (this.rows2.length > 1) {
+        this.rows2.splice(index, 1);
+      } else {
+        alert("ต้องมีแผนดำเนินงานอย่างน้อย 1 ขั้นตอน");
+      }
+    },
+
+    // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
+    //
+    // TODO(LAB 6.4): เติม async ข้างหน้า -> async handleSubmit()
+    handleSubmit() {
+      // TODO(LAB 6.5): เปลี่ยนจาก console.log เป็นยิง API จริง
+      //   ครอบ try/catch แล้วใน try:
+      //
+      //   const data = await apiFetch("/change-requests", {
+      //     method: "POST",
+      //     body: JSON.stringify({
+      //       crNumber: this.form.crId,        // ← ชื่อฝั่งซ้ายต้องตรงกับ
+      //       requestDate: this.form.requestDate,  //   ที่ backend รอรับ (LAB 4B)
+      //       department: this.form.department,
+      //       systemCode: this.form.system,
+      //       contact: this.form.contact,
+      //       priority: this.form.priority,
+      //       subject: this.form.subject,
+      //       problem: this.form.problem,
+      //       requestDetail: this.form.request,
+      //       impact: this.form.impact,
+      //       impactDetail: this.form.impactDetail,
+      //       downtime: this.form.downtime,
+      //       duration: this.form.duration,
+      //       deployDate: this.form.deployDate,
+      //       changeTypes: this.form.changeTypes,
+      //       plan: this.rows
+      //     })
+      //   });
+      //
+      //   สำเร็จ -> alert แล้วพาไปหน้าอนุมัติพร้อมแนบเลข CR:
+      //   this.$router.push("/approve?crId=" + data.crId);
+      //
+      //   catch -> alert("บันทึกไม่สำเร็จ: " + err.message);
+
+      // ⛔ ของเก่า (แค่พิมพ์ลง Console) — LAB 6 ให้แทนที่ทั้งก้อนนี้
+      console.log("CR data:", JSON.stringify({ ...this.form, plan: this.rows }, null, 2));
+      alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว! (โหมดปลอม — ยังไม่ลง database)");
+      this.$router.push("/approve");
+    }
+  }
+};
+</script>
+
+<template>
   <div class="container" id="app">
     <div class="header-section">
       <h1>CHANGE REQUEST FORM (CR)</h1>
@@ -31,7 +167,6 @@
 
         <div class="form-group">
           <label for="cr-id">เลขที่เอกสาร (CR ID):</label>
-          <!-- v-model = ผูกช่องกรอกเข้ากับตัวแปรใน data() ของ form.js -->
           <input type="text" id="cr-id" v-model="form.crId" placeholder="ระบุเลขที่เอกสาร เช่น CR6908001">
         </div>
 
@@ -73,7 +208,6 @@
       <div class="form-group" style="margin-top: 10px;">
         <label>ระดับความสำคัญ (Priority):</label>
         <div class="options-group">
-          <!-- radio ทุกอันผูกกับ form.priority ตัวเดียว เลือกได้ทีละอัน -->
           <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low
             (ไม่กระทบงานหลัก)</label>
           <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium
@@ -117,7 +251,6 @@
       <div class="form-group">
         <label>ประเภทการเปลี่ยน:</label>
         <div class="options-group">
-          <!-- checkbox หลายอันผูกกับ array เดียว ติ๊กอันไหนค่าเข้า array -->
           <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application /
             Software</label>
           <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database
@@ -134,7 +267,6 @@
             ไม่มีผลกระทบส่วนอื่น</label>
           <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น
             (ระบุ):</label>
-          <!-- ช่องนี้เปิดใช้เฉพาะตอนเลือก "กระทบระบบอื่น" -->
           <input type="text" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
             placeholder="ระบุระบบที่ได้รับผลกระทบ...">
           <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว
@@ -174,7 +306,6 @@
             </tr>
           </thead>
           <tbody>
-            <!-- v-for = วนสร้าง <tr> ตามจำนวนแถวใน rows (ดู form.js) -->
             <tr v-for="(row, index) in rows" :key="index">
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
@@ -190,19 +321,15 @@
           </tbody>
         </table>
 
-        <!-- @click = กดปุ่มแล้วเรียก method ใน form.js -->
         <button type="button" class="btn-add-row" @click="addRow">
           + เพิ่มขั้นตอนงาน
         </button>
       </div>
 
-
-
       <div class="section-title">
         <div>แผนการกู้คืน(Roll Back Plan)</div>
       </div>
 
-      <div class="table-wrapper"></div>
       <table class="action-table">
         <thead>
           <tr>
@@ -214,7 +341,6 @@
             <th style="width:100px;">เวลาสิ้นสุด</th>
             <th>หมายเหตุ</th>
             <th style="width:60px;">ลบ</th>
-          </tr>
           </tr>
         </thead>
         <tbody>
@@ -237,79 +363,20 @@
         + เพิ่มขั้นตอนงาน
       </button>
 
-        <div class="ui-action-buttons">
-    <button type="button" class="btn btn-cancel" @click="cancelForm">
-      <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
-    </button>
-
-    <button type="submit" class="btn btn-submit">
-      <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
-    </button>
-
-    <div class="container" id="app">
-    <div class="header-section">
-      <h1>CHANGE REQUEST FORM (CR)</h1>
-      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
-    </div>
-
-    <form @submit.prevent="handleSubmit">
-
-      <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
-      <div class="section-title">
-        <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
-        <span class="note">*เฉพาะสิทธิ์ Approver / PM</span>
-      </div>
-
-       <div class="form-group">
-          <label for="cr-department">ความเห็นของผู้ประเมิน:</label>
-          <input type="text" id="cr-department" v-model="form.department" placeholder="บันทึกข้อเสนอแนะเพิ่มเติม....">
-        </div>
-      <div class="form-group">
-        <label>ผลการพิจารณา:</label>
-        <div class="options-group">
-          <label class="option-item"><input type="radio" value="approved" v-model="form.result"> อนุมัติ (Approved)</label>
-          <label class="option-item"><input type="radio" value="rejected" v-model="form.result"> ไม่อนุมัติ (Rejected)</label>
-          <label class="option-item"><input type="radio" value="more-info" v-model="form.result"> ขอข้อมูลเพิ่ม (More Info)</label>
-        </div>
-      </div>
-
-      <div class="grid-2col" style="margin-top: 10px;">
-        <div class="form-group">
-          <label for="approver-name">ผู้อนุมัติ (Approver):</label>
-          <input type="text" id="approver-name" v-model="form.approver" placeholder="ชื่อผู้มีสิทธิ์อนุมัติ">
-        </div>
-        <div class="form-group">
-          <label for="approval-date">วันที่พิจารณา:</label>
-          <input type="date" id="approval-date" v-model="form.date">
-        </div>
-      </div>
-
       <div class="ui-action-buttons">
         <button type="button" class="btn btn-cancel" @click="cancelForm">
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 
-    
         <button type="submit" class="btn btn-submit">
-          <i class="fa-solid fa-paper-plane"></i> บันทึกผลอนุมัติ (Submit)
+          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
         </button>
       </div>
 
     </form>
   </div>
-  </div>
-  </div>
+</template>
 
-  
-  </form>
-  </div>
-
-  <!-- โหลด Vue จาก CDN ก่อน > common.js (ของใช้ร่วม) > โค้ดของหน้านี้ -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/form.js"></script>
-  
-</body>
-
-</html>
+<style>
+@import '../assets/css/form.css';
+</style>

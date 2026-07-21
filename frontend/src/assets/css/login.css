@@ -18,7 +18,7 @@ body {
 
 h1 {
   color: #00112c;
-  font-size: 32px;
+  font-size: 26px;
   margin-bottom: 24px;
   text-align: center;
 }
@@ -34,7 +34,7 @@ h1 {
   top: 50%;
   transform: translateY(-50%);
   color: #3a3a81;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .input-group input {
@@ -42,7 +42,7 @@ h1 {
   padding: 14px 14px 14px 45px;
   border: 1px solid #535375;
   border-radius: 50px;
-  font-size: 15px;
+  font-size: 14px;
   outline: none;
 }
 
@@ -58,7 +58,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 24px;
 }
 
@@ -76,7 +76,7 @@ h1 {
   border: none;
   padding: 14px;
   border-radius: 50px;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   font-weight: 500;
 }

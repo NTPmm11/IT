@@ -1,51 +1,14 @@
 <!DOCTYPE html>
-<html lang="th">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — Change Request System</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/login.css">
-</head>
-
-<body>
-
-  <!-- id="app" = พื้นที่ที่ Vue ควบคุม -->
-  <div class="card" id="app">
-    <h1>Login</h1>
-
-    <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก login() โดยไม่ reload หน้า -->
-    <form @submit.prevent="login">
-
-      <div class="input-group">
-        <i class="fa-regular fa-user"></i>
-        <!-- v-model = ผูกช่องกรอกเข้ากับตัวแปรใน data() -->
-        <input type="text" v-model="username" placeholder="Username" required>
-      </div>
-
-      <div class="input-group">
-        <i class="fa-solid fa-key"></i>
-        <input type="password" v-model="password" placeholder="Password" required>
-      </div>
-
-      <div class="flex-row">
-        <div class="remember-me">
-          <input type="checkbox" id="remember" v-model="remember">
-          <label for="remember">Remember Me</label>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-login">Sign in</button>
-
-    </form>
-  </div>
-
-  <!-- โหลด Vue จาก CDN ก่อน แล้วค่อยโหลดโค้ดของเรา -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/login.js"></script>
-</body>
-
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Change Request System</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>

@@ -1,11 +1,11 @@
 // ============================================
-// config.js — ค่ากลาง + ตัวช่วยเรียก API (ใช้ร่วมทุกหน้า)
+// api.js — ค่ากลาง + ตัวช่วยเรียก API (ใช้ร่วมทุกหน้า)
 // ============================================
 //
-// ทุกหน้าโหลดไฟล์นี้ "ก่อน" common.js และไฟล์ของหน้านั้น
+// เดิมคือ js/config.js — ทุกหน้าโหลดไฟล์นี้ก่อนใช้ apiFetch
 
 // ที่อยู่ backend — ถ้า deploy จริงค่อยเปลี่ยนเป็น domain จริง
-const API_BASE = "http://localhost:4000/api";
+export const API_BASE = "http://localhost:4000/api";
 
 // apiFetch = fetch ที่แถม 2 อย่างให้อัตโนมัติ:
 // 1. แนบ "ป้ายชื่อ" X-User-Id บอก server ว่าเราคือ user ไหน
@@ -14,7 +14,7 @@ const API_BASE = "http://localhost:4000/api";
 //
 // ⚠ วิธีป้ายชื่อแบบนี้ใช้หัดเขียนเท่านั้น — ใครก็ปลอม header ได้
 // งานจริงใช้ token/session ที่ปลอมไม่ได้
-async function apiFetch(path, options = {}) {
+export async function apiFetch(path, options = {}) {
   // JSON.parse ต้องการ string เสมอ — ถ้ายังไม่ login (ไม่มี "user")
   // getItem คืน null เลยให้ "null" (string) แทน -> parse ได้ null ออกมา
   const user = JSON.parse(localStorage.getItem("user") || "null");
