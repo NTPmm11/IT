@@ -163,11 +163,12 @@
         <table class="action-table">
           <thead>
             <tr>
-              <th style="width:60px;">ลำดับ</th>
+              <th style="width:40px;">ลำดับ</th>
               <th>ขั้นตอนงาน</th>
-              <th style="width:150px;">วัน/เดือน/ปี</th>
+              <th style="width:100px;">วัน/เดือน/ปี</th>
               <th style="width:100px;">เวลาเริ่ม</th>
-              <th style="width:100px;">วันที่สิ้นสุด</th>
+              <th style="width:100px;">วัน/เดือน/ปี</th>
+              <th style="width:100px;">สิ้นสุด</th>
               <th>หมายเหตุ</th>
               <th style="width:60px;">ลบ</th>
             </tr>
@@ -177,8 +178,9 @@
             <tr v-for="(row, index) in rows" :key="index">
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="row.start" required></td>
+              <td><input type="date" v-model="row.Date" required></td>
               <td><input type="time" v-model="row.start" required></td>
+              <td><input type="date" v-model="row.Date" required></td>
               <td><input type="time" v-model="row.end" required></td>
               <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
@@ -204,32 +206,34 @@
       <table class="action-table">
         <thead>
           <tr>
-            <th style="width:60px;">ลำดับ</th>
+            <th style="width:40px;">ลำดับ</th>
             <th>ขั้นตอนงาน</th>
-            <th style="width:150px;">วัน/เดือน/ปี</th>
+            <th style="width:0px;">วัน/เดือน/ปี</th>
             <th style="width:100px;">เวลาเริ่ม</th>
-            <th style="width:100px;">วันที่สิ้นสุด</th>
+            <th style="width:100px;">วัน/เดือน/ปี</th>
+            <th style="width:100px;">เวลาสิ้นสุด</th>
             <th>หมายเหตุ</th>
             <th style="width:60px;">ลบ</th>
           </tr>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in rows" :key="index">
+          <tr v-for="(row2, index) in rows2" :key="index">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row.step2 placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row.start2" required></td>
-            <td><input type="time" v-model="row.start2" required></td>
-            <td><input type="time" v-model="row.end2" required></td>
-            <td><input type="text" v-model="row.note2" placeholder="หมายเหตุ"></td>
+            <td><input type="text" v-model="row2.step2" placeholder="ระบุขั้นตอนงาน" required></td>
+            <td><input type="date" v-model="row2.Date2" required></td>
+            <td><input type="time" v-model="row2.start2" required></td>
+            <td><input type="date" v-model="row2.Date2" required></td>
+            <td><input type="time" v-model="row2.end2" required></td>
+            <td><input type="text" v-model="row2.note2" placeholder="หมายเหตุ"></td>
             <td class="text-center">
-              <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+              <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <button type="button" class="btn-add-row" @click="addRow3">
+      <button type="button" class="btn-add-row" @click="addRow2">
         + เพิ่มขั้นตอนงาน
       </button>
 
@@ -241,9 +245,62 @@
     <button type="submit" class="btn btn-submit">
       <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
     </button>
+
+    <div class="container" id="app">
+    <div class="header-section">
+      <h1>CHANGE REQUEST FORM (CR)</h1>
+      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+    </div>
+
+    <form @submit.prevent="handleSubmit">
+
+      <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
+      <div class="section-title">
+        <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
+        <span class="note">*เฉพาะสิทธิ์ Approver / PM</span>
+      </div>
+
+       <div class="form-group">
+          <label for="cr-department">ความเห็นของผู้ประเมิน:</label>
+          <input type="text" id="cr-department" v-model="form.department" placeholder="บันทึกข้อเสนอแนะเพิ่มเติม....">
+        </div>
+      <div class="form-group">
+        <label>ผลการพิจารณา:</label>
+        <div class="options-group">
+          <label class="option-item"><input type="radio" value="approved" v-model="form.result"> อนุมัติ (Approved)</label>
+          <label class="option-item"><input type="radio" value="rejected" v-model="form.result"> ไม่อนุมัติ (Rejected)</label>
+          <label class="option-item"><input type="radio" value="more-info" v-model="form.result"> ขอข้อมูลเพิ่ม (More Info)</label>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top: 10px;">
+        <div class="form-group">
+          <label for="approver-name">ผู้อนุมัติ (Approver):</label>
+          <input type="text" id="approver-name" v-model="form.approver" placeholder="ชื่อผู้มีสิทธิ์อนุมัติ">
+        </div>
+        <div class="form-group">
+          <label for="approval-date">วันที่พิจารณา:</label>
+          <input type="date" id="approval-date" v-model="form.date">
+        </div>
+      </div>
+
+      <div class="ui-action-buttons">
+        <button type="button" class="btn btn-cancel" @click="cancelForm">
+          <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
+        </button>
+
+    
+        <button type="submit" class="btn btn-submit">
+          <i class="fa-solid fa-paper-plane"></i> บันทึกผลอนุมัติ (Submit)
+        </button>
+      </div>
+
+    </form>
+  </div>
   </div>
   </div>
 
+  
   </form>
   </div>
 
