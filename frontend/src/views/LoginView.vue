@@ -1,3 +1,4 @@
+
 <script>
 // ============================================
 // LoginView.vue — เดิมคือ index.html + js/login.js
@@ -22,13 +23,10 @@ export default {
             return;
         }
 
-        // ชั่วคราว — ล็อค admin/1234 ไว้ก่อน รอ LAB 5 ต่อ backend จริง
-        if (this.username !== "admin" || this.password !== "1234") {
-            alert("Username หรือ Password ไม่ถูกต้อง");
-            return;
-        }
+        
 
-        this.$router.push("/form");
+        
+
     }
   }
 };

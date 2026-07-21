@@ -30,10 +30,15 @@ router.post("/login", async (req, res, next) => {
   try {
     // TODO(LAB 2.1): แกะ username กับ password ออกจาก req.body
     // hint: const { username, password } = req.body;
+    const{username,password} = req.body;
 
     // TODO(LAB 2.2): ถ้าขาดตัวใดตัวหนึ่ง ตอบ 400 พร้อมข้อความ error
     // hint: return res.status(400).json({ error: "..." });
     // (อย่าลืม return — ไม่งั้นโค้ดข้างล่างทำงานต่อ)
+
+    if (!username||!password){
+      return res.status(400).json({ error:"ต้องกรอก Username และPassword"})
+    }
 
     // TODO(LAB 2.3): ค้น user ในตาราง users
     //   - WHERE username ตรงกัน และ is_active = 1
