@@ -37,12 +37,14 @@ h1 {
   font-size: 16px;
 }
 
-.input-group input {
+/* .card prefix beats form.css's global input[type="text"] rule */
+.card .input-group input {
   width: 100%;
   padding: 14px 14px 14px 45px;
   border: 1px solid #535375;
   border-radius: 50px;
   font-size: 14px;
+  background: #fff;
   outline: none;
 }
 

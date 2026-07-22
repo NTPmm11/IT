@@ -18,8 +18,11 @@
 
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
+import ApprovalSection from "../components/ApprovalSection.vue";
 
 export default {
+  components: { ApprovalSection },
+
   data() {
     return {
 
@@ -53,7 +56,10 @@ export default {
 
       // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
       // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
-      systems: []
+      systems: [],
+
+      // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
+      submittedCrId: null
     };
   },
 
@@ -132,7 +138,12 @@ export default {
         });
 
         alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
-        this.$router.push("/approve?crId=" + data.crId);
+
+        // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์ม แล้วเลื่อนจอลงไปหา
+        this.submittedCrId = data.crId;
+        this.$nextTick(() => {
+          this.$refs.approvalSection?.$el.scrollIntoView({ behavior: "smooth" });
+        });
       } catch (err) {
         alert("บันทึกไม่สำเร็จ: " + err.message);
       }
@@ -364,6 +375,9 @@ export default {
       </div>
 
     </form>
+
+    <!-- ส่วนอนุมัติ — โผล่หลัง Submit CR สำเร็จ / requester เห็นแต่กดไม่ได้ -->
+    <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
   </div>
 </template>
 
