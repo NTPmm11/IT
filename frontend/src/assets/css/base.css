@@ -19,6 +19,19 @@ body {
   align-items: flex-start;
 }
 
+/* ===== Nav ===== */
+.back-link {
+  display: inline-block;
+  margin-bottom: 15px;
+  color: #00075a;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
 /* ===== Buttons ===== */
 .btn {
   padding: 10px 20px;
@@ -92,7 +105,8 @@ body {
 
   .ui-action-buttons,
   .btn-add-row,
-  .btn-delete-row {
+  .btn-delete-row,
+  .back-link {
     display: none;
   }
 

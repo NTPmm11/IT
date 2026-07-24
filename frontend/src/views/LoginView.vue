@@ -20,7 +20,7 @@
 // 3. login สำเร็จ -> backend ตอบข้อมูล user กลับมา -> เก็บไว้ใน localStorage
 //    (localStorage = ที่เก็บข้อมูลฝั่ง browser อยู่ได้แม้ปิดแท็บ)
 //    หน้าอื่นจะอ่านค่านี้ไปแนบ header X-User-Id ทุกครั้งที่เรียก API (ดู services/api.js)
-// 4. เด้งไปหน้าฟอร์ม (/form) ด้วย this.$router.push
+// 4. เด้งไปหน้าหลัก (/home) ด้วย this.$router.push
 //
 // ทำเสร็จแล้วเช็คยังไง:
 //   เข้าหน้า login กรอก username/password ที่มีจริงใน database
@@ -59,7 +59,7 @@ export default {
           localStorage.setItem("user", JSON.stringify(data.user));
 
           // เปลี่ยนหน้าแบบไม่ reload browser (Vue Router)
-          this.$router.push("/form");
+          this.$router.push("/home");
         } catch (err) {
           // apiFetch โยน Error พร้อมข้อความจาก backend มาให้แล้ว (เช่น "Username หรือ password ไม่ถูกต้อง")
           alert("เข้าสู่ระบบไม่สำเร็จ: " + err.message);

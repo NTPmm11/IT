@@ -35,7 +35,21 @@
       "Bash(node --check routes/cr.js)",
       "Bash(node --check routes/auth.js)",
       "Bash(node --check routes/systems.js)",
-      "Bash(node --check middleware/auth.js)"
+      "Bash(node --check middleware/auth.js)",
+      "Bash(git -C /Users/pung/Desktop/IT status --porcelain)",
+      "Bash(git -C /Users/pung/Desktop/IT ls-files \"frontend/src/assets/img/Downloads/*\")",
+      "Bash(git -C /Users/pung/Desktop/IT status --porcelain -- \"frontend/src/assets/img/Downloads\")",
+      "Bash(git -C /Users/pung/Desktop/IT check-ignore -v \"frontend/src/assets/img/Downloads/Azure Data Studio.app\")",
+      "Bash(git -C /Users/pung/Desktop/IT status --porcelain=v1 --untracked-files=all)",
+      "Bash(git -C /Users/pung/Desktop/IT check-ignore -v \"frontend/src/assets/img\")",
+      "Bash(git status *)",
+      "Bash(node -c src/routes/cr.js)",
+      "Bash(node -c src/services/mailer.js)",
+      "Bash(npx vite *)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); require\\('./src/routes/cr.js'\\); console.log\\('CR_ROUTE_OK'\\);\")",
+      "Bash(nc -zv -w 3 onemail.oneeclick.co 25)",
+      "Bash(dig +short onemail.oneeclick.co)",
+      "Bash(nslookup onemail.oneeclick.co)"
     ]
   }
 }

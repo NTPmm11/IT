@@ -13,6 +13,7 @@
 //
 // import ApprovalSection … = ดึง component นั้นเข้ามาใช้ในไฟล์นี้
 // components: { ApprovalSection } = "ลงทะเบียน" ให้ template ด้านล่างเรียกใช้แท็ก <ApprovalSection> ได้
+import { apiFetch } from "../services/api.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 
 export default {
@@ -20,12 +21,13 @@ export default {
 
   data() {
     return {
-      crId: null   // ยังไม่รู้เลข CR จนกว่า mounted() จะอ่านจาก URL มาใส่
+      crId: null,   // ยังไม่รู้เลข CR จนกว่า mounted() จะอ่านจาก URL มาใส่
+      cr: null      // รายละเอียด CR ใบนี้ (เลขที่, subject, ผู้ร้องขอ, ...) — ให้เห็นบริบทก่อนอนุมัติ
     };
   },
 
   // mounted() = โค้ดที่รันอัตโนมัติ 1 ครั้ง ทันทีที่หน้าเปิดเสร็จ (ไม่ต้องมีใครกดอะไร)
-  mounted() {
+  async mounted() {
     // ยังไม่เคย login (ไม่มี user เก็บใน localStorage) -> เด้งกลับหน้า login ทันที
     if (!localStorage.getItem("user")) {
       this.$router.push("/");
@@ -35,6 +37,15 @@ export default {
     // this.$route.query.crId = ค่าพารามิเตอร์ใน URL
     // เช่นเปิด /approve?crId=7 -> this.$route.query.crId ได้ "7" มา
     this.crId = this.$route.query.crId;
+
+    // ดึงรายละเอียด CR มาโชว์ — คนคลิกจากลิงก์ในเมลจะได้เห็นว่ากำลังอนุมัติใบไหน
+    if (this.crId) {
+      try {
+        this.cr = await apiFetch(`/change-requests/${this.crId}`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
   }
 };
 </script>
@@ -44,6 +55,14 @@ export default {
     <div class="header-section">
       <h1>CHANGE REQUEST FORM (CR)</h1>
       <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+    </div>
+
+    <RouterLink to="/home" class="back-link">← กลับหน้าหลัก</RouterLink>
+
+    <!-- สรุปว่ากำลังอนุมัติ CR ใบไหน — สำคัญมากเวลาเปิดหน้านี้ตรงจากลิงก์ในเมล -->
+    <div class="section-title" v-if="cr">
+      <div>{{ cr.cr_number }} — {{ cr.subject }}</div>
+      <span class="note">ผู้ร้องขอ: {{ cr.requester }} | ระบบ: {{ cr.system_name }} | ความสำคัญ: {{ cr.priority }}</span>
     </div>
 
     <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->

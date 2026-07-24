@@ -21,14 +21,36 @@
 const express = require("express");
 const dbPool = require("../db");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { sendMail } = require("../services/mailer");
 
 const router = express.Router();
+
+// ============================================
+// GET /api/change-requests/next-number — เลขที่เอกสารตัวถัดไป (preview ก่อน submit จริง)
+// ============================================
+// ต้องอยู่ก่อน "/:id" ไม่งั้น Express จะจับ "next-number" เป็นค่า :id ไปแทน
+// เป็นแค่ preview (MAX(cr_id)+1) — ถ้ามีคนอื่น submit แทรกก่อน เลขจริงตอน submit
+// อาจไม่ตรงกับที่ preview ไว้ (ยอมรับ trade-off นี้ เพื่อแลกกับไม่ต้อง insert แถวจริงล่วงหน้า)
+router.get("/next-number", requireAuth, async (req, res, next) => {
+  try {
+    const [[row]] = await dbPool.query(
+      "SELECT ISNULL(MAX(cr_id), 0) + 1 AS nextId FROM change_requests"
+    );
+    res.json({ crNumber: `CR${String(row.nextId).padStart(7, "0")}` });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ============================================
 // GET /api/change-requests — list ทั้งหมด
 // ★ เส้นนี้ทำให้ดูเป็นตัวอย่างเต็มๆ — อ่านให้เข้าใจก่อนทำเส้นอื่น
 // ============================================
 // สังเกต requireAuth คั่นกลาง = ต้องแนบ token มาถึงจะผ่านเข้ามาได้
+// query string รองรับ filter (ทั้งหมด optional, ใส่กี่ตัวพร้อมกันก็ได้):
+//   ?status=approved            ตรงตัว
+//   ?crNumber=CR6908           ค้นบางส่วน (LIKE)
+//   ?date=2026-07-24           ตรงกับ request_date
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     // JOIN = ดึงข้ามตาราง:
@@ -36,13 +58,33 @@ router.get("/", requireAuth, async (req, res, next) => {
     // อยากได้ "ชื่อ" ต้องไปเปิดตาราง users กับ systems ประกอบ
     // ON บอกว่าจับคู่แถวกันด้วยเงื่อนไขอะไร
     // AS = ตั้งชื่อเล่นให้ column ตอนตอบกลับ (u.full_name -> requester)
+    const { status, crNumber, date } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      conditions.push("cr.status = ?");
+      params.push(status);
+    }
+    if (crNumber) {
+      conditions.push("cr.cr_number LIKE ?");
+      params.push(`%${crNumber}%`);
+    }
+    if (date) {
+      conditions.push("cr.request_date = ?");
+      params.push(date);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
     const [crRows] = await dbPool.query(
       `SELECT cr.cr_id, cr.cr_number, cr.request_date, cr.subject, cr.priority,
               cr.status, u.full_name AS requester, s.system_name
        FROM change_requests cr
        JOIN users u   ON u.user_id = cr.requester_id
        JOIN systems s ON s.system_id = cr.system_id
-       ORDER BY cr.created_at DESC`   // เรียงใหม่สุดขึ้นก่อน
+       ${where}
+       ORDER BY cr.created_at DESC`,   // เรียงใหม่สุดขึ้นก่อน
+      params
     );
     res.json(crRows);
   } catch (err) {
@@ -116,9 +158,10 @@ router.get("/:id", requireAuth, async (req, res, next) => {
 // LAB 4B: POST /api/change-requests — บันทึก CR ใหม่ (โจทย์พีคสุด)
 // ============================================
 // body ที่ frontend/js/form.js จะส่งมา:
-// { crNumber, requestDate, department, systemCode, contact, priority,
+// { requestDate, department, systemCode, contact, priority,
 //   subject, problem, requestDetail, impact, impactDetail, downtime,
 //   duration, deployDate, changeTypes: [], plan: [], status }
+// (ไม่ต้องส่ง crNumber มาแล้ว — backend สร้างให้เองจาก cr_id ที่เพิ่ง insert ได้)
 //
 // ★ concept ใหม่: transaction
 // งานนี้ต้อง INSERT 3 ตาราง (CR + ประเภท + แผนงาน)
@@ -138,8 +181,9 @@ router.post("/", requireAuth, async (req, res, next) => {
     const body = req.body;   // เก็บไว้ตัวแปรสั้นๆ เพราะต้องอ้างถึงหลายรอบด้านล่าง
 
     // เช็คฟิลด์ที่ "ต้องมี" ก่อนแตะ database เลย ประหยัด query ที่ไม่จำเป็น
-    if (!body.crNumber || !body.subject || !body.systemCode) {
-      return res.status(400).json({ error: "ต้องมี crNumber, subject, systemCode" });
+    // cr_number ไม่ต้องรับจาก frontend แล้ว — backend สร้างให้เองจาก cr_id หลัง insert (ดูล่าง)
+    if (!body.subject || !body.systemCode) {
+      return res.status(400).json({ error: "ต้องมี subject, systemCode" });
     }
 
     // frontend ส่ง systemCode (ข้อความ เช่น "HR01") มา แต่ตาราง change_requests
@@ -155,6 +199,11 @@ router.post("/", requireAuth, async (req, res, next) => {
 
     await dbConnection.beginTransaction();
 
+    // cr_number เป็น NOT NULL UNIQUE ตั้งแต่ insert แถวแรก แต่เลข cr_id (IDENTITY) จะรู้ค่าจริง
+    // ก็ต่อเมื่อ insert ไปแล้วเท่านั้น — เลยใส่ค่ากันชนคาดคะเนไปก่อน (unique ชั่วคราว)
+    // แล้วค่อย UPDATE ทับด้วยเลขที่จริง "CRxxxxxxx" อีกที
+    const tempCrNumber = `TEMP-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     // INSERT ตารางหลัก — จำนวน "?" ต้องตรงกับจำนวนคอลัมน์และเรียงลำดับเดียวกับ array ด้านล่างเป๊ะๆ
     const [result] = await dbConnection.query(
       `INSERT INTO change_requests
@@ -163,7 +212,7 @@ router.post("/", requireAuth, async (req, res, next) => {
          downtime, duration, deploy_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        body.crNumber,
+        tempCrNumber,
         body.requestDate,
         req.user.userId,       // ไม่เชื่อ requesterId ที่ frontend ส่งมา — ใช้ user ที่ login จริงจาก requireAuth เท่านั้น
         body.department || null,  // "||" = ถ้าค่าซ้าย falsy (undefined/"") ใช้ค่าขวาแทน (คอลัมน์นี้ยอมเป็น NULL ได้)
@@ -182,6 +231,13 @@ router.post("/", requireAuth, async (req, res, next) => {
       ]
     );
     const crId = result.insertId;   // เลขที่ IDENTITY เพิ่งแจก (auto-increment primary key ของแถวที่เพิ่ง insert)
+
+    // มีเลข cr_id จริงแล้ว -> สร้างเลขที่เอกสารรูปแบบ CR0000001 (CR + เลข 7 หลัก) แล้วอัปเดตทับ temp
+    const crNumber = `CR${String(crId).padStart(7, "0")}`;
+    await dbConnection.query(
+      "UPDATE change_requests SET cr_number = ? WHERE cr_id = ?",
+      [crNumber, crId]
+    );
 
     // checkbox "ประเภทการเปลี่ยน" ผู้ใช้ติ๊กได้หลายอัน -> insert วนทีละแถว (1 ประเภท = 1 แถว)
     // "|| []" กันกรณี frontend ไม่ส่ง changeTypes มาเลย (undefined) ไม่งั้น for...of พังทันที
@@ -204,12 +260,28 @@ router.post("/", requireAuth, async (req, res, next) => {
     }
 
     await dbConnection.commit();   // ทุก INSERT ด้านบนสำเร็จหมด -> บันทึกจริงลง database พร้อมกันทีเดียว
-    res.status(201).json({ crId, crNumber: body.crNumber });   // 201 Created = สร้างข้อมูลใหม่สำเร็จ
+
+    // ส่ง e-mail แจ้งผู้อนุมัติ — เฉพาะตอน submit จริง (draft ยังไม่ต้องแจ้งใคร)
+    // ไม่ await ให้ล้มทั้ง request ถ้าส่งอีเมลพลาด — sendMail จัดการ catch ข้างในเองแล้ว (ดู services/mailer.js)
+    if (body.status !== "draft") {
+      const [approvers] = await dbPool.query(
+        "SELECT email FROM users WHERE role IN ('approver','it_admin') AND is_active = 1"
+      );
+      const approveLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/approve?crId=${crId}`;
+      sendMail({
+        to: approvers.map(a => a.email),
+        subject: `[CR] มีคำขอใหม่รอพิจารณา: ${crNumber}`,
+        html: `<p>มีคำขอ Change Request ใหม่ "<b>${body.subject}</b>" (เลขที่ ${crNumber}) รอการพิจารณา</p>
+               <p><a href="${approveLink}">คลิกเพื่อพิจารณา</a></p>`
+      });
+    }
+
+    res.status(201).json({ crId, crNumber });   // 201 Created = สร้างข้อมูลใหม่สำเร็จ
   } catch (err) {
     await dbConnection.rollback();   // ยกเลิกทุก INSERT ใน transaction (คืนสภาพเหมือนไม่เคยมีอะไรเกิดขึ้น)
     if (err.code === "ER_DUP_ENTRY") {
-      // cr_number ตั้ง UNIQUE ไว้ใน schema — ใส่เลขซ้ำของเดิม database จะโยน error โค้ดนี้มา
-      return res.status(409).json({ error: "CR number already exists" });   // 409 Conflict
+      // ชนกับ temp cr_number ของ request อื่นที่วิ่งพร้อมกันพอดี (โอกาสน้อยมาก) — ลองใหม่อีกทีได้เลย
+      return res.status(409).json({ error: "สร้างเลขที่เอกสารชนกัน ลอง submit อีกครั้ง" });   // 409 Conflict
     }
     next(err);
   } finally {
@@ -241,8 +313,12 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       }
 
       // เช็คก่อนว่า CR เลขนี้มีอยู่จริงไหม ก่อนจะเริ่ม transaction
+      // (ดึง cr_number/subject/email ผู้ร้องขอมาด้วยเลย เอาไว้ส่ง e-mail แจ้งผลหลัง commit)
       const [crRows] = await dbConnection.query(
-        "SELECT cr_id FROM change_requests WHERE cr_id = ?",
+        `SELECT cr.cr_id, cr.cr_number, cr.subject, u.email AS requesterEmail
+         FROM change_requests cr
+         JOIN users u ON u.user_id = cr.requester_id
+         WHERE cr.cr_id = ?`,
         [crId]
       );
       if (!crRows[0]) {
@@ -267,6 +343,17 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       );
 
       await dbConnection.commit();   // ทั้ง INSERT และ UPDATE สำเร็จพร้อมกัน — ถ้าอันใดพัง อีกอันจะไม่ถูกบันทึกด้วย (ดู catch ด้านล่าง)
+
+      // ส่ง e-mail แจ้งผลกลับไปยังผู้ร้องขอ (ไม่ await ให้บล็อก response — sendMail catch เองแล้ว)
+      const resultText = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", "more-info": "ขอข้อมูลเพิ่มเติม" }[result];
+      const cr = crRows[0];
+      sendMail({
+        to: cr.requesterEmail,
+        subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
+        html: `<p>คำขอ "<b>${cr.subject}</b>" (เลขที่ ${cr.cr_number}) ได้รับการพิจารณาแล้ว: <b>${resultText}</b></p>` +
+              (comment ? `<p>ความเห็น: ${comment}</p>` : "")
+      });
+
       res.status(201).json({ ok: true });
     } catch (err) {
       await dbConnection.rollback();

@@ -31,7 +31,7 @@ GO
 
 -- N'...' = string เป็น Unicode (จำเป็นสำหรับภาษาไทยใน NVARCHAR)
 INSERT INTO users (username, password_hash, full_name, email, department, role) VALUES
-  (N'admin',     N'$2y$10$REPLACE_WITH_REAL_HASH', N'ผู้ดูแลระบบ',    N'admin@company.com',    N'IT',        N'it_admin'),
+  (N'admin',     N'$2y$10$REPLACE_WITH_REAL_HASH', N'ผู้ดูแลระบบ',    N'pungzaza44@gmail.com', N'IT',        N'it_admin'),
   (N'somchai',   N'$2y$10$REPLACE_WITH_REAL_HASH', N'สมชาย ใจดี',     N'somchai@company.com',  N'Marketing', N'requester'),
   (N'approver1', N'$2y$10$REPLACE_WITH_REAL_HASH', N'หัวหน้าฝ่าย IT', N'approver@company.com', N'IT',        N'approver');
 GO

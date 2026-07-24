@@ -28,7 +28,6 @@ export default {
 
       // ข้อมูลฟอร์มหลัก — 1 ตัวแปรต่อ 1 ช่องกรอก (ผูกด้วย v-model)
       form: {
-        crId: "",           // เลขที่เอกสาร
         requestDate: "",    // วันที่ร้องขอ
         requester: "",      // ชื่อผู้ร้องขอ
         department: "",     // แผนก/ฝ่าย
@@ -59,7 +58,9 @@ export default {
       systems: [],
 
       // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
-      submittedCrId: null
+      submittedCrId: null,
+      submittedCrNumber: "",   // เลขที่เอกสารจริง (backend generate ตอน submit จริง — authoritative)
+      previewCrNumber: ""      // เลขที่ preview ตั้งแต่เปิดหน้า (อาจไม่ตรงเป๊ะถ้ามีคนอื่น submit แทรกก่อน)
     };
   },
 
@@ -77,10 +78,21 @@ export default {
     this.form.requester = user.fullName || "";
     this.form.department = user.department || "";
 
+    // วันที่ร้องขอ default เป็นวันนี้ — <input type="date"> ต้องการรูปแบบ YYYY-MM-DD
+    this.form.requestDate = new Date().toLocaleDateString("sv-SE");
+
     // ★ LAB 6: โหลดรายชื่อระบบจาก GET /api/systems (LAB 1) มาใส่ dropdown
     // this.systems เปลี่ยนค่า -> Vue วาด <option v-for="s in systems"> ใหม่ให้เองอัตโนมัติ
     try {
       this.systems = await apiFetch("/systems");
+    } catch (err) {
+      console.error(err);
+    }
+
+    // preview เลขที่เอกสารให้เห็นตั้งแต่เปิดหน้า (ไม่ต้องรอ submit เสร็จ)
+    try {
+      const next = await apiFetch("/change-requests/next-number");
+      this.previewCrNumber = next.crNumber;
     } catch (err) {
       console.error(err);
     }
@@ -121,12 +133,12 @@ export default {
     // ★ LAB 6: ยิง POST /api/change-requests (LAB 4B ฝั่ง backend) พร้อมข้อมูลทั้งฟอร์ม
     async handleSubmit() {
       try {
-        // key ฝั่งซ้าย (เช่น crNumber) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
-        // key ฝั่งขวา (เช่น this.form.crId) คือชื่อตัวแปรในหน้านี้ — ชื่อไม่ต้องตรงกันก็ได้
+        // key ฝั่งซ้าย (เช่น requestDate) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
+        // key ฝั่งขวา (เช่น this.form.requestDate) คือชื่อตัวแปรในหน้านี้ — ชื่อไม่ต้องตรงกันก็ได้
+        // ไม่ต้องส่ง crNumber แล้ว — backend สร้างให้เองจาก cr_id หลัง insert
         const data = await apiFetch("/change-requests", {
           method: "POST",
           body: JSON.stringify({
-            crNumber: this.form.crId,
             requestDate: this.form.requestDate,
             department: this.form.department,
             systemCode: this.form.system,
@@ -145,10 +157,11 @@ export default {
           })
         });
 
-        alert("ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!");
+        alert(`ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!\nเลขที่เอกสาร: ${data.crNumber}`);
 
         // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์ม แล้วเลื่อนจอลงไปหา
         this.submittedCrId = data.crId;
+        this.submittedCrNumber = data.crNumber;
         this.$nextTick(() => {
           this.$refs.approvalSection?.$el.scrollIntoView({ behavior: "smooth" });
         });
@@ -167,6 +180,8 @@ export default {
       <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
     </div>
 
+    <RouterLink to="/home" class="back-link">← กลับหน้าหลัก</RouterLink>
+
     <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก handleSubmit() โดยไม่ reload หน้า -->
     <form @submit.prevent="handleSubmit">
 
@@ -178,8 +193,8 @@ export default {
       <div class="grid-2col">
 
         <div class="form-group">
-          <label for="cr-id">เลขที่เอกสาร (CR ID):</label>
-          <input type="text" id="cr-id" v-model="form.crId" placeholder="ระบุเลขที่เอกสาร เช่น CR6908001">
+          <label>เลขที่เอกสาร (CR ID):</label>
+          <input type="text" :value="submittedCrNumber || previewCrNumber || 'กำลังโหลด...'" disabled>
         </div>
 
         <div class="form-group">
