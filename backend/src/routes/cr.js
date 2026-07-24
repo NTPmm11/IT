@@ -19,7 +19,7 @@
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/cr.js
 
 const express = require("express");
-const pool = require("../db");
+const dbPool = require("../db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
@@ -36,7 +36,7 @@ router.get("/", requireAuth, async (req, res, next) => {
     // อยากได้ "ชื่อ" ต้องไปเปิดตาราง users กับ systems ประกอบ
     // ON บอกว่าจับคู่แถวกันด้วยเงื่อนไขอะไร
     // AS = ตั้งชื่อเล่นให้ column ตอนตอบกลับ (u.full_name -> requester)
-    const [rows] = await pool.query(
+    const [crRows] = await dbPool.query(
       `SELECT cr.cr_id, cr.cr_number, cr.request_date, cr.subject, cr.priority,
               cr.status, u.full_name AS requester, s.system_name
        FROM change_requests cr
@@ -44,7 +44,7 @@ router.get("/", requireAuth, async (req, res, next) => {
        JOIN systems s ON s.system_id = cr.system_id
        ORDER BY cr.created_at DESC`   // เรียงใหม่สุดขึ้นก่อน
     );
-    res.json(rows);
+    res.json(crRows);
   } catch (err) {
     next(err);
   }
@@ -57,9 +57,14 @@ router.get("/", requireAuth, async (req, res, next) => {
 // ค่า 7 จะโผล่ใน req.params.id
 router.get("/:id", requireAuth, async (req, res, next) => {
   try {
+    // req.params.id = ค่าจาก :id ใน URL (มาจากชื่อตัวแปรใน path "/:id" ด้านบน)
     const crId = req.params.id;
 
-    const [[cr]] = await pool.query(
+    // [[cr]] คือ destructure ซ้อน 2 ชั้น:
+    //   dbPool.query คืนแถวผลลัพธ์เป็น array ก้อนแรก (เหมือน crRows/userRows/systemRows ที่อื่นในไฟล์นี้)
+    //   ชั้นสองดึงแถวแรกออกจาก array นั้นมาตั้งชื่อว่า cr ตรงๆ เลย (เจอ 1 CR ก็พอ ไม่ต้องมีทั้ง array)
+    // เท่ากับเขียนยาวว่า: const [crRows] = await dbPool.query(...); const cr = crRows[0];
+    const [[cr]] = await dbPool.query(
       `SELECT cr.cr_id, cr.cr_number, cr.request_date, cr.department, cr.contact,
               cr.priority, cr.subject, cr.problem, cr.request_detail,
               cr.impact, cr.impact_detail, cr.downtime, cr.duration, cr.deploy_date,
@@ -76,15 +81,17 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: "CR not found" });
     }
 
-    const [types] = await pool.query(
+    // CR หนึ่งใบมีได้หลายประเภทการเปลี่ยน (checkbox) และหลายขั้นตอนแผนงาน (ตาราง)
+    // เก็บแยกคนละตาราง (1 CR ต่อหลายแถว) เลยต้อง query แยกจากตัวหลัก แล้วค่อยประกอบกลับ
+    const [types] = await dbPool.query(
       "SELECT change_type FROM cr_change_types WHERE cr_id = ?",
       [crId]
     );
-    const [plans] = await pool.query(
+    const [plans] = await dbPool.query(
       "SELECT step, start_date, end_date, owner, note FROM cr_action_plans WHERE cr_id = ? ORDER BY seq_no",
       [crId]
     );
-    const [approvals] = await pool.query(
+    const [approvals] = await dbPool.query(
       `SELECT a.result, a.comment, a.approval_date, u.full_name AS approver
        FROM cr_approvals a
        JOIN users u ON u.user_id = a.approver_id
@@ -93,7 +100,9 @@ router.get("/:id", requireAuth, async (req, res, next) => {
     );
 
     res.json({
-      ...cr,
+      ...cr,   // "spread" เอาทุก field ของ cr มากางใส่ object ใหม่นี้เลย (cr_id, subject, status, ...)
+      // types เป็น array ของ object เช่น [{change_type:"App"}, {change_type:"DB"}]
+      // .map ดึงเอาแค่ค่า change_type ออกมาเหลือ array string ธรรมดา ["App","DB"]
       changeTypes: types.map(t => t.change_type),
       plan: plans,
       approvals
@@ -115,87 +124,98 @@ router.get("/:id", requireAuth, async (req, res, next) => {
 // งานนี้ต้อง INSERT 3 ตาราง (CR + ประเภท + แผนงาน)
 // ถ้าตารางแรกสำเร็จแล้วตารางถัดไปพัง = ข้อมูลค้างครึ่งๆ กลางๆ
 // transaction = "ทำทั้งหมด หรือไม่ทำเลยสักอย่าง":
-//   conn.beginTransaction()  เริ่มจดแบบร่าง
-//   conn.commit()            พอใจแล้ว บันทึกจริงทั้งหมด
-//   conn.rollback()          พังกลางทาง ยกเลิกแบบร่างทั้งหมด
+//   dbConnection.beginTransaction()  เริ่มจดแบบร่าง
+//   dbConnection.commit()            พอใจแล้ว บันทึกจริงทั้งหมด
+//   dbConnection.rollback()          พังกลางทาง ยกเลิกแบบร่างทั้งหมด
 // transaction ต้องอยู่บน connection เส้นเดียวกันตลอด
-// เลยต้องจองจากสระ: const conn = await pool.getConnection()
-// (แล้วใช้ conn.query แทน pool.query ทุกที่ในเส้นนี้)
+// เลยต้องจองจากสระ: const dbConnection = await dbPool.getConnection()
+// (แล้วใช้ dbConnection.query แทน dbPool.query ทุกที่ในเส้นนี้)
 router.post("/", requireAuth, async (req, res, next) => {
-  const conn = await pool.getConnection();
+  // จองตัวคุยกับ database มา "1 เส้น" ตายตัวสำหรับ request นี้
+  // (ต่างจาก dbPool.query ที่ปกติสุ่มยืมเส้นว่างจากสระ — transaction ต้องใช้เส้นเดียวกันตลอด)
+  const dbConnection = await dbPool.getConnection();
   try {
-    const b = req.body;
+    const body = req.body;   // เก็บไว้ตัวแปรสั้นๆ เพราะต้องอ้างถึงหลายรอบด้านล่าง
 
-    if (!b.crNumber || !b.subject || !b.systemCode) {
+    // เช็คฟิลด์ที่ "ต้องมี" ก่อนแตะ database เลย ประหยัด query ที่ไม่จำเป็น
+    if (!body.crNumber || !body.subject || !body.systemCode) {
       return res.status(400).json({ error: "ต้องมี crNumber, subject, systemCode" });
     }
 
-    const [systemRows] = await conn.query(
+    // frontend ส่ง systemCode (ข้อความ เช่น "HR01") มา แต่ตาราง change_requests
+    // ต้องการ system_id (เลข FK) เลยต้อง query แปลงค่าก่อน 1 รอบ
+    const [systemRows] = await dbConnection.query(
       "SELECT system_id FROM systems WHERE system_code = ?",
-      [b.systemCode]
+      [body.systemCode]
     );
     if (!systemRows[0]) {
       return res.status(400).json({ error: "Unknown systemCode" });
     }
     const systemId = systemRows[0].system_id;
 
-    await conn.beginTransaction();
+    await dbConnection.beginTransaction();
 
-    const [result] = await conn.query(
+    // INSERT ตารางหลัก — จำนวน "?" ต้องตรงกับจำนวนคอลัมน์และเรียงลำดับเดียวกับ array ด้านล่างเป๊ะๆ
+    const [result] = await dbConnection.query(
       `INSERT INTO change_requests
         (cr_number, request_date, requester_id, department, system_id, contact,
          priority, subject, problem, request_detail, impact, impact_detail,
          downtime, duration, deploy_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        b.crNumber,
-        b.requestDate,
-        req.user.userId,
-        b.department || null,
+        body.crNumber,
+        body.requestDate,
+        req.user.userId,       // ไม่เชื่อ requesterId ที่ frontend ส่งมา — ใช้ user ที่ login จริงจาก requireAuth เท่านั้น
+        body.department || null,  // "||" = ถ้าค่าซ้าย falsy (undefined/"") ใช้ค่าขวาแทน (คอลัมน์นี้ยอมเป็น NULL ได้)
         systemId,
-        b.contact || null,
-        b.priority || "Low",
-        b.subject,
-        b.problem || null,
-        b.requestDetail || null,
-        b.impact || "none",
-        b.impactDetail || null,
-        b.downtime ? 1 : 0,
-        b.duration || null,
-        b.deployDate || null,
-        b.status === "draft" ? "draft" : "submitted"
+        body.contact || null,
+        body.priority || "Low",
+        body.subject,
+        body.problem || null,
+        body.requestDetail || null,
+        body.impact || "none",
+        body.impactDetail || null,
+        body.downtime ? 1 : 0,    // BIT ใน SQL Server เก็บ 0/1 — แปลง true/false ของ JS ให้ตรงชนิด
+        body.duration || null,
+        body.deployDate || null,
+        body.status === "draft" ? "draft" : "submitted"   // ค่าอื่นนอกจาก "draft" ถือเป็น submit ทันที
       ]
     );
-    const crId = result.insertId;   // เลขที่ IDENTITY เพิ่งแจก
+    const crId = result.insertId;   // เลขที่ IDENTITY เพิ่งแจก (auto-increment primary key ของแถวที่เพิ่ง insert)
 
-    for (const type of b.changeTypes || []) {
-      await conn.query(
+    // checkbox "ประเภทการเปลี่ยน" ผู้ใช้ติ๊กได้หลายอัน -> insert วนทีละแถว (1 ประเภท = 1 แถว)
+    // "|| []" กันกรณี frontend ไม่ส่ง changeTypes มาเลย (undefined) ไม่งั้น for...of พังทันที
+    for (const type of body.changeTypes || []) {
+      await dbConnection.query(
         "INSERT INTO cr_change_types (cr_id, change_type) VALUES (?, ?)",
         [crId, type]
       );
     }
 
+    // ตารางแผนงานก็เหมือนกัน วนทีละแถวจาก body.plan (array ที่ frontend ส่งมาจากตาราง Action Plan)
+    // seq++ = เอาค่าปัจจุบันไปใช้ก่อน แล้วค่อยบวก 1 (แถวแรก seq_no=1, แถวถัดไป 2, 3, ...)
     let seq = 1;
-    for (const row of b.plan || []) {
-      await conn.query(
+    for (const row of body.plan || []) {
+      await dbConnection.query(
         `INSERT INTO cr_action_plans (cr_id, seq_no, step, start_date, end_date, owner, note)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [crId, seq++, row.step, row.start, row.end, row.owner || null, row.note || null]
       );
     }
 
-    await conn.commit();
-    res.status(201).json({ crId, crNumber: b.crNumber });
+    await dbConnection.commit();   // ทุก INSERT ด้านบนสำเร็จหมด -> บันทึกจริงลง database พร้อมกันทีเดียว
+    res.status(201).json({ crId, crNumber: body.crNumber });   // 201 Created = สร้างข้อมูลใหม่สำเร็จ
   } catch (err) {
-    await conn.rollback();   // ยกเลิกทุก INSERT ใน transaction
+    await dbConnection.rollback();   // ยกเลิกทุก INSERT ใน transaction (คืนสภาพเหมือนไม่เคยมีอะไรเกิดขึ้น)
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ error: "CR number already exists" });
+      // cr_number ตั้ง UNIQUE ไว้ใน schema — ใส่เลขซ้ำของเดิม database จะโยน error โค้ดนี้มา
+      return res.status(409).json({ error: "CR number already exists" });   // 409 Conflict
     }
     next(err);
   } finally {
     // finally = ทำเสมอไม่ว่าสำเร็จหรือพัง
     // คืน connection กลับสระ — ลืมคืนบ่อยเข้าสระแห้ง ทั้งระบบค้าง
-    conn.release();
+    dbConnection.release();
   }
 });
 
@@ -209,16 +229,19 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
   async (req, res, next) => {
     // เส้นนี้แตะ 2 ตาราง (เพิ่มผลพิจารณา + อัปเดตสถานะใบ CR)
     // เลยใช้ transaction เหมือน LAB 4B
-    const conn = await pool.getConnection();
+    const dbConnection = await dbPool.getConnection();
     try {
       const crId = req.params.id;
+      // req.body ของเส้นนี้: { result, comment, approvalDate }
       const { result, comment, approvalDate } = req.body;
 
+      // whitelist ค่าที่ยอมรับ — กันคนส่ง result มั่วๆ เข้ามาปนใน database
       if (!["approved", "rejected", "more-info"].includes(result)) {
         return res.status(400).json({ error: "result ต้องเป็น approved/rejected/more-info" });
       }
 
-      const [crRows] = await conn.query(
+      // เช็คก่อนว่า CR เลขนี้มีอยู่จริงไหม ก่อนจะเริ่ม transaction
+      const [crRows] = await dbConnection.query(
         "SELECT cr_id FROM change_requests WHERE cr_id = ?",
         [crId]
       );
@@ -226,9 +249,10 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
         return res.status(404).json({ error: "CR not found" });
       }
 
-      await conn.beginTransaction();
+      await dbConnection.beginTransaction();
 
-      await conn.query(
+      // แถวที่ 1: บันทึกผลพิจารณาลงตาราง cr_approvals (ใครอนุมัติ ผลอะไร คอมเมนต์อะไร)
+      await dbConnection.query(
         `INSERT INTO cr_approvals (cr_id, approver_id, result, comment, approval_date)
          VALUES (?, ?, ?, ?, ?)`,
         [crId, req.user.userId, result, comment || null, approvalDate]
@@ -236,18 +260,19 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
 
       // enum ใน schema ใช้ขีดล่าง แต่หน้าเว็บส่งขีดกลางมา (more-info -> more_info)
       const statusValue = result === "more-info" ? "more_info" : result;
-      await conn.query(
+      // แถวที่ 2: อัปเดตสถานะปัจจุบันของใบ CR เอง ให้ตรงกับผลล่าสุด
+      await dbConnection.query(
         "UPDATE change_requests SET status = ?, updated_at = GETDATE() WHERE cr_id = ?",
         [statusValue, crId]
       );
 
-      await conn.commit();
+      await dbConnection.commit();   // ทั้ง INSERT และ UPDATE สำเร็จพร้อมกัน — ถ้าอันใดพัง อีกอันจะไม่ถูกบันทึกด้วย (ดู catch ด้านล่าง)
       res.status(201).json({ ok: true });
     } catch (err) {
-      await conn.rollback();
+      await dbConnection.rollback();
       next(err);
     } finally {
-      conn.release();
+      dbConnection.release();
     }
   });
 

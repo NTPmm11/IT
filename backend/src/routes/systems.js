@@ -16,7 +16,7 @@
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/systems.js
 
 const express = require("express");
-const pool = require("../db");   // ตัวคุยกับ SQL Server — ใช้ผ่าน pool.query(...)
+const dbPool = require("../db");   // ตัวคุยกับ SQL Server — ใช้ผ่าน dbPool.query(...)
 
 const router = express.Router();
 
@@ -24,11 +24,15 @@ const router = express.Router();
 // (index.js เสียบไฟล์นี้ไว้ใต้ /api/systems)
 router.get("/", async (req, res, next) => {
   try {
-    const [rows] = await pool.query(
+    // ไม่มีเงื่อนไขจาก user เลยไม่ต้องมี "?" placeholder เหมือนไฟล์อื่น
+    // is_active = 1 = กรองเอาเฉพาะระบบที่ยังเปิดใช้งาน (ไม่โชว์ระบบที่ปิดไปแล้ว)
+    // dbPool.query คืน [systemRows, fields] — สนใจแค่ systemRows เลยดึงตัวแรกออกมาด้วย [systemRows]
+    const [systemRows] = await dbPool.query(
       "SELECT system_code, system_name FROM systems WHERE is_active = 1 ORDER BY system_name"
     );
 
-    res.json(rows);
+    // res.json(systemRows) = ส่ง systemRows กลับเป็น JSON array ตรงๆ ให้ frontend เอาไปวาด dropdown
+    res.json(systemRows);
   } catch (err) {
     // database พัง -> ส่งต่อให้ error handler กลางใน index.js
     next(err);

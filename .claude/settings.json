@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5174/src/views/LoginView.vue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5174/form)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5174/approve)",
+      "Bash(node --check src/db.js)",
+      "Bash(node --check src/index.js)",
+      "Bash(node --check src/routes/systems.js)",
+      "Bash(node --check src/routes/auth.js)",
+      "Bash(node --check src/routes/cr.js)",
+      "Bash(timeout 5 node -e ' *)",
+      "Bash(node -e ' *)",
+      "Bash(grep -i \"\\\\.env$\")",
+      "Bash(curl -s http://localhost:4000/api/health)",
+      "Bash(curl -s http://localhost:4000/api/systems)",
+      "Bash(lsof -nP -iTCP:4000 -sTCP:LISTEN)",
+      "Bash(kill 64860)",
+      "Bash(node --check src/middleware/auth.js)",
+      "Bash(nc -zv -w 3 10.31.1.106 1433)",
+      "Bash(node scripts/hash-password.js 1234)",
+      "Bash(curl -s -X POST http://localhost:4000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"1234\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"ผิด\"}')",
+      "Bash(node --check /Users/pung/Desktop/IT/backend/src/routes/auth.js)",
+      "Bash(node --check /Users/pung/Desktop/IT/backend/src/middleware/auth.js)",
+      "Bash(node --check /Users/pung/Desktop/IT/backend/src/routes/cr.js)",
+      "Bash(git branch *)",
+      "Bash(perl -pi -e 's/\\\\bpool\\\\b/dbPool/g' middleware/auth.js routes/auth.js routes/systems.js routes/cr.js)",
+      "Bash(perl -pi -e 's/\\\\bconn\\\\b/dbConnection/g' routes/cr.js)",
+      "Bash(perl -pi -e 's/\\\\brows\\\\b/userRows/g' middleware/auth.js routes/auth.js)",
+      "Bash(perl -pi -e 's/\\\\brows\\\\b/systemRows/g' routes/systems.js)",
+      "Bash(perl -pi -e 's/\\\\bb\\\\b/body/g' routes/cr.js)",
+      "Bash(node --check routes/cr.js)",
+      "Bash(node --check routes/auth.js)",
+      "Bash(node --check routes/systems.js)",
+      "Bash(node --check middleware/auth.js)"
+    ]
+  }
+}

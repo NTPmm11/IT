@@ -63,17 +63,22 @@ export default {
     };
   },
 
-  // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ
+  // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ (ไม่ต้องมีใครกดอะไร)
+  // async เพราะข้างในต้องรอ apiFetch คุยกับ backend ก่อน
   async mounted() {
+    // ยังไม่เคย login (ไม่มี user เก็บใน localStorage) -> เด้งกลับหน้า login ทันที
     if (!localStorage.getItem("user")) {
       this.$router.push("/");
       return;
     }
 
+    // เอาชื่อ/แผนกจาก user ที่ login ไว้ มาเติมให้ในฟอร์มอัตโนมัติ (ไม่ต้องพิมพ์เอง)
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     this.form.requester = user.fullName || "";
     this.form.department = user.department || "";
 
+    // ★ LAB 6: โหลดรายชื่อระบบจาก GET /api/systems (LAB 1) มาใส่ dropdown
+    // this.systems เปลี่ยนค่า -> Vue วาด <option v-for="s in systems"> ใหม่ให้เองอัตโนมัติ
     try {
       this.systems = await apiFetch("/systems");
     } catch (err) {
@@ -113,8 +118,11 @@ export default {
     },
 
     // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
+    // ★ LAB 6: ยิง POST /api/change-requests (LAB 4B ฝั่ง backend) พร้อมข้อมูลทั้งฟอร์ม
     async handleSubmit() {
       try {
+        // key ฝั่งซ้าย (เช่น crNumber) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
+        // key ฝั่งขวา (เช่น this.form.crId) คือชื่อตัวแปรในหน้านี้ — ชื่อไม่ต้องตรงกันก็ได้
         const data = await apiFetch("/change-requests", {
           method: "POST",
           body: JSON.stringify({
