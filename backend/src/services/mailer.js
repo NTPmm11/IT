@@ -41,10 +41,22 @@ function getTransporter() {
   return transporterPromise;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // to รับได้ทั้ง string เดียวหรือ array ของ email
 async function sendMail({ to, subject, html }) {
-  const recipients = Array.isArray(to) ? to.filter(Boolean) : [to].filter(Boolean);
+  const raw = Array.isArray(to) ? to : [to];
+  const recipients = raw.filter(Boolean).filter(addr => {
+    const valid = EMAIL_RE.test(addr);
+    if (!valid) console.warn(`[mailer] ข้าม email รูปแบบไม่ถูกต้อง: ${addr}`);
+    return valid;
+  });
   if (recipients.length === 0) return;
+
+  if (!subject || !html) {
+    console.warn("[mailer] sendMail ถูกเรียกโดยไม่มี subject/html — ข้าม");
+    return;
+  }
 
   try {
     const transporter = await getTransporter();
@@ -69,4 +81,31 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
-module.exports = { sendMail };
+// สร้าง HTML e-mail แบบ card สวยๆ (inline CSS ทั้งหมด — client mail ส่วนใหญ่ตัด <style> ทิ้ง)
+// heading/bodyHtml = เนื้อหา, ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
+function renderEmail({ heading, bodyHtml, ctaText, ctaUrl }) {
+  return `
+  <div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f4f5f7;padding:24px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+      <tr>
+        <td style="background:#4f46e5;padding:20px 24px;">
+          <span style="color:#ffffff;font-size:18px;font-weight:600;">CR System</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:24px;">
+          <h2 style="margin:0 0 16px;font-size:18px;color:#111827;">${heading}</h2>
+          <div style="font-size:14px;color:#374151;line-height:1.7;">${bodyHtml}</div>
+          ${ctaUrl ? `<div style="margin-top:24px;"><a href="${ctaUrl}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:6px;font-size:14px;font-weight:600;">${ctaText}</a></div>` : ""}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+          <span style="font-size:12px;color:#9ca3af;">อีเมลนี้ส่งอัตโนมัติจากระบบ CR System กรุณาอย่าตอบกลับ</span>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
+module.exports = { sendMail, renderEmail };

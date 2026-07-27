@@ -21,7 +21,7 @@
 const express = require("express");
 const dbPool = require("../db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { sendMail } = require("../services/mailer");
+const { sendMail, renderEmail } = require("../services/mailer");
 
 const router = express.Router();
 
@@ -271,8 +271,12 @@ router.post("/", requireAuth, async (req, res, next) => {
       sendMail({
         to: approvers.map(a => a.email),
         subject: `[CR] มีคำขอใหม่รอพิจารณา: ${crNumber}`,
-        html: `<p>มีคำขอ Change Request ใหม่ "<b>${body.subject}</b>" (เลขที่ ${crNumber}) รอการพิจารณา</p>
-               <p><a href="${approveLink}">คลิกเพื่อพิจารณา</a></p>`
+        html: renderEmail({
+          heading: "มีคำขอ Change Request ใหม่รอพิจารณา",
+          bodyHtml: `<p>เรื่อง: <b>${body.subject}</b></p><p>เลขที่เอกสาร: <b>${crNumber}</b></p>`,
+          ctaText: "ไปหน้าพิจารณา",
+          ctaUrl: approveLink
+        })
       });
     }
 
@@ -346,12 +350,17 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
 
       // ส่ง e-mail แจ้งผลกลับไปยังผู้ร้องขอ (ไม่ await ให้บล็อก response — sendMail catch เองแล้ว)
       const resultText = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", "more-info": "ขอข้อมูลเพิ่มเติม" }[result];
+      const resultColor = { approved: "#16a34a", rejected: "#dc2626", "more-info": "#d97706" }[result];
       const cr = crRows[0];
       sendMail({
         to: cr.requesterEmail,
         subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
-        html: `<p>คำขอ "<b>${cr.subject}</b>" (เลขที่ ${cr.cr_number}) ได้รับการพิจารณาแล้ว: <b>${resultText}</b></p>` +
-              (comment ? `<p>ความเห็น: ${comment}</p>` : "")
+        html: renderEmail({
+          heading: `ผลการพิจารณาคำขอ ${cr.cr_number}`,
+          bodyHtml: `<p>เรื่อง: <b>${cr.subject}</b></p>
+                     <p>สถานะ: <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${resultColor}1a;color:${resultColor};font-weight:600;">${resultText}</span></p>
+                     ${comment ? `<p>ความเห็น: ${comment}</p>` : ""}`
+        })
       });
 
       res.status(201).json({ ok: true });

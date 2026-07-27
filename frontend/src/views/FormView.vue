@@ -129,9 +129,39 @@ export default {
       }
     },
 
+    // เช็คช่องที่ required attribute เดี่ยวๆ คุมไม่ได้ (checkbox group / conditional field / format)
+    // return string ข้อความ error ตัวแรกที่เจอ, ผ่านหมด return ""
+    validateForm() {
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const phoneRe = /^0\d{8,9}$/;
+      const contact = this.form.contact.trim();
+      if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact))) {
+        return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล หรือเบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก)";
+      }
+      if (this.form.changeTypes.length === 0) {
+        return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
+      }
+      if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
+        return "กรุณาระบุระบบที่ได้รับผลกระทบ";
+      }
+      if (!this.form.duration.trim()) {
+        return "กรุณาระบุระยะเวลาที่คาดใช้";
+      }
+      if (!this.form.deployDate) {
+        return "กรุณาระบุเป้าหมาย Deploy";
+      }
+      return "";
+    },
+
     // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
     // ★ LAB 6: ยิง POST /api/change-requests (LAB 4B ฝั่ง backend) พร้อมข้อมูลทั้งฟอร์ม
     async handleSubmit() {
+      const validationError = this.validateForm();
+      if (validationError) {
+        alert(validationError);
+        return;
+      }
+
       try {
         // key ฝั่งซ้าย (เช่น requestDate) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
         // key ฝั่งขวา (เช่น this.form.requestDate) คือชื่อตัวแปรในหน้านี้ — ชื่อไม่ต้องตรงกันก็ได้
@@ -301,11 +331,11 @@ export default {
       <div class="grid-2col" style="margin-top: 10px;">
         <div class="form-group">
           <label for="cr-duration">ระยะเวลาที่คาดใช้:</label>
-          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน">
+          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" required>
         </div>
         <div class="form-group">
           <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
-          <input type="date" id="cr-deploy-date" v-model="form.deployDate">
+          <input type="date" id="cr-deploy-date" v-model="form.deployDate" required>
         </div>
       </div>
 
