@@ -115,6 +115,11 @@ router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     // req.params.id = ค่าจาก :id ใน URL (มาจากชื่อตัวแปรใน path "/:id" ด้านบน)
     const crId = req.params.id;
+    // id ต้องเป็นเลขล้วนเท่านั้น (cr_id เป็น INT) — ไม่งั้นส่งไปให้ SQL Server แปลงเอง
+    // จะได้ error "Conversion failed" โผล่เป็น 500 แทนที่จะเป็น 400 ที่ตรงกว่า
+    if (!/^\d+$/.test(crId)) {
+      return res.status(400).json({ error: "Invalid CR id" });
+    }
 
     // [[cr]] คือ destructure ซ้อน 2 ชั้น:
     //   dbPool.query คืนแถวผลลัพธ์เป็น array ก้อนแรก (เหมือน crRows/userRows/systemRows ที่อื่นในไฟล์นี้)
@@ -340,6 +345,11 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       const crId = req.params.id;
       // req.body ของเส้นนี้: { result, comment, approvalDate }
       const { result, comment, approvalDate } = req.body;
+
+      // id ต้องเป็นเลขล้วนเท่านั้น (cr_id เป็น INT) เหมือน GET /:id ด้านบน
+      if (!/^\d+$/.test(crId)) {
+        return res.status(400).json({ error: "Invalid CR id" });
+      }
 
       // whitelist ค่าที่ยอมรับ — กันคนส่ง result มั่วๆ เข้ามาปนใน database
       if (!["approved", "rejected", "more-info"].includes(result)) {

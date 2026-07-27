@@ -56,13 +56,24 @@ poolPromise.catch((err) => {
 
 // ── ตัวแปลง ? (สไตล์ mysql2) -> @p0, @p1, ... (สไตล์ mssql) ──
 // ไล่ทีละตัวอักษร ข้าม ? ที่อยู่ใน string literal (คั่นด้วย ' ') ไป
+// '' ติดกัน 2 ตัวข้างใน string literal = quote ตัวเดียวที่ escape ไว้ (มาตรฐาน T-SQL)
+// ไม่ใช่ตัวปิด string — ต้องข้ามคู่นี้ไปโดยไม่ toggle inString ไม่งั้นนับ string ผิดจังหวะ
 function bindParams(request, text, params) {
   let paramIndex = 0;
   let inString = false;
   let out = "";
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
-    if (ch === "'") inString = !inString;
+    if (ch === "'") {
+      if (inString && text[i + 1] === "'") {
+        out += "''";
+        i++;
+        continue;
+      }
+      inString = !inString;
+      out += ch;
+      continue;
+    }
     if (ch === "?" && !inString) {
       const name = `p${paramIndex}`;
       request.input(name, params[paramIndex]);

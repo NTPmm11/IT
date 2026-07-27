@@ -61,7 +61,7 @@ export default {
         { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
       ],
       rows2: [
-        { step2: "", startDate2: "", start2: "", endDate2: "", end2: "", owner2: "", note2: "" }
+        { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
       ],
 
       // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
@@ -131,7 +131,7 @@ export default {
     },
 
     addRow2() {
-      this.rows2.push({ step2: "", startDate2: "", start2: "", endDate2: "", end2: "", owner2: "", note2: "" });
+      this.rows2.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
     },
 
     // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
@@ -167,6 +167,15 @@ export default {
       return "";
     },
 
+    // ตาราง action plan / rollback plan ให้กรอกวันที่กับเวลาแยกช่อง (startDate+start, endDate+end)
+    // แต่ column ปลายทาง (cr_action_plans.start_date/end_date) เก็บได้ช่องเดียว (NVARCHAR)
+    // เลยรวมวันที่+เวลาเป็นข้อความเดียวก่อนส่ง กันวันที่หายตอน backend insert แค่ start/end
+    combineRow(row) {
+      const start = row.startDate && row.start ? `${row.startDate} ${row.start}` : (row.start || row.startDate || "");
+      const end = row.endDate && row.end ? `${row.endDate} ${row.end}` : (row.end || row.endDate || "");
+      return { step: row.step, start, end, owner: row.owner, note: row.note };
+    },
+
     // รวม field ของฟอร์มเป็น payload เดียว ใช้ร่วมกันทั้ง submit จริงและ save draft
     // (ต่างกันแค่ status — backend ดูค่านี้ตัดสินว่าจะส่งเมลแจ้ง approver ไหม ดู routes/cr.js)
     buildPayload(status) {
@@ -185,8 +194,8 @@ export default {
         duration: this.form.duration,
         deployDate: this.form.deployDate,
         changeTypes: this.form.changeTypes,
-        plan: this.rows,
-        rollbackPlan: this.rows2,   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
+        plan: this.rows.map(this.combineRow),
+        rollbackPlan: this.rows2.map(this.combineRow),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
         status
       };
     },
@@ -463,12 +472,12 @@ export default {
         <tbody>
           <tr v-for="(row2, index) in rows2" :key="index">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row2.step2" placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row2.startDate2" required></td>
-            <td><input type="time" v-model="row2.start2" required></td>
-            <td><input type="date" v-model="row2.endDate2" required></td>
-            <td><input type="time" v-model="row2.end2" required></td>
-            <td><input type="text" v-model="row2.note2" placeholder="หมายเหตุ"></td>
+            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
+            <td><input type="date" v-model="row2.startDate" required></td>
+            <td><input type="time" v-model="row2.start" required></td>
+            <td><input type="date" v-model="row2.endDate" required></td>
+            <td><input type="time" v-model="row2.end" required></td>
+            <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
             </td>

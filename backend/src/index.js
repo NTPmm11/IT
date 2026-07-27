@@ -39,10 +39,12 @@ const app = express();
 
 // app.use(...) = ติดตั้ง middleware (ด่านที่ทุก request ต้องผ่านตามลำดับ)
 //
-// ด่าน 1: cors = ยอมให้ frontend (localhost:3000) เรียก API ได้
+// ด่าน 1: cors = ยอมให้ frontend เรียก API ได้ (เฉพาะ origin ที่กำหนดใน FRONTEND_URL เท่านั้น)
 // ปกติ browser ห้ามเว็บ port นึงยิงหา server อีก port นึง (กัน hack)
 // ต้องให้ server ประกาศเองว่า "ฉันยินดีรับ" — cors() ทำหน้าที่นั้น
-app.use(cors());
+// (ไม่เปิดรับทุก origin เพราะ auth ของโปรเจกต์นี้พิสูจน์ตัวตนแค่ header X-User-Id
+//  เว็บ origin ไหนก็แนบ header เองได้ถ้า browser ยอมให้ยิงมาถึง — จำกัด origin ไว้ก่อน)
+app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
 
 // ด่าน 2: แปลง body ที่เป็น JSON ให้กลายเป็น object
 // frontend ส่ง JSON.stringify(...) มา -> ฝั่งนี้อ่านผ่าน req.body ได้เลย
