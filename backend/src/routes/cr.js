@@ -35,7 +35,7 @@
 const express = require("express");
 const dbPool = require("../db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { sendMail, renderEmail, escapeHtml } = require("../services/mailer");
+const { sendMail, renderEmail } = require("../services/mailer");
 
 const router = express.Router();
 
@@ -308,7 +308,10 @@ router.post("/", requireAuth, async (req, res, next) => {
         subject: `[CR] มีคำขอใหม่รอพิจารณา: ${crNumber}`,
         html: renderEmail({
           heading: "มีคำขอ Change Request ใหม่รอพิจารณา",
-          bodyHtml: `<p>เรื่อง: <b>${escapeHtml(body.subject)}</b></p><p>เลขที่เอกสาร: <b>${crNumber}</b></p>`,
+          fields: [
+            { label: "เลขที่เอกสาร", value: `<b>${crNumber}</b>`, raw: true },
+            { label: "เรื่อง", value: body.subject }
+          ],
           ctaText: "ไปหน้าพิจารณา",
           ctaUrl: approveLink
         })
@@ -392,14 +395,18 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       const resultText = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", "more-info": "ขอข้อมูลเพิ่มเติม" }[result];
       const resultColor = { approved: "#16a34a", rejected: "#dc2626", "more-info": "#d97706" }[result];
       const cr = crRows[0];
+
+      const fields = [{ label: "เรื่อง", value: cr.subject }];
+      if (comment) fields.push({ label: "ความเห็น", value: comment });
+
       sendMail({
         to: cr.requesterEmail,
         subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
         html: renderEmail({
           heading: `ผลการพิจารณาคำขอ ${cr.cr_number}`,
-          bodyHtml: `<p>เรื่อง: <b>${escapeHtml(cr.subject)}</b></p>
-                     <p>สถานะ: <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${resultColor}1a;color:${resultColor};font-weight:600;">${resultText}</span></p>
-                     ${comment ? `<p>ความเห็น: ${escapeHtml(comment)}</p>` : ""}`
+          statusText: resultText,
+          statusColor: resultColor,
+          fields
         })
       });
 

@@ -88,37 +88,67 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
-// bodyHtml ของ renderEmail() ถูกแปะลง <div> ตรงๆ ไม่ผ่านการ escape — ถ้าเอาข้อความที่ผู้ใช้พิมพ์เอง
-// (subject/comment) ไปต่อ string ใส่ตรงๆ โดยไม่ escape ก่อน คนร้ายพิมพ์ <a href="..."> ลงช่อง subject
-// ก็แปะลิงก์ปลอม/HTML แปลกปลอมลงอีเมลที่ส่งจริงได้ (HTML injection) — escapeHtml() ตัวนี้กันไว้
-// ใช้ห่อเฉพาะค่าที่มาจากผู้ใช้ก่อนต่อเข้า bodyHtml เสมอ (ดูตัวอย่างใน routes/cr.js)
+// renderEmail() escape ค่าใน fields[].value ให้อัตโนมัติอยู่แล้ว (ดู fieldRows ด้านล่าง)
+// export ตัวนี้ไว้เผื่อไฟล์อื่นต้องแปะ HTML ดิบเอง (fields[].value + raw:true) — ตอนนั้นค่อยเรียกเอง
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (ch) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[ch]));
 }
 
-// สร้าง HTML e-mail แบบ card สวยๆ (inline CSS ทั้งหมด — client mail ส่วนใหญ่ตัด <style> ทิ้ง)
-// heading/bodyHtml = เนื้อหา, ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
-function renderEmail({ heading, bodyHtml, ctaText, ctaUrl }) {
+// สร้าง HTML e-mail หน้าตาแบบ "ใบเอกสาร" ให้เข้าธีมกับฟอร์มจริงในเว็บ ไม่ใช่การ์ด SaaS ทั่วไป
+// (inline CSS ทั้งหมด — mail client ส่วนใหญ่ตัด <style> ทิ้ง)
+//
+// สี/ฟอนต์/เลย์เอาต์ทั้งหมดยกมาจาก frontend/src/assets/css จริง ไม่ได้เลือกเอง:
+//   letterhead (เส้นคั่นล่างหนา, จัดกลาง)  ลอกมาจาก .header-section
+//   field label:value 2 คอลัมน์              ลอกมาจาก .form-group
+//   สี navy #00075a / maroon #5a0000         ตัวเว็บทั้งระบบใช้สีนี้อยู่แล้ว
+//   ปุ่ม pill navy                            ลอกมาจาก .btn-submit
+//
+// heading  = หัวเรื่องของอีเมลนี้
+// fields   = [{ label, value, raw }] แถว label:value (เช่น เลขที่เอกสาร, เรื่อง)
+//   value ถูก escape ให้อัตโนมัติเสมอ (กัน HTML injection โดยที่ผู้เรียกไม่ต้องจำ escapeHtml เอง)
+//   ต้องการแปะ HTML จริงๆ (เช่น <b>) ใส่ raw: true — ใช้เฉพาะค่าที่ backend สร้างเอง ไม่ใช่ข้อความผู้ใช้พิมพ์
+// statusText/statusColor = ใส่เมื่อมีผลพิจารณา (ข้อความตัวหนาสีเดียว ไม่ทำ pill — เอกสารทางการไม่ใช้ badge)
+// ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
+function renderEmail({ heading, fields = [], statusText, statusColor, ctaText, ctaUrl }) {
+  const fieldRows = fields.map(f => `
+        <tr>
+          <td style="padding:9px 16px 9px 0;width:110px;font-size:13.5px;font-weight:600;color:#000000;vertical-align:top;white-space:nowrap;">${f.label}</td>
+          <td style="padding:9px 0;font-size:14px;color:#3b3b3b;line-height:1.6;">${f.raw ? f.value : escapeHtml(f.value)}</td>
+        </tr>`).join("");
+
   return `
-  <div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f4f5f7;padding:24px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+  <div style="font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f5f7;padding:32px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;">
       <tr>
-        <td style="background:#4f46e5;padding:20px 24px;">
-          <span style="color:#ffffff;font-size:18px;font-weight:600;">CR System</span>
+        <td style="text-align:center;border-bottom:3px solid #00075a;padding:26px 32px 20px;">
+          <div style="font-size:12px;letter-spacing:1px;color:#6b7280;text-transform:uppercase;margin-bottom:6px;">ระบบขออนุมัติเปลี่ยนแปลงระบบงาน</div>
+          <div style="font-size:20px;font-weight:800;color:#00112c;">CR System</div>
         </td>
       </tr>
       <tr>
-        <td style="padding:24px;">
-          <h2 style="margin:0 0 16px;font-size:18px;color:#111827;">${heading}</h2>
-          <div style="font-size:14px;color:#374151;line-height:1.7;">${bodyHtml}</div>
-          ${ctaUrl ? `<div style="margin-top:24px;"><a href="${ctaUrl}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:6px;font-size:14px;font-weight:600;">${ctaText}</a></div>` : ""}
+        <td style="padding:26px 32px 4px;">
+          <div style="font-size:16px;font-weight:700;color:#00112c;">${heading}</div>
+          ${statusText ? `<div style="font-size:14px;font-weight:700;color:${statusColor};margin-top:6px;">${statusText}</div>` : ""}
         </td>
       </tr>
       <tr>
-        <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;">
-          <span style="font-size:12px;color:#9ca3af;">อีเมลนี้ส่งอัตโนมัติจากระบบ CR System กรุณาอย่าตอบกลับ</span>
+        <td style="padding:14px 32px 4px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;">
+            ${fieldRows}
+          </table>
+        </td>
+      </tr>
+      ${ctaUrl ? `
+      <tr>
+        <td style="padding:22px 32px 8px;">
+          <a href="${ctaUrl}" style="display:inline-block;background:#00075a;color:#ffffff;text-decoration:none;padding:11px 26px;border-radius:50px;font-size:14px;font-weight:600;">${ctaText}</a>
+        </td>
+      </tr>` : ""}
+      <tr>
+        <td style="padding:24px 32px 22px;border-top:2px dashed #e5e7eb;margin-top:10px;">
+          <span style="font-size:11.5px;color:#9ca3af;">อีเมลนี้ส่งอัตโนมัติจากระบบ CR System กรุณาอย่าตอบกลับ</span>
         </td>
       </tr>
     </table>
