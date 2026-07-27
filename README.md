@@ -33,8 +33,9 @@ cd frontend && npm install && npm run dev   # -> เทอร์มินัล�
 Login: user อยู่ในตาราง `users` ของ database (ตั้งรหัสตอน setup)
 ต้องต่อ internet (ไอคอน Font Awesome โหลดจาก CDN — Vue เองติดตั้งอยู่ในเครื่องแล้ว)
 
-*ยังไม่ได้ตั้ง backend? เปิดหน้าเว็บดูได้เลย — จะอยู่ "โหมดปลอม"
-(login แบบ hardcode admin/1234, Submit ไม่ลง database) จนกว่าจะทำ LAB เสร็จ*
+*ยังไม่ได้ตั้ง backend? เปิดหน้าเว็บดูได้เลย — แต่ login จะไม่ผ่าน
+(ยิง POST /api/auth/login จริงเสมอ ไม่มีโหมดปลอม/hardcode) ต้องตั้ง backend
++ database ให้เสร็จก่อน (dev-guide ภาคพิเศษ 2) ถึงจะ login ได้*
 
 ## โครงไฟล์
 
@@ -51,11 +52,16 @@ IT/
 │       ├── router/        กำหนดว่า path ไหนโชว์หน้าไหน
 │       ├── views/         1 ไฟล์ = 1 หน้า (template+script+style รวมกัน)
 │       │   ├── LoginView.vue     หน้า login          ← LAB 5
+│       │   ├── HomeView.vue      หน้าหลักหลัง login (ทางแยก)
 │       │   ├── FormView.vue      ฟอร์ม + action plan  ← LAB 6
+│       │   ├── ListView.vue      ประวัติ/สืบค้น CR ทั้งหมด
 │       │   └── ApproveView.vue   ผลอนุมัติ            ← LAB 7
+│       ├── components/
+│       │   ├── ApprovalSection.vue  ฟอร์มอนุมัติ (ใช้ใน FormView + ApproveView)
+│       │   └── StatusModal.vue      modal แจ้งผลสำเร็จ/พลาด
 │       ├── services/
 │       │   ├── api.js            ที่อยู่ API + apiFetch (ตัวช่วยยิง API)
-│       │   └── commonActions.js  method ใช้ร่วม — ยกเลิก, ร่าง, PDF
+│       │   └── commonActions.js  method ใช้ร่วม — ยกเลิก, PDF
 │       └── assets/
 │           ├── css/              หน้าตา (base / login / form)
 │           └── img/
@@ -70,18 +76,21 @@ IT/
 │           ├── systems.js   dropdown ระบบ   ← LAB 1
 │           ├── auth.js      login           ← LAB 2
 │           └── cr.js        CRUD ใบ CR      ← LAB 4
-└── database/
-    ├── schema.sql        พิมพ์เขียว database เต็ม (6 ตาราง, T-SQL)
-    └── users_only.sql    เฉพาะ table users — รันก่อนได้ถ้ายังไม่พร้อมทำ LAB 1/4
+└── database/           พิมพ์เขียว database เต็ม (7 ตาราง, T-SQL) — รันเรียงเลขไฟล์
+    ├── users_only.sql    table users — รันก่อนสุด (FK ไฟล์อื่นอ้างถึง)
+    ├── 01_systems.sql    .. 06_cr_rollback_plans.sql (รันตามลำดับเลข ห้ามข้าม)
+    └── ...
 ```
 
 ## ลำดับหน้า
 
 ```
-LoginView ──login ผ่าน──> FormView ──Submit CR──> ApproveView (?crId=...)
-     │                        │                          │
-  POST /api/auth/login   POST /api/change-requests  POST .../approval
-     └────────────── backend (port 4000) ── SQL Server ──┘
+                              ┌─ กรอก CR ใหม่ ─> FormView ──Submit CR──> ApprovalSection (ต่อท้ายฟอร์ม)
+LoginView ──login ผ่าน──> HomeView ─┤
+                              └─ ประวัติ ─────> ListView ──คลิกแถว──> ApproveView (?crId=...)
+     │                                              │                       │
+  POST /api/auth/login                    GET /change-requests    POST .../approval
+     └───────────────────────── backend (port 4000) ── SQL Server ──────────┘
 ```
 
 (สลับหน้าโดย Vue Router — ไม่ reload browser ทั้งหน้าเหมือนเว็บ .html แยกไฟล์แบบเดิม)

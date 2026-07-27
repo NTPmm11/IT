@@ -14,7 +14,10 @@
 ก่อนเริ่ม ต้องผ่านของพวกนี้ก่อน:
   1. อ่าน dev-guide.txt "ภาคพิเศษ 2: หลังบ้าน" ตอนที่ 1-2
      (ตั้งค่า SQL Server + .env + npm install ให้เสร็จ)
-  2. รัน database: เปิด database/schema.sql ใน SSMS/Azure Data Studio แล้ว Execute
+  2. รัน database: เปิดทีละไฟล์ใน database/ ตามลำดับเลข (users_only.sql ก่อน
+     แล้ว 01_systems.sql, 02_..., ... จนถึง 06_cr_rollback_plans.sql) ใน
+     SSMS/Azure Data Studio แล้ว Execute — ต้องรันเรียงลำดับ เพราะไฟล์หลัง
+     มี FK อ้างถึงตารางในไฟล์ก่อนหน้า
   3. server สตาร์ทได้: cd backend && npm run dev
      เปิด http://localhost:4000/api/health เห็น {"ok":true}
   4. frontend ติดตั้งแล้วรันได้: cd frontend && npm install && npm run dev

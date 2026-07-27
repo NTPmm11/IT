@@ -140,11 +140,16 @@ browser อ่านของพวกนี้แล้ววาดหน้า
   │       │                      ( / -> login, /form -> ฟอร์ม, /approve -> อนุมัติ)
   │       ├─ views/             ← 1 ไฟล์ = 1 หน้า (โครง+การทำงานรวมกัน)
   │       │   ├─ LoginView.vue    หน้า login
+  │       │   ├─ HomeView.vue     หน้าหลักหลัง login (ทางแยก: สร้าง CR ใหม่ / ประวัติ)
   │       │   ├─ FormView.vue     หน้าฟอร์ม CR
-  │       │   └─ ApproveView.vue  หน้าอนุมัติ
+  │       │   ├─ ListView.vue     ประวัติ/สืบค้น CR ทั้งหมด
+  │       │   └─ ApproveView.vue  หน้าอนุมัติ (เปิดตรงจากลิงก์ในเมล/ลิสต์)
+  │       ├─ components/        ← ชิ้นส่วน UI ใช้ซ้ำหลายหน้า
+  │       │   ├─ ApprovalSection.vue  ฟอร์มอนุมัติ (ใช้ใน FormView + ApproveView)
+  │       │   └─ StatusModal.vue      modal แจ้งผลสำเร็จ/พลาด
   │       ├─ services/          ← ของที่หลายหน้าใช้ร่วมกัน
   │       │   ├─ api.js           ที่อยู่ API + ตัวช่วยยิง API (apiFetch)
-  │       │   └─ commonActions.js ปุ่มที่ใช้ร่วมกันทุกหน้า (ยกเลิก/ร่าง/PDF)
+  │       │   └─ commonActions.js ปุ่มที่ใช้ร่วมกันทุกหน้า (ยกเลิก/PDF)
   │       └─ assets/
   │           ├─ css/            ← สีทาบ้าน (หน้าตา)
   │           │   ├─ base.css      ของที่ใช้ทุกหน้า (พื้นหลัง ปุ่ม)
@@ -159,8 +164,10 @@ browser อ่านของพวกนี้แล้ววาดหน้า
   │       ├─ db.js               ตัวต่อกับ SQL Server
   │       ├─ middleware/         ด่านเช็ค token ก่อนเข้า API
   │       └─ routes/             API แต่ละเส้น (auth / systems / cr)
-  ├─ database/
-  │   └─ schema.sql            พิมพ์เขียว database (ตาราง 6 ตัว)
+  ├─ database/                 พิมพ์เขียว database (7 ตาราง, T-SQL) — รันเรียงเลขไฟล์
+  │   ├─ users_only.sql          รันก่อนสุด (ตาราง users — FK ไฟล์อื่นอ้างถึง)
+  │   ├─ 01_systems.sql          .. 06_cr_rollback_plans.sql (รันตามลำดับเลข)
+  │   └─ ...
   └─ README.md                 แผนที่โปรเจคฉบับย่อ
 
 กติกาบ้านนี้มีแค่ 3 ข้อ (ยังเหมือนเดิม แค่ย้ายที่อยู่):
@@ -637,8 +644,12 @@ Vue "เฝ้าดู" มันตลอดเวลา ค่าเปลี
 จากนั้นไล่ทีละขั้น (พิมพ์ใน Terminal ที่โฟลเดอร์ IT):
 
   1. สร้าง database + ตารางทั้งหมดจากพิมพ์เขียว
-     เปิดไฟล์ database/schema.sql ใน SSMS/Azure Data Studio แล้วกด Execute
-     (หรือถ้ามี sqlcmd: sqlcmd -S localhost -U sa -P รหัส -i database/schema.sql)
+     เปิดทีละไฟล์ใน database/ ตามลำดับ แล้วกด Execute ใน SSMS/Azure Data Studio
+     (users_only.sql ก่อน แล้ว 01_systems.sql, 02_change_requests.sql, ...
+      จนถึง 06_cr_rollback_plans.sql — ต้องเรียงลำดับเพราะไฟล์หลังมี FK
+      อ้างถึงตารางในไฟล์ก่อนหน้า)
+     (หรือถ้ามี sqlcmd: sqlcmd -S localhost -U sa -P รหัส -i database/users_only.sql
+      แล้วไล่รันไฟล์ 01_...sql ถึง 06_...sql ทีละไฟล์ด้วยคำสั่งเดียวกัน)
 
   2. ติดตั้งของที่ backend ใช้:
 
@@ -755,7 +766,7 @@ login ได้ 3 user (รหัส 1234 ทั้งหมด):
     = รหัสใน .env ไม่ตรงกับรหัส SQL Server จริง
 
   "Cannot open database "CR" requested by the login"
-    = ยังไม่ได้รัน schema.sql (ตอนที่ 2 ข้อ 1)
+    = ยังไม่ได้รันไฟล์ใน database/ (ตอนที่ 2 ข้อ 1)
 
   หน้าเว็บ alert "Missing X-User-Id header"
     = ยังไม่ได้ login (หรือ localStorage โดนล้าง) -> login ใหม่
