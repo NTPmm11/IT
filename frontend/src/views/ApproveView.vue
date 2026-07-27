@@ -13,6 +13,13 @@
 //
 // import ApprovalSection … = ดึง component นั้นเข้ามาใช้ในไฟล์นี้
 // components: { ApprovalSection } = "ลงทะเบียน" ให้ template ด้านล่างเรียกใช้แท็ก <ApprovalSection> ได้
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: router/index.js -> path "/approve" (lazy load) — ผู้ใช้มาถึงหน้านี้ 2 ทาง:
+//   1. คลิกลิงก์ในเมล (backend/src/routes/cr.js สร้างลิงก์ ${FRONTEND_URL}/approve?crId=...)
+//   2. คลิกแถวใน ListView.vue -> this.$router.push(`/approve?crId=${crId}`)
+// ปลายทาง: services/api.js (apiFetch -> GET /change-requests/:id เอารายละเอียดมาโชว์)
+//          + components/ApprovalSection.vue (ฟอร์มอนุมัติจริง ส่ง crId ให้ผ่าน prop)
 import { apiFetch } from "../services/api.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 

@@ -24,16 +24,31 @@
 //
 // ทำเสร็จแล้วเช็คยังไง:
 //   เข้าหน้า login กรอก username/password ที่มีจริงใน database
-//   ถูก -> เด้งไปหน้าฟอร์ม / ผิด -> alert ข้อความ error จาก backend
+//   ถูก -> เด้งไปหน้าฟอร์ม / ผิด -> modal แจ้ง error จาก backend
+//
+// UX: ปุ่ม submit ต้องให้รู้ทันทีว่า "กำลังทำงานอยู่" ระหว่างรอ backend ตอบ
+// (submitting = true -> ปุ่มถูก disable + เปลี่ยนข้อความ กันคนกดซ้ำ/เข้าใจว่าไม่มีอะไรเกิดขึ้น)
+// ผิดพลาด -> โชว์ StatusModal แทน alert() ของ browser (ชัดเจน คุมสไตล์เองได้)
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: router/index.js -> path "/" (หน้าแรกสุดที่ทุกคนเจอ, import ตรงๆ ไม่ lazy load)
+// ปลายทาง: services/api.js (apiFetch -> POST /api/auth/login) + components/StatusModal.vue
+// เป็นหน้าเดียวในระบบที่ "ยังไม่ต้อง login" ก็เข้าได้ (ทุกหน้าอื่นเช็ค localStorage.user ใน mounted())
 import { apiFetch } from "../services/api.js";
+import StatusModal from "../components/StatusModal.vue";
 
 export default {
+  components: { StatusModal },
+
   // data() ต้องเป็นฟังก์ชัน (ไม่ใช่ object เฉยๆ) — Vue เรียกให้ตอน component ถูกสร้าง
   // ค่าที่ return ออกมาคือ "ตัวแปรของหน้านี้" ผูกกับช่อง input ผ่าน v-model ใน template
   data() {
     return {
-      username: "",   // ผูกกับช่อง Username
-      password: ""    // ผูกกับช่อง Password
+      username: "",     // ผูกกับช่อง Username
+      password: "",     // ผูกกับช่อง Password
+      remember: false,  // ผูกกับ checkbox "Remember Me" (ยังไม่มี logic จำ user จริง — เก็บสถานะติ๊กไว้เฉยๆ)
+      submitting: false, // true ระหว่างรอ backend ตอบ — คุมปุ่ม disable/ข้อความ
+      modal: { show: false, variant: "error", title: "", message: "" }
     };
   },
 
@@ -41,29 +56,33 @@ export default {
     // ถูกเรียกตอนกด submit ฟอร์ม (ดู @submit.prevent="login" ใน template ด้านล่าง)
     // async เพราะข้างในต้องรอ apiFetch คุยกับ backend เสร็จก่อน
     async login() {
-        if (this.username === "" || this.password === "") {
-            alert("กรุณากรอกข้อมูล");
-            return;
-        }
+      if (this.username === "" || this.password === "") {
+        this.modal = { show: true, variant: "error", title: "กรอกข้อมูลไม่ครบ", message: "กรุณากรอก Username และ Password" };
+        return;
+      }
 
-        try {
-          // ยิง POST ไปที่ /api/auth/login พร้อม username/password
-          // apiFetch ช่วยแปลง response error ให้โยนเป็น Error อัตโนมัติ (ดู services/api.js)
-          const data = await apiFetch("/auth/login", {
-            method: "POST",
-            body: JSON.stringify({ username: this.username, password: this.password })
-          });
+      this.submitting = true;
+      try {
+        // ยิง POST ไปที่ /api/auth/login พร้อม username/password
+        // apiFetch ช่วยแปลง response error ให้โยนเป็น Error อัตโนมัติ (ดู services/api.js)
+        const data = await apiFetch("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ username: this.username, password: this.password })
+        });
 
-          // เก็บข้อมูล user ไว้ใน localStorage (ต้องแปลงเป็น string ด้วย JSON.stringify)
-          // หน้าอื่นจะอ่านค่านี้กลับมาเช็คว่า login อยู่ไหม / แนบ X-User-Id ตอนเรียก API
-          localStorage.setItem("user", JSON.stringify(data.user));
+        // เก็บข้อมูล user ไว้ใน localStorage (ต้องแปลงเป็น string ด้วย JSON.stringify)
+        // หน้าอื่นจะอ่านค่านี้กลับมาเช็คว่า login อยู่ไหม / แนบ X-User-Id ตอนเรียก API
+        localStorage.setItem("user", JSON.stringify(data.user));
 
-          // เปลี่ยนหน้าแบบไม่ reload browser (Vue Router)
-          this.$router.push("/home");
-        } catch (err) {
-          // apiFetch โยน Error พร้อมข้อความจาก backend มาให้แล้ว (เช่น "Username หรือ password ไม่ถูกต้อง")
-          alert("เข้าสู่ระบบไม่สำเร็จ: " + err.message);
-        }
+        // เปลี่ยนหน้าแบบไม่ reload browser (Vue Router)
+        // ไม่ต้องโชว์ modal สำเร็จ — เปลี่ยนหน้าไปเลยคือ feedback ที่ชัดเจนอยู่แล้ว
+        this.$router.push("/home");
+      } catch (err) {
+        // apiFetch โยน Error พร้อมข้อความจาก backend มาให้แล้ว (เช่น "Username หรือ password ไม่ถูกต้อง")
+        this.modal = { show: true, variant: "error", title: "เข้าสู่ระบบไม่สำเร็จ", message: err.message };
+        // สำเร็จแล้วไม่ต้องคืน submitting เพราะกำลังเปลี่ยนหน้าออกไปพอดี (component นี้จะถูกทำลายไป)
+        this.submitting = false;
+      }
     }
   }
 };
@@ -94,9 +113,14 @@ export default {
         </div>
       </div>
 
-      <button type="submit" class="btn-login">Sign in</button>
+      <button type="submit" class="btn-login" :disabled="submitting">
+        {{ submitting ? "กำลังเข้าสู่ระบบ..." : "Sign in" }}
+      </button>
 
     </form>
+
+    <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
+      @close="modal.show = false" />
   </div>
 </template>
 

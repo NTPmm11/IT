@@ -14,6 +14,13 @@
 // ไฟล์นี้เลยห่อ (wrap) mssql ให้ "หน้าตาเหมือน mysql2" ทุก route ไฟล์อื่น
 // (auth.js / systems.js / middleware/auth.js / cr.js) จึงยังเขียนโค้ด
 // ตาม TODO/hint เดิมได้เป๊ะๆ โดยไม่ต้องรู้ว่าเบื้องหลังเปลี่ยนเป็น SQL Server แล้ว
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง (require ไฟล์นี้ไปใช้ — ทุกไฟล์เรียก dbPool.query(...) หรือ dbPool.getConnection()):
+//   middleware/auth.js, routes/auth.js, routes/systems.js, routes/cr.js
+// ปลายทาง: require("mssql") ตรงไปที่ SQL Server จริง (ที่อยู่/รหัสอ่านจาก .env ผ่าน dotenv)
+// เขียนแยกไฟล์นี้ออกมาต่างหาก เพราะทุก route ต้องคุย database เหมือนกัน
+// ไม่อยากให้แต่ละ route เปิด connection ของตัวเอง — รวมจุดเดียว (pool เดียว) ใช้ร่วมกันทั้งระบบ
 
 // อ่านไฟล์ .env ก่อน — รหัส database อยู่ในนั้น
 require("dotenv").config();

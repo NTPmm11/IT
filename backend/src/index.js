@@ -8,6 +8,17 @@
 //
 // รัน: npm run dev  (ต้องมีไฟล์ .env ก่อน — copy จาก .env.example)
 // API ทั้งหมดอยู่ใต้ /api/*  frontend ยิงมาที่ http://localhost:4000
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: ไม่มีไฟล์ไหน require ไฟล์นี้ — นี่คือ entry point ตัวจริง
+//         (package.json "scripts.dev" สั่งรันไฟล์นี้ตรงๆ ด้วย node/nodemon)
+// ปลายทาง (require เข้ามาใช้):
+//   routes/auth.js     -> ผูกไว้ที่ /api/auth
+//   routes/systems.js  -> ผูกไว้ที่ /api/systems
+//   routes/cr.js       -> ผูกไว้ที่ /api/change-requests
+// ฝั่ง frontend (frontend/src/services/api.js) ยิง fetch มาที่ URL เหล่านี้โดยตรง
+// เขียนแบบนี้ (index.js บาง แยก route ไปคนละไฟล์) เพื่อให้ไฟล์นี้อ่านจบในหน้าจอเดียว
+// เห็นภาพรวมทั้งระบบทันที ไม่ต้องไล่หา logic จริงปนอยู่ในนี้
 
 // dotenv = ตัวอ่านไฟล์ .env แล้วยัดค่าเข้า process.env
 // ต้องเรียกบรรทัดแรกสุด ก่อน require ไฟล์อื่น

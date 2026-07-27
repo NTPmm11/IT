@@ -15,13 +15,23 @@
 // - กด Submit แล้วส่งข้อมูลทั้งฟอร์มไปเก็บลง database
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- frontend/js/form.js
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: router/index.js -> path "/form" (lazy load) — HomeView.vue มีลิงก์มาที่นี่
+// ปลายทาง:
+//   services/api.js         apiFetch -> GET /api/systems (dropdown), GET /change-requests/next-number
+//                            (preview เลขที่), POST /change-requests (submit จริง)
+//   services/commonActions.js  ...commonMethods (cancelForm/generatePDF)
+//   components/ApprovalSection.vue  โผล่ท้ายฟอร์มหลัง submit สำเร็จ (ส่ง crId ให้ผ่าน prop)
+//   components/StatusModal.vue      โชว์ผล submit สำเร็จ/พลาด + error ตอน validate ฝั่งหน้าเว็บ
 
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
+import StatusModal from "../components/StatusModal.vue";
 
 export default {
-  components: { ApprovalSection },
+  components: { ApprovalSection, StatusModal },
 
   data() {
     return {
@@ -46,11 +56,12 @@ export default {
       },
 
       // ตาราง action plan — 1 object ใน array = 1 แถวในตาราง
+      // startDate/endDate แยกกันคนละช่อง (ของเดิมใช้ชื่อ Date ซ้ำกัน 2 ช่อง เลยเผลอผูกพร้อมกัน)
       rows: [
-        { step: "", Date:"", start: "", Date:"", end: "", owner: "", note: "" }
+        { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
       ],
-        rows2: [
-        { step2: "", Date2:"",start2: "", Date2:"", end2: "", owner2: "", note2: "" }
+      rows2: [
+        { step2: "", startDate2: "", start2: "", endDate2: "", end2: "", owner2: "", note2: "" }
       ],
 
       // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
@@ -60,7 +71,10 @@ export default {
       // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
       submittedCrId: null,
       submittedCrNumber: "",   // เลขที่เอกสารจริง (backend generate ตอน submit จริง — authoritative)
-      previewCrNumber: ""      // เลขที่ preview ตั้งแต่เปิดหน้า (อาจไม่ตรงเป๊ะถ้ามีคนอื่น submit แทรกก่อน)
+      previewCrNumber: "",     // เลขที่ preview ตั้งแต่เปิดหน้า (อาจไม่ตรงเป๊ะถ้ามีคนอื่น submit แทรกก่อน)
+
+      submitting: false, // true ระหว่างรอ backend ตอบ POST /change-requests — คุมปุ่ม disable/ข้อความ
+      modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
@@ -104,7 +118,7 @@ export default {
 
     // ปุ่ม "+ เพิ่มขั้นตอนงาน" (@click="addRow")
     addRow() {
-      this.rows.push({ step: "", start: "", end: "", owner: "", note: "" });
+      this.rows.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
     },
 
     // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow(index)")
@@ -117,7 +131,7 @@ export default {
     },
 
     addRow2() {
-      this.rows2.push({ step2: "", start2: "", Date2:"", end2: "", owner2: "", note2: "" });
+      this.rows2.push({ step2: "", startDate2: "", start2: "", endDate2: "", end2: "", owner2: "", note2: "" });
     },
 
     // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
@@ -153,50 +167,99 @@ export default {
       return "";
     },
 
+    // รวม field ของฟอร์มเป็น payload เดียว ใช้ร่วมกันทั้ง submit จริงและ save draft
+    // (ต่างกันแค่ status — backend ดูค่านี้ตัดสินว่าจะส่งเมลแจ้ง approver ไหม ดู routes/cr.js)
+    buildPayload(status) {
+      return {
+        requestDate: this.form.requestDate,
+        department: this.form.department,
+        systemCode: this.form.system,
+        contact: this.form.contact,
+        priority: this.form.priority,
+        subject: this.form.subject,
+        problem: this.form.problem,
+        requestDetail: this.form.request,
+        impact: this.form.impact,
+        impactDetail: this.form.impactDetail,
+        downtime: this.form.downtime,
+        duration: this.form.duration,
+        deployDate: this.form.deployDate,
+        changeTypes: this.form.changeTypes,
+        plan: this.rows,
+        rollbackPlan: this.rows2,   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
+        status
+      };
+    },
+
     // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
     // ★ LAB 6: ยิง POST /api/change-requests (LAB 4B ฝั่ง backend) พร้อมข้อมูลทั้งฟอร์ม
+    //
+    // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ/เข้าใจว่าไม่มีอะไรเกิดขึ้น
+    // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่ — ให้ feedback ชัดเจน คุมสไตล์เองได้
     async handleSubmit() {
       const validationError = this.validateForm();
       if (validationError) {
-        alert(validationError);
+        this.modal = { show: true, variant: "error", title: "กรอกข้อมูลไม่ครบ", message: validationError };
         return;
       }
 
+      this.submitting = true;
       try {
         // key ฝั่งซ้าย (เช่น requestDate) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
-        // key ฝั่งขวา (เช่น this.form.requestDate) คือชื่อตัวแปรในหน้านี้ — ชื่อไม่ต้องตรงกันก็ได้
         // ไม่ต้องส่ง crNumber แล้ว — backend สร้างให้เองจาก cr_id หลัง insert
         const data = await apiFetch("/change-requests", {
           method: "POST",
-          body: JSON.stringify({
-            requestDate: this.form.requestDate,
-            department: this.form.department,
-            systemCode: this.form.system,
-            contact: this.form.contact,
-            priority: this.form.priority,
-            subject: this.form.subject,
-            problem: this.form.problem,
-            requestDetail: this.form.request,
-            impact: this.form.impact,
-            impactDetail: this.form.impactDetail,
-            downtime: this.form.downtime,
-            duration: this.form.duration,
-            deployDate: this.form.deployDate,
-            changeTypes: this.form.changeTypes,
-            plan: this.rows
-          })
+          body: JSON.stringify(this.buildPayload("submitted"))
         });
 
-        alert(`ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว!\nเลขที่เอกสาร: ${data.crNumber}`);
-
-        // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์ม แล้วเลื่อนจอลงไปหา
+        // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์มไว้เลย (อยู่หลัง modal) แล้วค่อยเลื่อนจอลงไปหา
+        // ตอนปิด modal (ดู closeModal ด้านล่าง)
         this.submittedCrId = data.crId;
         this.submittedCrNumber = data.crNumber;
+        this.modal = {
+          show: true,
+          variant: "success",
+          title: "ส่งคำขอสำเร็จ",
+          message: `ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว\nเลขที่เอกสาร: ${data.crNumber}`
+        };
+      } catch (err) {
+        this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // ปุ่ม "บันทึกร่าง (Save Draft)" — ยิงไปตาราง change_requests เหมือน submit จริง
+    // แต่ status: "draft" -> backend ข้ามการส่งเมลแจ้ง approver (ดู routes/cr.js: if (body.status !== "draft"))
+    // ไม่เรียก validateForm() เพราะ draft ตั้งใจให้กรอกไม่ครบได้ (นั่นคือประเด็นของการ "ร่าง")
+    // backend เองมีด่านขั้นต่ำอยู่แล้ว (ต้องมี subject + systemCode ไม่งั้น 400) พอสำหรับ draft
+    async handleSaveDraft() {
+      this.submitting = true;
+      try {
+        const data = await apiFetch("/change-requests", {
+          method: "POST",
+          body: JSON.stringify(this.buildPayload("draft"))
+        });
+        this.modal = {
+          show: true,
+          variant: "success",
+          title: "บันทึกร่างสำเร็จ",
+          message: `บันทึกแบบร่างไว้แล้ว ยังไม่ส่งเข้าขั้นตอนอนุมัติ\nเลขที่เอกสาร: ${data.crNumber}`
+        };
+      } catch (err) {
+        this.modal = { show: true, variant: "error", title: "บันทึกร่างไม่สำเร็จ", message: err.message };
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    // ปิด modal — ถ้าเพิ่ง submit สำเร็จ (มี submittedCrId แล้ว) เลื่อนจอลงไปหาส่วนอนุมัติต่อเลย
+    closeModal() {
+      this.modal.show = false;
+      if (this.submittedCrId) {
         this.$nextTick(() => {
           this.$refs.approvalSection?.$el.scrollIntoView({ behavior: "smooth" });
         });
-      } catch (err) {
-        alert("บันทึกไม่สำเร็จ: " + err.message);
       }
     }
   }
@@ -363,9 +426,9 @@ export default {
             <tr v-for="(row, index) in rows" :key="index">
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="row.Date" required></td>
+              <td><input type="date" v-model="row.startDate" required></td>
               <td><input type="time" v-model="row.start" required></td>
-              <td><input type="date" v-model="row.Date" required></td>
+              <td><input type="date" v-model="row.endDate" required></td>
               <td><input type="time" v-model="row.end" required></td>
               <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
@@ -389,7 +452,7 @@ export default {
           <tr>
             <th style="width:40px;">ลำดับ</th>
             <th>ขั้นตอนงาน</th>
-            <th style="width:0px;">วัน/เดือน/ปี</th>
+            <th style="width:100px;">วัน/เดือน/ปี</th>
             <th style="width:100px;">เวลาเริ่ม</th>
             <th style="width:100px;">วัน/เดือน/ปี</th>
             <th style="width:100px;">เวลาสิ้นสุด</th>
@@ -401,9 +464,9 @@ export default {
           <tr v-for="(row2, index) in rows2" :key="index">
             <td class="text-center">{{ index + 1 }}</td>
             <td><input type="text" v-model="row2.step2" placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row2.Date2" required></td>
+            <td><input type="date" v-model="row2.startDate2" required></td>
             <td><input type="time" v-model="row2.start2" required></td>
-            <td><input type="date" v-model="row2.Date2" required></td>
+            <td><input type="date" v-model="row2.endDate2" required></td>
             <td><input type="time" v-model="row2.end2" required></td>
             <td><input type="text" v-model="row2.note2" placeholder="หมายเหตุ"></td>
             <td class="text-center">
@@ -422,8 +485,16 @@ export default {
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 
-        <button type="submit" class="btn btn-submit">
-          <i class="fa-solid fa-paper-plane"></i> ส่งคำขออนุมัติ (Submit CR)
+        <!-- type="button" ตั้งใจ — ไม่ใช่ submit เพราะไม่อยากให้ required attribute ของช่องอื่น
+             บล็อกการบันทึกร่าง (ร่างกรอกไม่ครบได้ นั่นคือประเด็นของมัน) -->
+        <button type="button" class="btn btn-draft" @click="handleSaveDraft" :disabled="submitting">
+          <i class="fa-solid fa-floppy-disk"></i>
+          {{ submitting ? "กำลังบันทึก..." : "บันทึกร่าง (Save Draft)" }}
+        </button>
+
+        <button type="submit" class="btn btn-submit" :disabled="submitting">
+          <i class="fa-solid fa-paper-plane"></i>
+          {{ submitting ? "กำลังส่ง..." : "ส่งคำขออนุมัติ (Submit CR)" }}
         </button>
       </div>
 
@@ -431,6 +502,9 @@ export default {
 
     <!-- ส่วนอนุมัติ — โผล่หลัง Submit CR สำเร็จ / requester เห็นแต่กดไม่ได้ -->
     <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
+
+    <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
+      @close="closeModal" />
   </div>
 </template>
 

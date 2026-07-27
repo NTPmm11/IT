@@ -23,7 +23,12 @@
 //   ต้องได้ 401 / แนบ -H "X-User-Id: 1" ต้องผ่าน
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/middleware/auth.js
-
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง (require ไฟล์นี้): routes/cr.js เท่านั้น (auth.js/systems.js ไม่ต้อง login ก็เรียกได้)
+//   router.get("/", requireAuth, ...)  หรือ  router.post("/:id/approval", requireAuth, requireRole(...), ...)
+// ปลายทาง: require("../db") ไปเช็คว่า user_id ที่แนบมามีจริงในตาราง users ไหม
+// ฝั่ง frontend ที่ "ป้อน" header X-User-Id ให้ทุก request คือ services/api.js (ฟังก์ชัน apiFetch)
 const dbPool = require("../db");
 
 // ── ด่าน 1: requireAuth = ดูป้ายชื่อ แล้วเช็คว่า user นี้มีจริงใน database ──

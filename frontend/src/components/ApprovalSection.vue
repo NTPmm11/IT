@@ -9,11 +9,23 @@
 //   - approver / it_admin  -> กรอก + กดบันทึกได้
 //   - requester            -> เห็นทุกช่องแต่ disabled ทั้งหมด (ดูได้อย่างเดียว)
 // backend กันซ้ำอีกชั้นด้วย requireRole("approver", "it_admin") อยู่แล้ว
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง (import ไฟล์นี้): views/FormView.vue (ต่อท้ายฟอร์มหลัง submit สำเร็จ) และ
+//                          views/ApproveView.vue (เปิดตรงจากลิงก์ในเมล /approve?crId=)
+//                          ทั้งสองส่ง prop crId เข้ามา — component นี้ไม่รู้จัก URL/route เลย
+// ปลายทาง: services/api.js (apiFetch) -> backend routes/cr.js POST /:id/approval
+//          + components/StatusModal.vue (โชว์ผลสำเร็จ/พลาด)
+// แยกเป็น component ต่างหาก (ไม่เขียนสดใน FormView/ApproveView) เพราะ "ฟอร์มอนุมัติ" หน้าตา
+// เดียวกันเป๊ะ ต้องใช้ซ้ำ 2 ที่ — เขียนซ้ำสองรอบเสี่ยงแก้ไม่ครบเวลามีบั๊ก/เปลี่ยนฟิลด์
 
 import { apiFetch } from "../services/api.js";
+import StatusModal from "./StatusModal.vue";
 
 export default {
   name: "ApprovalSection",
+
+  components: { StatusModal },
 
   props: {
     crId: { type: [String, Number], required: true }
@@ -28,7 +40,9 @@ export default {
         result: "",     // approved / rejected / more-info
         approver: user.fullName || "",
         date: ""
-      }
+      },
+      submitting: false, // true ระหว่างรอ backend ตอบ — คุมปุ่ม disable/ข้อความ
+      modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
@@ -40,12 +54,15 @@ export default {
   },
 
   methods: {
+    // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ
+    // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่
     async submitApproval() {
       if (!this.form.result) {
-        alert("กรุณาเลือกผลการพิจารณา");
+        this.modal = { show: true, variant: "error", title: "ยังเลือกผลไม่ครบ", message: "กรุณาเลือกผลการพิจารณา" };
         return;
       }
 
+      this.submitting = true;
       try {
         await apiFetch(`/change-requests/${this.crId}/approval`, {
           method: "POST",
@@ -55,10 +72,12 @@ export default {
             approvalDate: this.form.date
           })
         });
-        alert("บันทึกผลการพิจารณาเรียบร้อยแล้ว!");
+        this.modal = { show: true, variant: "success", title: "บันทึกสำเร็จ", message: "บันทึกผลการพิจารณาเรียบร้อยแล้ว!" };
         this.$emit("approved", this.form.result);
       } catch (err) {
-        alert("บันทึกไม่สำเร็จ: " + err.message);
+        this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };
+      } finally {
+        this.submitting = false;
       }
     }
   }
@@ -104,12 +123,16 @@ export default {
       </div>
 
       <div class="ui-action-buttons" v-if="canApprove">
-        <button type="submit" class="btn btn-submit">
-          <i class="fa-solid fa-paper-plane"></i> บันทึกผลอนุมัติ (Submit)
+        <button type="submit" class="btn btn-submit" :disabled="submitting">
+          <i class="fa-solid fa-paper-plane"></i>
+          {{ submitting ? "กำลังบันทึก..." : "บันทึกผลอนุมัติ (Submit)" }}
         </button>
       </div>
 
     </fieldset>
+
+    <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
+      @close="modal.show = false" />
   </form>
 </template>
 

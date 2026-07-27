@@ -3,6 +3,14 @@
 // ============================================
 //
 // เดิมคือ js/config.js — ทุกหน้าโหลดไฟล์นี้ก่อนใช้ apiFetch
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง (import ไฟล์นี้ไปใช้ apiFetch): ทุก view/component ที่คุยกับ backend —
+//   LoginView, FormView, ListView, ApproveView, ApprovalSection.vue
+// ปลายทาง: fetch() ตรงไปที่ backend/src/index.js (API_BASE = http://localhost:4000/api)
+//          แล้ว index.js ส่งต่อให้ routes/auth.js, routes/systems.js, routes/cr.js อีกที
+// รวม fetch ไว้ไฟล์เดียว เพราะทุกหน้าต้องแนบ X-User-Id และแปลง error เหมือนกันหมด
+// ไม่อยากให้แต่ละหน้าเขียน fetch + error handling ซ้ำๆ กัน 6-7 ที่
 
 // ที่อยู่ backend — ถ้า deploy จริงค่อยเปลี่ยนเป็น domain จริง
 export const API_BASE = "http://localhost:4000/api";

@@ -86,3 +86,8 @@ h1 {
 .btn-login:hover {
   background: #2a2c30;
 }
+
+.btn-login:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+}

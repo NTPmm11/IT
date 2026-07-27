@@ -8,6 +8,12 @@
 //   -> แสดงรายการทั้งหมด -> ปุ่ม Download PDF ย้อนหลัง
 //
 // backend รองรับ filter ผ่าน query string แล้ว (GET /change-requests?status=&crNumber=&date=)
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: router/index.js -> path "/list" (lazy load) — HomeView.vue มีลิงก์มาที่นี่
+// ปลายทาง: services/api.js (apiFetch -> GET /api/change-requests) + services/commonActions.js
+//          (...commonMethods เอา generatePDF มาใช้กับปุ่ม "Download PDF ย้อนหลัง")
+// คลิกแถวไหน -> this.$router.push("/approve?crId=...") ไปเปิด ApproveView.vue ต่อ
 
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";

@@ -7,6 +7,13 @@
 // ดูอีเมลที่ "ส่งไปแล้ว" ได้จาก preview URL ที่ log ออก console ตอน sendMail
 //
 // ใช้งานจริง: ใส่ SMTP_HOST/PORT/USER/PASS ใน .env แล้วจะสลับไปส่งผ่านนั้นแทนทันที
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง (require ไฟล์นี้): routes/cr.js เท่านั้น — เรียก sendMail() ตอน submit CR ใหม่
+//   (แจ้ง approver) และตอนบันทึกผลพิจารณา (แจ้งผู้ร้องขอ) พร้อม renderEmail() ห่อ HTML สวยๆ ให้
+// ปลายทาง: require("nodemailer") ยิงออก SMTP จริง (ตาม .env) หรือ Ethereal (fake inbox ตอน dev)
+// แยกออกมาเป็นไฟล์ต่างหาก (ไม่เขียนสดใน cr.js) เพราะ "การส่งเมล" เป็นคนละหน้าที่กับ "จัดการ CR"
+// — cr.js ตัดสินใจว่า "ควรส่งเมลไหม/ส่งหาใคร" ส่วนไฟล์นี้ตัดสินใจว่า "จะส่งยังไง" (SMTP ไหน, ล้มแล้วทำไง)
 
 const nodemailer = require("nodemailer");
 
@@ -81,6 +88,16 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
+// bodyHtml ของ renderEmail() ถูกแปะลง <div> ตรงๆ ไม่ผ่านการ escape — ถ้าเอาข้อความที่ผู้ใช้พิมพ์เอง
+// (subject/comment) ไปต่อ string ใส่ตรงๆ โดยไม่ escape ก่อน คนร้ายพิมพ์ <a href="..."> ลงช่อง subject
+// ก็แปะลิงก์ปลอม/HTML แปลกปลอมลงอีเมลที่ส่งจริงได้ (HTML injection) — escapeHtml() ตัวนี้กันไว้
+// ใช้ห่อเฉพาะค่าที่มาจากผู้ใช้ก่อนต่อเข้า bodyHtml เสมอ (ดูตัวอย่างใน routes/cr.js)
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+
 // สร้าง HTML e-mail แบบ card สวยๆ (inline CSS ทั้งหมด — client mail ส่วนใหญ่ตัด <style> ทิ้ง)
 // heading/bodyHtml = เนื้อหา, ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
 function renderEmail({ heading, bodyHtml, ctaText, ctaUrl }) {
@@ -108,4 +125,4 @@ function renderEmail({ heading, bodyHtml, ctaText, ctaUrl }) {
   </div>`;
 }
 
-module.exports = { sendMail, renderEmail };
+module.exports = { sendMail, renderEmail, escapeHtml };

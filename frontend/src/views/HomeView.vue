@@ -5,6 +5,12 @@
 //
 // จุดกลางให้เลือกไปต่อ: สร้าง CR ใหม่ / ดูประวัติย้อนหลัง / logout
 // (ตาม flowchart: Login -> หน้าหลักระบบ -> แยกไป "กรอก CR ใหม่" หรือ "สืบค้นประวัติย้อนหลัง")
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: router/index.js -> path "/home" (lazy load) — LoginView.vue push มาที่นี่หลัง login สำเร็จ
+// ปลายทาง: ไม่เรียก apiFetch เลย (ไม่มี logic คุย backend) — มีแค่ <RouterLink> ไปหน้าอื่น
+//          (to="/form", to="/list") + ปุ่ม logout ที่ลบ localStorage แล้วเด้งกลับ "/"
+// หน้านี้เป็นแค่ "ทางแยก" ไม่มี state/ฟอร์มอะไรให้จัดการ เลยไม่ต้องมี StatusModal/submitting
 
 export default {
   data() {

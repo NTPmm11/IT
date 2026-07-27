@@ -14,6 +14,11 @@
 // 2. เปิดหน้าฟอร์ม dropdown ต้องมีตัวเลือกโผล่
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/systems.js
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: index.js -> app.use("/api/systems", systemRoutes)
+// ปลายทาง: require("../db") อ่านตาราง systems ตรงๆ (ไม่ต้อง login ก็เรียกได้ — ไม่มี requireAuth)
+// ฝั่ง frontend ที่เรียกเส้นนี้: views/FormView.vue ตอน mounted() เอาไปวาด <select id="cr-system">
 
 const express = require("express");
 const dbPool = require("../db");   // ตัวคุยกับ SQL Server — ใช้ผ่าน dbPool.query(...)

@@ -10,18 +10,32 @@
 //   POST /api/change-requests            บันทึก CR ใหม่          ← LAB 4B (พีคสุด: transaction)
 //   POST /api/change-requests/:id/approval  บันทึกผลพิจารณา     ← LAB 4C
 //
-// mapping กับ database/schema.sql:
-//   change_requests  = ฟอร์ม section 1-3
-//   cr_change_types  = checkbox ประเภทการเปลี่ยน (หลายค่า)
-//   cr_action_plans  = ตารางแผนดำเนินงาน section 4
-//   cr_approvals     = ผลพิจารณา section 5 (approve.html)
+// mapping กับ database/*.sql:
+//   change_requests    = ฟอร์ม section 1-3
+//   cr_change_types    = checkbox ประเภทการเปลี่ยน (หลายค่า)
+//   cr_action_plans    = ตารางแผนดำเนินงาน section 4
+//   cr_rollback_plans  = ตารางแผนการกู้คืน (Roll Back Plan) — โครงเหมือน cr_action_plans
+//   cr_approvals       = ผลพิจารณา section 5 (approve.html)
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/cr.js
+//
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: index.js -> app.use("/api/change-requests", crRoutes)
+// ปลายทาง (require เข้ามาใช้):
+//   ../db                    คุยกับตาราง change_requests / cr_change_types / cr_action_plans /
+//                            cr_rollback_plans / cr_approvals
+//   ../middleware/auth       requireAuth (ต้อง login) + requireRole (เช็คสิทธิ์ approver/it_admin)
+//   ../services/mailer       ส่งเมลแจ้งเตือนหลัง submit/หลังพิจารณาผล (sendMail + renderEmail ทำ HTML สวยๆ)
+// ฝั่ง frontend ที่เรียกเส้นต่างๆ ในไฟล์นี้:
+//   views/FormView.vue           -> POST /  (submit CR ใหม่) + GET /next-number (preview เลขที่)
+//   views/ListView.vue           -> GET /   (list + filter)
+//   views/ApproveView.vue        -> GET /:id (ดึงรายละเอียด CR มาโชว์ก่อนอนุมัติ)
+//   components/ApprovalSection.vue -> POST /:id/approval (บันทึกผลพิจารณา)
 
 const express = require("express");
 const dbPool = require("../db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { sendMail, renderEmail } = require("../services/mailer");
+const { sendMail, renderEmail, escapeHtml } = require("../services/mailer");
 
 const router = express.Router();
 
@@ -133,6 +147,10 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       "SELECT step, start_date, end_date, owner, note FROM cr_action_plans WHERE cr_id = ? ORDER BY seq_no",
       [crId]
     );
+    const [rollbackPlans] = await dbPool.query(
+      "SELECT step, start_date, end_date, owner, note FROM cr_rollback_plans WHERE cr_id = ? ORDER BY seq_no",
+      [crId]
+    );
     const [approvals] = await dbPool.query(
       `SELECT a.result, a.comment, a.approval_date, u.full_name AS approver
        FROM cr_approvals a
@@ -147,6 +165,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       // .map ดึงเอาแค่ค่า change_type ออกมาเหลือ array string ธรรมดา ["App","DB"]
       changeTypes: types.map(t => t.change_type),
       plan: plans,
+      rollbackPlan: rollbackPlans,
       approvals
     });
   } catch (err) {
@@ -213,7 +232,7 @@ router.post("/", requireAuth, async (req, res, next) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         tempCrNumber,
-        body.requestDate,
+        body.requestDate || null,  // request_date DATE NULL — "" (ลบ input date ออก) แปลงเป็น DATE ตรงๆ ไม่ได้ พังทันที
         req.user.userId,       // ไม่เชื่อ requesterId ที่ frontend ส่งมา — ใช้ user ที่ login จริงจาก requireAuth เท่านั้น
         body.department || null,  // "||" = ถ้าค่าซ้าย falsy (undefined/"") ใช้ค่าขวาแทน (คอลัมน์นี้ยอมเป็น NULL ได้)
         systemId,
@@ -259,6 +278,17 @@ router.post("/", requireAuth, async (req, res, next) => {
       );
     }
 
+    // ตาราง "แผนการกู้คืน (Roll Back Plan)" — โครงเหมือน action plan เป๊ะ แค่คนละตาราง (cr_rollback_plans)
+    // seq นับแยกชุดของตัวเอง เริ่ม 1 ใหม่ (ไม่ต่อจาก action plan)
+    let rollbackSeq = 1;
+    for (const row of body.rollbackPlan || []) {
+      await dbConnection.query(
+        `INSERT INTO cr_rollback_plans (cr_id, seq_no, step, start_date, end_date, owner, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [crId, rollbackSeq++, row.step, row.start, row.end, row.owner || null, row.note || null]
+      );
+    }
+
     await dbConnection.commit();   // ทุก INSERT ด้านบนสำเร็จหมด -> บันทึกจริงลง database พร้อมกันทีเดียว
 
     // ส่ง e-mail แจ้งผู้อนุมัติ — เฉพาะตอน submit จริง (draft ยังไม่ต้องแจ้งใคร)
@@ -273,7 +303,7 @@ router.post("/", requireAuth, async (req, res, next) => {
         subject: `[CR] มีคำขอใหม่รอพิจารณา: ${crNumber}`,
         html: renderEmail({
           heading: "มีคำขอ Change Request ใหม่รอพิจารณา",
-          bodyHtml: `<p>เรื่อง: <b>${body.subject}</b></p><p>เลขที่เอกสาร: <b>${crNumber}</b></p>`,
+          bodyHtml: `<p>เรื่อง: <b>${escapeHtml(body.subject)}</b></p><p>เลขที่เอกสาร: <b>${crNumber}</b></p>`,
           ctaText: "ไปหน้าพิจารณา",
           ctaUrl: approveLink
         })
@@ -335,7 +365,7 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       await dbConnection.query(
         `INSERT INTO cr_approvals (cr_id, approver_id, result, comment, approval_date)
          VALUES (?, ?, ?, ?, ?)`,
-        [crId, req.user.userId, result, comment || null, approvalDate]
+        [crId, req.user.userId, result, comment || null, approvalDate || null]  // approval_date DATE NULL — ช่องนี้ไม่ required ฝั่งหน้าเว็บ ต้องกัน "" เอง
       );
 
       // enum ใน schema ใช้ขีดล่าง แต่หน้าเว็บส่งขีดกลางมา (more-info -> more_info)
@@ -357,9 +387,9 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
         subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
         html: renderEmail({
           heading: `ผลการพิจารณาคำขอ ${cr.cr_number}`,
-          bodyHtml: `<p>เรื่อง: <b>${cr.subject}</b></p>
+          bodyHtml: `<p>เรื่อง: <b>${escapeHtml(cr.subject)}</b></p>
                      <p>สถานะ: <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${resultColor}1a;color:${resultColor};font-weight:600;">${resultText}</span></p>
-                     ${comment ? `<p>ความเห็น: ${comment}</p>` : ""}`
+                     ${comment ? `<p>ความเห็น: ${escapeHtml(comment)}</p>` : ""}`
         })
       });
 

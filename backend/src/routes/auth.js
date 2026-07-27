@@ -19,6 +19,12 @@
 //
 // ติดตรงไหนดูเฉลย:  git diff main solution -- backend/src/routes/auth.js
 //
+// ── เชื่อมกับไฟล์ไหนบ้าง ──
+// ต้นทาง: index.js -> app.use("/api/auth", authRoutes) เสียบไฟล์นี้ไว้ใต้ prefix /api/auth
+// ปลายทาง: require("../db") คุยกับตาราง users โดยตรง (ไม่ผ่าน middleware/auth.js เพราะหน้านี้
+//          คือจุดที่ "ยังไม่ login" — ไม่มี X-User-Id ให้เช็คด้วยซ้ำ)
+// ฝั่ง frontend ที่เรียกเส้นนี้: views/LoginView.vue (apiFetch("/auth/login", ...))
+//
 // ── วิธีเขียนทีละขั้น (ถ้าเริ่มจากไฟล์เปล่า) ──
 // 1. import ของที่ต้องใช้: express (สร้าง router), bcryptjs (เทียบรหัสผ่าน), dbPool (คุย database)
 // 2. สร้าง router ด้วย express.Router() — ไฟล์นี้จัดการเฉพาะ route ใต้ /auth
