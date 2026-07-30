@@ -427,6 +427,7 @@ export default {
               <th style="width:100px;">เวลาเริ่ม</th>
               <th style="width:100px;">วัน/เดือน/ปี</th>
               <th style="width:100px;">สิ้นสุด</th>
+              <th style="width:120px;">ผู้รับผิดชอบ</th>
               <th>หมายเหตุ</th>
               <th style="width:60px;">ลบ</th>
             </tr>
@@ -439,6 +440,7 @@ export default {
               <td><input type="time" v-model="row.start" required></td>
               <td><input type="date" v-model="row.endDate" required></td>
               <td><input type="time" v-model="row.end" required></td>
+              <td><input type="text" v-model="row.owner" placeholder="ผู้รับผิดชอบ"></td>
               <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
                 <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
@@ -465,6 +467,7 @@ export default {
             <th style="width:100px;">เวลาเริ่ม</th>
             <th style="width:100px;">วัน/เดือน/ปี</th>
             <th style="width:100px;">เวลาสิ้นสุด</th>
+            <th style="width:120px;">ผู้รับผิดชอบ</th>
             <th>หมายเหตุ</th>
             <th style="width:60px;">ลบ</th>
           </tr>
@@ -477,6 +480,7 @@ export default {
             <td><input type="time" v-model="row2.start" required></td>
             <td><input type="date" v-model="row2.endDate" required></td>
             <td><input type="time" v-model="row2.end" required></td>
+            <td><input type="text" v-model="row2.owner" placeholder="ผู้รับผิดชอบ"></td>
             <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
