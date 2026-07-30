@@ -27,6 +27,15 @@ const router = express.Router();
 
 // "/" ในไฟล์นี้ = URL จริงคือ /api/systems
 // (index.js เสียบไฟล์นี้ไว้ใต้ /api/systems)
+/**
+ * @openapi
+ * /api/systems:
+ *   get:
+ *     summary: รายชื่อระบบ (สำหรับ dropdown)
+ *     tags: [Systems]
+ *     responses:
+ *       200: { description: รายการระบบที่ยังเปิดใช้งาน }
+ */
 router.get("/", async (req, res, next) => {
   try {
     // ไม่มีเงื่อนไขจาก user เลยไม่ต้องมี "?" placeholder เหมือนไฟล์อื่น

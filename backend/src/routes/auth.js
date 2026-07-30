@@ -53,6 +53,27 @@ const router = express.Router();
 // ของไฟล์นี้ (index.js เสียบไว้ใต้ /api/auth เลยรวมเป็น POST /api/auth/login)
 //
 // body: { username, password }  <- ข้อมูลที่ frontend ส่งมาใน request body (JSON)
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     summary: Login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, password]
+ *             properties:
+ *               username: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       200: { description: Login สำเร็จ ได้ข้อมูล user กลับมา }
+ *       400: { description: กรอกข้อมูลไม่ครบ }
+ *       401: { description: Username หรือ password ไม่ถูกต้อง }
+ */
 router.post("/login", async (req, res, next) => {
   try {
     // { username, password } = req.body คือ "destructuring"

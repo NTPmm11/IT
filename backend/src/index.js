@@ -28,6 +28,8 @@ require("dotenv").config();
 // require = ดึงของจากกล่องอื่นมาใช้ (เหมือน <script src> ฝั่งหน้าเว็บ)
 const express = require("express");  // ตัวสร้าง server
 const cors = require("cors");        // ตัวปลดล็อกให้คนละ port คุยกันได้
+const swaggerUi = require("swagger-ui-express");   // หน้าเว็บโชว์ API docs
+const swaggerSpec = require("./swagger");          // spec ที่ประกอบจากคอมเมนต์ @openapi ในแต่ละ route
 
 // ดึง route ของเราเอง (./ = ไฟล์ในโปรเจคเรา ไม่ใช่ของที่ npm install)
 const authRoutes = require("./routes/auth");
@@ -59,6 +61,9 @@ app.use("/api/change-requests", crRoutes);     // /api/change-requests/...
 // เช็คว่า server ยังทำงาน: เปิด GET /api/health ใน browser
 // (req = ของที่ client ส่งมา, res = ของที่เราตอบกลับ)
 app.get("/api/health", (req, res) => res.json({ ok: true }));
+
+// หน้า API docs: เปิด http://localhost:4000/api-docs ใน browser
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // error handler กลาง — route ไหนเรียก next(err) จะตกลงมาที่นี่
 // (สังเกต: มี 4 parameter — Express ดูจำนวน parameter

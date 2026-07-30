@@ -45,6 +45,17 @@ const router = express.Router();
 // ต้องอยู่ก่อน "/:id" ไม่งั้น Express จะจับ "next-number" เป็นค่า :id ไปแทน
 // เป็นแค่ preview (MAX(cr_id)+1) — ถ้ามีคนอื่น submit แทรกก่อน เลขจริงตอน submit
 // อาจไม่ตรงกับที่ preview ไว้ (ยอมรับ trade-off นี้ เพื่อแลกกับไม่ต้อง insert แถวจริงล่วงหน้า)
+/**
+ * @openapi
+ * /api/change-requests/next-number:
+ *   get:
+ *     summary: เลขที่เอกสารตัวถัดไป (preview)
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     responses:
+ *       200: { description: "เลขที่เอกสาร เช่น CR0000001" }
+ *       401: { description: ไม่ได้ login }
+ */
 router.get("/next-number", requireAuth, async (req, res, next) => {
   try {
     const [[row]] = await dbPool.query(
@@ -65,6 +76,82 @@ router.get("/next-number", requireAuth, async (req, res, next) => {
 //   ?status=approved            ตรงตัว
 //   ?crNumber=CR6908           ค้นบางส่วน (LIKE)
 //   ?date=2026-07-24           ตรงกับ request_date
+/**
+ * @openapi
+ * /api/change-requests:
+ *   get:
+ *     summary: รายการ CR ทั้งหมด (filter ได้)
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string }
+ *       - in: query
+ *         name: crNumber
+ *         schema: { type: string }
+ *         description: ค้นบางส่วน (LIKE)
+ *       - in: query
+ *         name: date
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200: { description: รายการ CR }
+ *       401: { description: ไม่ได้ login }
+ *   post:
+ *     summary: บันทึก CR ใหม่
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [subject, systemCode]
+ *             properties:
+ *               requestDate: { type: string, format: date }
+ *               department: { type: string }
+ *               systemCode: { type: string }
+ *               contact: { type: string }
+ *               priority: { type: string }
+ *               subject: { type: string }
+ *               problem: { type: string }
+ *               requestDetail: { type: string }
+ *               impact: { type: string }
+ *               impactDetail: { type: string }
+ *               downtime: { type: boolean }
+ *               duration: { type: string }
+ *               deployDate: { type: string, format: date }
+ *               status: { type: string, enum: [draft, submitted] }
+ *               changeTypes:
+ *                 type: array
+ *                 items: { type: string }
+ *               plan:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     step: { type: string }
+ *                     start: { type: string, format: date }
+ *                     end: { type: string, format: date }
+ *                     owner: { type: string }
+ *                     note: { type: string }
+ *               rollbackPlan:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     step: { type: string }
+ *                     start: { type: string, format: date }
+ *                     end: { type: string, format: date }
+ *                     owner: { type: string }
+ *                     note: { type: string }
+ *     responses:
+ *       201: { description: สร้าง CR สำเร็จ }
+ *       400: { description: ข้อมูลไม่ครบ หรือ systemCode ไม่รู้จัก }
+ *       401: { description: ไม่ได้ login }
+ *       409: { description: สร้างเลขที่เอกสารชนกัน ลอง submit อีกครั้ง }
+ */
 router.get("/", requireAuth, async (req, res, next) => {
   try {
     // JOIN = ดึงข้ามตาราง:
@@ -111,6 +198,24 @@ router.get("/", requireAuth, async (req, res, next) => {
 // ============================================
 // :id = ตัวแปรใน URL เช่นเรียก /api/change-requests/7
 // ค่า 7 จะโผล่ใน req.params.id
+/**
+ * @openapi
+ * /api/change-requests/{id}:
+ *   get:
+ *     summary: ดู CR ตัวเดียว ครบทุกส่วน
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: รายละเอียด CR }
+ *       400: { description: Invalid CR id }
+ *       401: { description: ไม่ได้ login }
+ *       404: { description: CR not found }
+ */
 router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     // req.params.id = ค่าจาก :id ใน URL (มาจากชื่อตัวแปรใน path "/:id" ด้านบน)
@@ -339,6 +444,36 @@ router.post("/", requireAuth, async (req, res, next) => {
 // สังเกตด่าน 2 ชั้น: requireAuth แล้วต่อด้วย requireRole
 // role requester หลุดมาถึงนี่จะโดน 403 เด้งกลับ (ฝีมือ LAB 3.4)
 // body: { result: "approved"|"rejected"|"more-info", comment, approvalDate }
+/**
+ * @openapi
+ * /api/change-requests/{id}/approval:
+ *   post:
+ *     summary: บันทึกผลพิจารณา (approver/it_admin เท่านั้น)
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [result]
+ *             properties:
+ *               result: { type: string, enum: [approved, rejected, more-info] }
+ *               comment: { type: string }
+ *               approvalDate: { type: string, format: date }
+ *     responses:
+ *       201: { description: บันทึกผลสำเร็จ }
+ *       400: { description: Invalid CR id หรือ result ไม่ถูกต้อง }
+ *       401: { description: ไม่ได้ login }
+ *       403: { description: role ไม่มีสิทธิ์ }
+ *       404: { description: CR not found }
+ */
 router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
   async (req, res, next) => {
     // เส้นนี้แตะ 2 ตาราง (เพิ่มผลพิจารณา + อัปเดตสถานะใบ CR)
