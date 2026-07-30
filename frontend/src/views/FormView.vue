@@ -282,7 +282,11 @@ export default {
       <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
     </div>
 
-    <RouterLink to="/home" class="back-link">← กลับหน้าหลัก</RouterLink>
+<button type="button" class="btn-back" @click="$router.push('/home')">
+  <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+</button>
+
+
 
     <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก handleSubmit() โดยไม่ reload หน้า -->
     <form @submit.prevent="handleSubmit">
@@ -294,10 +298,7 @@ export default {
 
       <div class="grid-2col">
 
-        <div class="form-group">
-          <label>เลขที่เอกสาร (CR ID):</label>
-          <input type="text" :value="submittedCrNumber || previewCrNumber || 'กำลังโหลด...'" disabled>
-        </div>
+    
 
         <div class="form-group">
           <label for="cr-request-date">วันที่ร้องขอ:</label>

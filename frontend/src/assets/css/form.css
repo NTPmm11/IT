@@ -220,4 +220,30 @@ textarea:focus {
   }
 }
 
+/* ===== ปุ่มกลับหน้าหลัก ===== */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+ background: linear-gradient(135deg, #5a0000, #00075a);
+  color: #fcfcff;
+  border: 1.5px solid #fdfeff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(245, 221, 221, 0.863);
+  margin-bottom: 20px;
+}
+
+/* เอฟเฟกต์ตอนนำเมาส์ไปชี้ (Hover) */
+.btn-back:hover {
+  background-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
+  transform: translateY(-1px);
+}
 

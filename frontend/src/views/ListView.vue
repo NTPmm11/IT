@@ -92,7 +92,10 @@ export default {
       <p>สืบค้น / ดูรายการ CR ทั้งหมดในระบบ</p>
     </div>
 
-    <RouterLink to="/home" class="back-link">← กลับหน้าหลัก</RouterLink>
+   <button type="button" class="btn-back" @click="$router.push('/home')">
+  <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+</button>
+
 
     <div class="section-title">
       <div>เงื่อนไขค้นหา</div>
@@ -125,42 +128,87 @@ export default {
       </div>
     </form>
 
-    <div class="section-title">
-      <div>รายการทั้งหมด ({{ rows.length }})</div>
-    </div>
+   <div class="section-title">
+  <div>รายการทั้งหมด ({{ totalRows }})</div>
+</div>
 
-    <div class="table-wrapper">
-      <table class="action-table">
-        <thead>
-          <tr>
-            <th>เลขที่ CR</th>
-            <th>วันที่ร้องขอ</th>
-            <th>หัวข้อ</th>
-            <th>ผู้ร้องขอ</th>
-            <th>ระบบ</th>
-            <th>ความสำคัญ</th>
-            <th>สถานะ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="7" class="text-center">กำลังโหลด...</td>
-          </tr>
-          <tr v-else-if="rows.length === 0">
-            <td colspan="7" class="text-center">ไม่พบข้อมูล</td>
-          </tr>
-          <tr v-for="row in rows" :key="row.cr_id" class="row-click" @click="openCr(row.cr_id)">
-            <td>{{ row.cr_number }}</td>
-            <td>{{ row.request_date ? new Date(row.request_date).toLocaleDateString('th-TH') : '-' }}</td>
-            <td>{{ row.subject }}</td>
-            <td>{{ row.requester }}</td>
-            <td>{{ row.system_name }}</td>
-            <td>{{ row.priority }}</td>
-            <td><span class="status-badge" :class="'status-' + row.status">{{ statusLabel(row.status) }}</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<div class="table-wrapper">
+  <table class="action-table">
+    <thead>
+      <tr>
+        <th class="text-center">เลขที่ CR</th>
+        <th class="text-center">วันที่ร้องขอ</th>
+        <th>หัวข้อ</th>
+        <th>ผู้ร้องขอ</th>
+        <th>ระบบ</th>
+        <th class="text-center">ความสำคัญ</th>
+        <th class="text-center">สถานะ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 1. สถานะกำลังโหลด -->
+      <tr v-if="loading">
+        <td colspan="7" class="text-center" style="padding: 20px;">กำลังโหลด...</td>
+      </tr>
+
+      <!-- 2. กรณีไม่มีข้อมูล -->
+      <tr v-else-if="rows.length === 0">
+        <td colspan="7" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
+      </tr>
+
+      <!-- 3. แสดงข้อมูล (ใช้ rows และตัวแปรเดิมของคุณ) -->
+      <tr 
+        v-else 
+        v-for="row in rows" 
+        :key="row.cr_id" 
+        class="row-click" 
+        @click="openCr(row.cr_id)"
+      >
+        <td class="text-center"><strong>{{ row.cr_number }}</strong></td>
+        <td class="text-center">{{ row.request_date ? new Date(row.request_date).toLocaleDateString('th-TH') : '-' }}</td>
+        <td>{{ row.subject }}</td>
+        <td>{{ row.requester }}</td>
+        <td>{{ row.system_name }}</td>
+        <td class="text-center">{{ row.priority }}</td>
+        <td class="text-center">
+          <span class="status-badge" :class="'status-' + row.status">
+            {{ statusLabel(row.status) }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== ปุ่มเปลี่ยนหน้า 1, 2, 3, 4 ..... (วางใตัตาราง) ===== -->
+<div class="pagination" v-if="totalPages > 1">
+  <button 
+    class="page-btn" 
+    :disabled="currentPage === 1" 
+    @click="changePage(currentPage - 1)"
+  >
+    ← ก่อนหน้า
+  </button>
+
+  <button 
+    v-for="page in totalPages" 
+    :key="page"
+    :class="['page-btn', { active: page === currentPage }]"
+    @click="changePage(page)"
+  >
+    {{ page }}
+  </button>
+
+  <button 
+    class="page-btn" 
+    :disabled="currentPage === totalPages" 
+    @click="changePage(currentPage + 1)"
+  >
+    ถัดไป →
+  </button>
+</div>
+
+    
 
     <div class="ui-action-buttons">
       <button type="button" class="btn btn-pdf" @click="generatePDF">
@@ -202,6 +250,22 @@ export default {
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
+}
+/* กำหนดสีปุ่ม PDF ให้เป็นสีกรมท่า (โทนเดียวกับปุ่มกลับหน้าหลัก) */
+.btn-pdf {
+ background: linear-gradient(135deg, #5a0000, #00075a); /* สีกรมท่าหลัก */
+  color: #ffffff !important;             /* ตัวหนังสือสีขาว */
+  border: none !important;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* ตอนเอาเม้าส์ไปชี้ ให้สว่างขึ้นเล็กน้อย */
+.btn-pdf:hover {
+background-color: #0a1b33;
 }
 
 .status-draft       { background: #e5e7eb; color: #4b5563; }
