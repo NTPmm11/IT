@@ -421,18 +421,17 @@ export default {
       <div class="table-wrapper">
         <table class="action-table">
           <thead>
-            <tr>
-              <th style="width:40px;">ลำดับ</th>
-              <th>ขั้นตอนงาน</th>
-              <th style="width:100px;">วัน/เดือน/ปี</th>
-              <th style="width:100px;">เวลาเริ่ม</th>
-              <th style="width:100px;">วัน/เดือน/ปี</th>
-              <th style="width:100px;">สิ้นสุด</th>
-              <th style="width:120px;">ผู้รับผิดชอบ</th>
-              <th>หมายเหตุ</th>
-              <th style="width:60px;">ลบ</th>
-            </tr>
-          </thead>
+    <tr>
+      <th style="width: 40px;">ลำดับ</th>
+      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
+      <th style="width: 95px;">วัน/เดือน/ปี</th>
+      <th style="width: 85px;">เวลาเริ่ม</th>
+      <th style="width: 95px;">วัน/เดือน/ปี</th>
+      <th style="width: 85px;">สิ้นสุด</th>
+      <th>หมายเหตุ</th>
+      <th style="width: 50px;">ลบ</th>
+    </tr>
+  </thead>
           <tbody>
             <tr v-for="(row, index) in rows" :key="index">
               <td class="text-center">{{ index + 1 }}</td>
@@ -441,7 +440,6 @@ export default {
               <td><input type="time" v-model="row.start" required></td>
               <td><input type="date" v-model="row.endDate" required></td>
               <td><input type="time" v-model="row.end" required></td>
-              <td><input type="text" v-model="row.owner" placeholder="ผู้รับผิดชอบ"></td>
               <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
                 <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
@@ -462,17 +460,16 @@ export default {
       <table class="action-table">
         <thead>
           <tr>
-            <th style="width:40px;">ลำดับ</th>
-            <th>ขั้นตอนงาน</th>
-            <th style="width:100px;">วัน/เดือน/ปี</th>
-            <th style="width:100px;">เวลาเริ่ม</th>
-            <th style="width:100px;">วัน/เดือน/ปี</th>
-            <th style="width:100px;">เวลาสิ้นสุด</th>
-            <th style="width:120px;">ผู้รับผิดชอบ</th>
-            <th>หมายเหตุ</th>
-            <th style="width:60px;">ลบ</th>
-          </tr>
-        </thead>
+      <th style="width: 40px;">ลำดับ</th>
+      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
+      <th style="width: 95px;">วัน/เดือน/ปี</th>
+      <th style="width: 85px;">เวลาเริ่ม</th>
+      <th style="width: 95px;">วัน/เดือน/ปี</th>
+      <th style="width: 85px;">สิ้นสุด</th>
+      <th>หมายเหตุ</th>
+      <th style="width: 50px;">ลบ</th>
+    </tr>
+  </thead>
         <tbody>
           <tr v-for="(row2, index) in rows2" :key="index">
             <td class="text-center">{{ index + 1 }}</td>
@@ -481,7 +478,6 @@ export default {
             <td><input type="time" v-model="row2.start" required></td>
             <td><input type="date" v-model="row2.endDate" required></td>
             <td><input type="time" v-model="row2.end" required></td>
-            <td><input type="text" v-model="row2.owner" placeholder="ผู้รับผิดชอบ"></td>
             <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
@@ -521,6 +517,7 @@ export default {
       @close="closeModal" />
   </div>
 </template>
+
 
 <style>
 @import '../assets/css/form.css';

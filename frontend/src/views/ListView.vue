@@ -98,7 +98,7 @@ export default {
 
 
     <div class="section-title">
-      <div>เงื่อนไขค้นหา</div>
+      <div>ค้นหารายการ</div>
     </div>
 
     <form class="grid-2col filter-grid" @submit.prevent="search">
