@@ -81,7 +81,9 @@ export default {
       <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
     </div>
 
-    <RouterLink to="/home" class="back-link">← กลับหน้าหลัก</RouterLink>
+   <button type="button" class="btn-back" @click="$router.push('/home')">
+  <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+</button>
 
     <!-- สรุปว่ากำลังอนุมัติ CR ใบไหน — สำคัญมากเวลาเปิดหน้านี้ตรงจากลิงก์ในเมล -->
     <div class="section-title" v-if="cr">
