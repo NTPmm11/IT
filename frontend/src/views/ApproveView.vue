@@ -53,6 +53,23 @@ export default {
         console.error(err);
       }
     }
+  },
+
+  computed: {
+    // cr.changeTypes เป็น array ค่า code ("App"/"DB"/"Infra") -> แปลงเป็นข้อความอ่านง่ายก่อนโชว์
+    changeTypesText() {
+      const labels = { App: "Application / Software", DB: "Database Schema", Infra: "Infrastructure" };
+      const types = this.cr?.changeTypes || [];
+      return types.length ? types.map(t => labels[t] || t).join(", ") : "-";
+    }
+  },
+
+  methods: {
+    // request_date/deploy_date มาจาก backend เป็น ISO datetime เต็ม ("2026-07-21T00:00:00.000Z")
+    // ตัดเอาแค่ส่วนวันที่มาโชว์ (ไม่ต้อง parse เป็น Date object ให้ซับซ้อนเกินจำเป็น)
+    fmtDate(value) {
+      return value ? String(value).slice(0, 10) : "-";
+    }
   }
 };
 </script>
@@ -71,6 +88,117 @@ export default {
       <div>{{ cr.cr_number }} — {{ cr.subject }}</div>
       <span class="note">ผู้ร้องขอ: {{ cr.requester }} | ระบบ: {{ cr.system_name }} | ความสำคัญ: {{ cr.priority }}</span>
     </div>
+
+    <!-- รายละเอียดคำขอเต็ม (อ่านอย่างเดียว) — ให้ approver เห็นว่ากำลังอนุมัติอะไร ไม่ใช่แค่หัวข้อ -->
+    <template v-if="cr">
+      <div class="grid-2col">
+        <div class="form-group">
+          <label>วันที่ร้องขอ:</label>
+          <input type="text" :value="fmtDate(cr.request_date)" disabled>
+        </div>
+        <div class="form-group">
+          <label>แผนก/ฝ่าย:</label>
+          <input type="text" :value="cr.department" disabled>
+        </div>
+        <div class="form-group">
+          <label>อีเมล/เบอร์โทร:</label>
+          <input type="text" :value="cr.contact" disabled>
+        </div>
+      </div>
+
+      <div class="form-group align-top">
+        <label>สถานะปัจจุบัน / ปัญหาที่พบ:</label>
+        <textarea rows="3" disabled>{{ cr.problem }}</textarea>
+      </div>
+
+      <div class="form-group align-top">
+        <label>สิ่งที่ต้องการให้ปรับปรุง:</label>
+        <textarea rows="3" disabled>{{ cr.request_detail }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>ประเภทการเปลี่ยน:</label>
+        <input type="text" :value="changeTypesText" disabled>
+      </div>
+
+      <div class="form-group">
+        <label>ผลกระทบระบบ:</label>
+        <input type="text"
+          :value="cr.impact === 'other' ? ('กระทบระบบอื่น: ' + (cr.impact_detail || '-')) : 'ไม่มีผลกระทบส่วนอื่น'"
+          disabled>
+      </div>
+
+      <div class="grid-2col">
+        <div class="form-group">
+          <label>ปิดระบบชั่วคราว (Downtime):</label>
+          <input type="text" :value="cr.downtime ? 'ต้องปิดระบบ' : 'ไม่ต้องปิดระบบ'" disabled>
+        </div>
+        <div class="form-group">
+          <label>ระยะเวลาที่คาดใช้:</label>
+          <input type="text" :value="cr.duration" disabled>
+        </div>
+        <div class="form-group">
+          <label>เป้าหมาย Deploy:</label>
+          <input type="text" :value="fmtDate(cr.deploy_date)" disabled>
+        </div>
+      </div>
+
+      <template v-if="cr.plan && cr.plan.length">
+        <div class="section-title">
+          <div>แผนดำเนินงาน (Action Plan)</div>
+        </div>
+        <table class="action-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">ลำดับ</th>
+              <th>ขั้นตอนงาน</th>
+              <th>เริ่ม</th>
+              <th>สิ้นสุด</th>
+              <th>ผู้รับผิดชอบ</th>
+              <th>หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in cr.plan" :key="'plan-' + i">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td>{{ row.step }}</td>
+              <td>{{ row.start_date }}</td>
+              <td>{{ row.end_date }}</td>
+              <td>{{ row.owner || "-" }}</td>
+              <td>{{ row.note || "-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+
+      <template v-if="cr.rollbackPlan && cr.rollbackPlan.length">
+        <div class="section-title">
+          <div>แผนการกู้คืน (Roll Back Plan)</div>
+        </div>
+        <table class="action-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">ลำดับ</th>
+              <th>ขั้นตอนงาน</th>
+              <th>เริ่ม</th>
+              <th>สิ้นสุด</th>
+              <th>ผู้รับผิดชอบ</th>
+              <th>หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in cr.rollbackPlan" :key="'rb-' + i">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td>{{ row.step }}</td>
+              <td>{{ row.start_date }}</td>
+              <td>{{ row.end_date }}</td>
+              <td>{{ row.owner || "-" }}</td>
+              <td>{{ row.note || "-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+    </template>
 
     <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
     <ApprovalSection v-if="crId" :crId="crId" />
