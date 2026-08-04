@@ -111,7 +111,8 @@ body {
   .ui-action-buttons,
   .btn-add-row,
   .btn-delete-row,
-  .back-link {
+  .back-link,
+  .pagination {
     display: none;
   }
 

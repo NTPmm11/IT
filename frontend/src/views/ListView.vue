@@ -36,7 +36,10 @@ export default {
       },
       rows: [],
       loading: false,
-      statusOptions: STATUS_LABEL
+      statusOptions: STATUS_LABEL,
+      currentPage: 1,
+      pageSize: 10,
+      printing: false   // true ระหว่างพิมพ์ -> pagedRows คืนทุกแถว ไม่ตัดเหลือแค่หน้าปัจจุบัน
     };
   },
 
@@ -46,6 +49,22 @@ export default {
       return;
     }
     this.search();
+  },
+
+  computed: {
+    // backend ยังไม่รองรับ page/limit — filter/list ทั้งหมดมาที่เดียว แล้วตัดหน้าฝั่ง client เอา
+    totalRows() {
+      return this.rows.length;
+    },
+    totalPages() {
+      return Math.ceil(this.rows.length / this.pageSize) || 1;
+    },
+    pagedRows() {
+      // ปุ่ม "Download PDF ย้อนหลัง" ต้องได้ทุกแถว ไม่ใช่แค่หน้าที่กำลังดูอยู่บนจอ
+      if (this.printing) return this.rows;
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.rows.slice(start, start + this.pageSize);
+    }
   },
 
   methods: {
@@ -66,6 +85,7 @@ export default {
 
         const qs = params.toString();
         this.rows = await apiFetch(`/change-requests${qs ? "?" + qs : ""}`);
+        this.currentPage = 1;   // ค้นใหม่ -> กลับหน้า 1 กันค้างหน้าท้ายๆ ที่ผลค้นหาใหม่ไม่มีแล้ว
       } catch (err) {
         alert("ค้นหาไม่สำเร็จ: " + err.message);
       } finally {
@@ -80,6 +100,26 @@ export default {
 
     openCr(crId) {
       this.$router.push(`/approve?crId=${crId}`);
+    },
+
+    changePage(page) {
+      if (page < 1 || page > this.totalPages) return;
+      this.currentPage = page;
+    },
+
+    // ทับ commonMethods.generatePDF (ตัวเดิมแค่ window.print() เฉยๆ) — หน้านี้ต้องสลับไปโชว์
+    // ทุกแถวก่อนพิมพ์ (pagedRows อ่านค่า printing) ไม่งั้นได้ PDF แค่แถวที่เห็นในหน้าปัจจุบัน
+    async generatePDF() {
+      this.printing = true;
+      await this.$nextTick();
+
+      const restore = () => {
+        this.printing = false;
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
+
+      window.print();
     }
   }
 };
@@ -157,9 +197,9 @@ export default {
       </tr>
 
       <!-- 3. แสดงข้อมูล (ใช้ rows และตัวแปรเดิมของคุณ) -->
-      <tr 
-        v-else 
-        v-for="row in rows" 
+      <tr
+        v-else
+        v-for="row in pagedRows"
         :key="row.cr_id" 
         class="row-click" 
         @click="openCr(row.cr_id)"
