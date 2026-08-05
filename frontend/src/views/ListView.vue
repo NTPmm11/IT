@@ -102,6 +102,12 @@ export default {
       this.$router.push(`/approve?crId=${crId}`);
     },
 
+    // ปุ่ม PDF ต่อแถว — ไป ApproveView (มี form เต็มใบของ CR นี้อยู่แล้ว) พร้อม ?print=1
+    // ให้เปิด print dialog ให้อัตโนมัติทันทีที่ข้อมูลโหลดเสร็จ (ดู mounted() ใน ApproveView.vue)
+    openCrPdf(crId) {
+      this.$router.push(`/approve?crId=${crId}&print=1`);
+    },
+
     changePage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
@@ -113,11 +119,19 @@ export default {
       this.printing = true;
       await this.$nextTick();
 
+      // บาง browser/OS ไม่ยิง afterprint ตอนปิด print dialog บางจังหวะ (เช่น cancel เร็วเกินไป)
+      // -> printing ค้าง true ตลอด (ตารางไม่แบ่งหน้าอีกเลยจนกว่าจะ search/เปลี่ยนหน้าใหม่)
+      // เพิ่ม focus เป็นตัวสำรอง: ปิด dialog แล้ว (ไม่ว่าพิมพ์จริงหรือ cancel) focus กลับมาที่ window เสมอ
+      let restored = false;
       const restore = () => {
+        if (restored) return;
+        restored = true;
         this.printing = false;
         window.removeEventListener("afterprint", restore);
+        window.removeEventListener("focus", restore);
       };
       window.addEventListener("afterprint", restore);
+      window.addEventListener("focus", restore);
 
       window.print();
     }
@@ -183,17 +197,18 @@ export default {
         <th>ระบบ</th>
         <th class="text-center">ความสำคัญ</th>
         <th class="text-center">สถานะ</th>
+        <th class="text-center">PDF</th>
       </tr>
     </thead>
     <tbody>
       <!-- 1. สถานะกำลังโหลด -->
       <tr v-if="loading">
-        <td colspan="7" class="text-center" style="padding: 20px;">กำลังโหลด...</td>
+        <td colspan="8" class="text-center" style="padding: 20px;">กำลังโหลด...</td>
       </tr>
 
       <!-- 2. กรณีไม่มีข้อมูล -->
       <tr v-else-if="rows.length === 0">
-        <td colspan="7" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
+        <td colspan="8" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
       </tr>
 
       <!-- 3. แสดงข้อมูล (ใช้ rows และตัวแปรเดิมของคุณ) -->
@@ -214,6 +229,12 @@ export default {
           <span class="status-badge" :class="'status-' + row.status">
             {{ statusLabel(row.status) }}
           </span>
+        </td>
+        <td class="text-center">
+          <!-- @click.stop กัน event ไหลต่อไปโดน @click="openCr" ของ <tr> (ไม่งั้นเด้งไปหน้า approve ซ้อนก่อน print) -->
+          <button type="button" class="btn-icon-pdf" title="ดาวน์โหลด PDF ใบนี้" @click.stop="openCrPdf(row.cr_id)">
+            <i class="fa-solid fa-file-pdf"></i>
+          </button>
         </td>
       </tr>
     </tbody>
@@ -313,4 +334,20 @@ background-color: #0a1b33;
 .status-approved     { background: #d1fae5; color: #065f46; }
 .status-rejected     { background: #fee2e2; color: #991b1b; }
 .status-more_info    { background: #dbeafe; color: #1e40af; }
+
+/* ปุ่ม PDF ต่อแถว — ไอคอนเล็กๆ ในตาราง ไม่ใช่ปุ่มเต็มแบบ .btn-pdf ท้ายหน้า */
+.btn-icon-pdf {
+  background: none;
+  border: none;
+  color: #5a0000;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-icon-pdf:hover {
+  background: #f5e6e6;
+}
 </style>

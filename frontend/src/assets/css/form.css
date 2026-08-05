@@ -205,7 +205,10 @@ textarea:focus {
 
 
 /* ===== Responsive ===== */
-@media (max-width: 768px) {
+/* "screen and" กันไว้ — ไม่งั้น breakpoint นี้ดันมาทำงานตอน print ด้วย
+   (หน้ากระดาษ print หัก margin แล้วมักคำนวณออกมาต่ำกว่า 768px)
+   ทำให้ grid-2col/form-group ยุบเหลือคอลัมน์เดียว ทุกช่องเรียงเป็นเส้นตรงดิ่งลงมาตอนสั่งพิมพ์ */
+@media screen and (max-width: 768px) {
   .grid-2col {
     grid-template-columns: 1fr;
     gap: 0;

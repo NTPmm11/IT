@@ -68,6 +68,10 @@ export default {
       // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
       systems: [],
 
+      // role ของ user ที่ login อยู่ (เติมใน mounted จาก localStorage)
+      // ใช้ล็อกส่วน "3. การประเมินผลกระทบและทรัพยากร" — เฉพาะสิทธิ์ it_admin เท่านั้น (ดู canEditImpact)
+      userRole: "",
+
       // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
       submittedCrId: null,
       submittedCrNumber: "",   // เลขที่เอกสารจริง (backend generate ตอน submit จริง — authoritative)
@@ -91,6 +95,7 @@ export default {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     this.form.requester = user.fullName || "";
     this.form.department = user.department || "";
+    this.userRole = user.role || "";
 
     // วันที่ร้องขอ default เป็นวันนี้ — <input type="date"> ต้องการรูปแบบ YYYY-MM-DD
     this.form.requestDate = new Date().toLocaleDateString("sv-SE");
@@ -109,6 +114,15 @@ export default {
       this.previewCrNumber = next.crNumber;
     } catch (err) {
       console.error(err);
+    }
+  },
+
+  computed: {
+    // ส่วน "3. การประเมินผลกระทบและทรัพยากร" เฉพาะสิทธิ์ it_admin (ดู label ในฟอร์ม)
+    // role อื่น (requester/approver) เห็นช่องพวกนี้แต่กรอกไม่ได้ (fieldset disabled ใน template)
+    // backend กันซ้ำอีกชั้นแล้วเหมือนกัน (routes/cr.js: isItAdmin) — ฝั่งนี้แค่ทำ UX ให้ตรงสิทธิ์จริง
+    canEditImpact() {
+      return this.userRole === "it_admin";
     }
   },
 
@@ -152,17 +166,22 @@ export default {
       if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact))) {
         return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล หรือเบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก)";
       }
-      if (this.form.changeTypes.length === 0) {
-        return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
-      }
-      if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
-        return "กรุณาระบุระบบที่ได้รับผลกระทบ";
-      }
-      if (!this.form.duration.trim()) {
-        return "กรุณาระบุระยะเวลาที่คาดใช้";
-      }
-      if (!this.form.deployDate) {
-        return "กรุณาระบุเป้าหมาย Deploy";
+      // ช่องพวกนี้อยู่ใน section 3 (เฉพาะสิทธิ์ it_admin) — role อื่น field ถูก disable
+      // ไว้เป็นค่า default เสมอ (v-model แก้ไม่ได้) เลยไม่บังคับกรอกกับ role อื่น
+      // ไม่งั้น requester/approver submit CR ไม่ผ่านเลยสักใบ (validate ค่า default ที่ตัวเองแก้ไม่ได้)
+      if (this.canEditImpact) {
+        if (this.form.changeTypes.length === 0) {
+          return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
+        }
+        if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
+          return "กรุณาระบุระบบที่ได้รับผลกระทบ";
+        }
+        if (!this.form.duration.trim()) {
+          return "กรุณาระบุระยะเวลาที่คาดใช้";
+        }
+        if (!this.form.deployDate) {
+          return "กรุณาระบุเป้าหมาย Deploy";
+        }
       }
       return "";
     },
@@ -372,8 +391,13 @@ export default {
       <!-- [ 3. การประเมินผลกระทบ ] -->
       <div class="section-title">
         <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
-        <span class="note">*เฉพาะสิทธิ์ IT / Admin</span>
+        <span class="note" v-if="canEditImpact">*เฉพาะสิทธิ์ IT / Admin</span>
+        <span class="note" v-else>*เฉพาะสิทธิ์ IT / Admin — คุณดูได้อย่างเดียว</span>
       </div>
+
+      <!-- fieldset disabled = ปิดทุก input/checkbox/radio ข้างในทีเดียว ให้ role อื่นนอกจาก it_admin
+           กันซ้ำอีกชั้นฝั่ง backend แล้ว (routes/cr.js: isItAdmin) เผื่อมีคนยิง POST ตรงๆ ข้าม UI -->
+      <fieldset :disabled="!canEditImpact" class="section3-fieldset">
 
       <div class="form-group">
         <label>ประเภทการเปลี่ยน:</label>
@@ -394,7 +418,7 @@ export default {
             ไม่มีผลกระทบส่วนอื่น</label>
           <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น
             (ระบุ):</label>
-          <input type="text" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
+          <input type="text" v-model="form.impactDetail" :disabled="!canEditImpact || form.impact !== 'other'"
             placeholder="ระบุระบบที่ได้รับผลกระทบ...">
           <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว
             (Downtime)</label>
@@ -404,13 +428,15 @@ export default {
       <div class="grid-2col" style="margin-top: 10px;">
         <div class="form-group">
           <label for="cr-duration">ระยะเวลาที่คาดใช้:</label>
-          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" required>
+          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" :required="canEditImpact">
         </div>
         <div class="form-group">
           <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
-          <input type="date" id="cr-deploy-date" v-model="form.deployDate" required>
+          <input type="date" id="cr-deploy-date" v-model="form.deployDate" :required="canEditImpact">
         </div>
       </div>
+
+      </fieldset>
 
       <!-- [ 4. แผนดำเนินงาน ] -->
       <div class="section-title">
@@ -510,8 +536,12 @@ export default {
 
     </form>
 
-    <!-- ส่วนอนุมัติ — โผล่หลัง Submit CR สำเร็จ / requester เห็นแต่กดไม่ได้ -->
-    <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
+    <!-- ส่วนอนุมัติ — โผล่หลัง Submit CR สำเร็จ / requester เห็นแต่กดไม่ได้
+         no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
+         ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
+    <div class="no-print">
+      <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
+    </div>
 
     <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
       @close="closeModal" />
@@ -521,4 +551,19 @@ export default {
 
 <style>
 @import '../assets/css/form.css';
+
+/* section 3 (การประเมินผลกระทบและทรัพยากร) เฉพาะสิทธิ์ it_admin — ดู canEditImpact */
+.section3-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.section3-fieldset:disabled input,
+.section3-fieldset:disabled select,
+.section3-fieldset:disabled textarea {
+  background-color: #eaedf2;
+  color: #6b7280;
+  cursor: not-allowed;
+}
 </style>

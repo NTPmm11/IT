@@ -21,6 +21,7 @@
 // ปลายทาง: services/api.js (apiFetch -> GET /change-requests/:id เอารายละเอียดมาโชว์)
 //          + components/ApprovalSection.vue (ฟอร์มอนุมัติจริง ส่ง crId ให้ผ่าน prop)
 import { apiFetch } from "../services/api.js";
+import { commonMethods } from "../services/commonActions.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 
 export default {
@@ -53,6 +54,12 @@ export default {
         console.error(err);
       }
     }
+
+    // มาจากปุ่ม PDF ใน ListView (ดู openCrPdf ใน ListView.vue -> push ?print=1 ต่อท้าย)
+    // -> เปิด print dialog อัตโนมัติทันทีที่ข้อมูล CR โหลดเสร็จ ไม่ต้องกดปุ่มซ้ำอีกที
+    if (this.$route.query.print === "1" && this.cr) {
+      this.$nextTick(() => this.generatePDF());
+    }
   },
 
   computed: {
@@ -65,6 +72,9 @@ export default {
   },
 
   methods: {
+    // ดึงปุ่ม generatePDF (window.print()) มาจาก services/commonActions.js — ใช้ร่วมกับ FormView/ListView
+    ...commonMethods,
+
     // request_date/deploy_date มาจาก backend เป็น ISO datetime เต็ม ("2026-07-21T00:00:00.000Z")
     // ตัดเอาแค่ส่วนวันที่มาโชว์ (ไม่ต้อง parse เป็น Date object ให้ซับซ้อนเกินจำเป็น)
     fmtDate(value) {
@@ -198,13 +208,24 @@ export default {
           </tbody>
         </table>
       </template>
+
+      <!-- ui-action-buttons = ซ่อนอัตโนมัติตอน print (ดู base.css @media print) -->
+      <div class="ui-action-buttons">
+        <button type="button" class="btn btn-pdf" @click="generatePDF">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </button>
+      </div>
     </template>
 
-    <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
-    <ApprovalSection v-if="crId" :crId="crId" />
-    <p v-else style="text-align:center; color:#6b7280;">
-      ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
-    </p>
+    <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
+         ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
+    <div class="no-print">
+      <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
+      <ApprovalSection v-if="crId" :crId="crId" />
+      <p v-else style="text-align:center; color:#6b7280;">
+        ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
+      </p>
+    </div>
   </div>
 </template>
 
