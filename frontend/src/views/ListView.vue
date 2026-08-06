@@ -267,6 +267,17 @@ export default {
 .btn-pdf:hover {
 background-color: #0a1b33;
 }
+h1 {
+  margin-bottom: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+p {
+  margin-top: 4px;
+  color: #2d3036;
+  font-size: 16px;
+}
 
 .status-draft       { background: #e5e7eb; color: #4b5563; }
 .status-submitted    { background: #fef3c7; color: #92400e; }
