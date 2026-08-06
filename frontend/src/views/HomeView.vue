@@ -74,6 +74,7 @@ export default {
   width: 600px;
 }
 
+
 .home-menu {
   display: grid;
   gap: 16px;
@@ -86,20 +87,21 @@ export default {
   gap: 18px;
   padding: 20px;
   border-radius: 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #868686;
   text-decoration: none;
-  color: #00112c;
+  color: #000000;
   transition: all 0.2s;
+  box-shadow: 0 15px 35px rgba(7, 7, 7, 0.589);
 }
 
 .home-card:hover {
-  border-color: #00075a;
-  background: #f5f7ff;
+  border-color: #000000;
+  background: #3f3e3f73;
 }
 
 .home-card i {
   font-size: 26px;
-  color: #00075a;
+  color: #000000;
   width: 36px;
   text-align: center;
 }
@@ -111,7 +113,7 @@ export default {
 
 .home-card p {
   font-size: 13px;
-  color: #6b7280;
+  color: #443d39;
 }
 </style>
 
