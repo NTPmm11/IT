@@ -303,10 +303,16 @@ router.get("/:id", requireAuth, async (req, res, next) => {
 // เลยต้องจองจากสระ: const dbConnection = await dbPool.getConnection()
 // (แล้วใช้ dbConnection.query แทน dbPool.query ทุกที่ในเส้นนี้)
 router.post("/", requireAuth, async (req, res, next) => {
-  // จองตัวคุยกับ database มา "1 เส้น" ตายตัวสำหรับ request นี้
-  // (ต่างจาก dbPool.query ที่ปกติสุ่มยืมเส้นว่างจากสระ — transaction ต้องใช้เส้นเดียวกันตลอด)
-  const dbConnection = await dbPool.getConnection();
+  // ประกาศนอก try ด้วย let — เผื่อ getConnection() เองพังก่อนได้ dbConnection มา
+  // (ต้องอยู่นอก try ไม่งั้น catch/finally ด้านล่างมองไม่เห็นตัวแปรนี้)
+  let dbConnection;
   try {
+    // จองตัวคุยกับ database มา "1 เส้น" ตายตัวสำหรับ request นี้ — ต้องอยู่ "ใน" try
+    // (ต่างจาก dbPool.query ที่ปกติสุ่มยืมเส้นว่างจากสระ — transaction ต้องใช้เส้นเดียวกันตลอด)
+    // เดิมอยู่นอก try: connect ล้มเหลว (SQL Server สะดุด) = promise reject ไม่มีใครจับ
+    // Express 4 ไม่ auto-catch async rejection ให้ -> unhandled rejection -> Node 15+
+    // ตั้งค่า default ให้ process ทั้งตัว crash ทันที (ไม่ใช่แค่ request นี้ล้ม)
+    dbConnection = await dbPool.getConnection();
     const body = req.body;   // เก็บไว้ตัวแปรสั้นๆ เพราะต้องอ้างถึงหลายรอบด้านล่าง
 
     // เช็คฟิลด์ที่ "ต้องมี" ก่อนแตะ database เลย ประหยัด query ที่ไม่จำเป็น
@@ -314,6 +320,12 @@ router.post("/", requireAuth, async (req, res, next) => {
     if (!body.subject || !body.systemCode) {
       return res.status(400).json({ error: "ต้องมี subject, systemCode" });
     }
+
+    // ส่วน "3. การประเมินผลกระทบและทรัพยากร" (impact/changeTypes/downtime/duration/deployDate)
+    // เฉพาะสิทธิ์ it_admin — frontend disable field พวกนี้ให้ role อื่นอยู่แล้ว แต่ frontend
+    // เชื่อไม่ได้ (ใครก็ยิง POST ตรงๆ ข้าม UI ได้) เลยกันซ้ำฝั่ง backend อีกชั้น:
+    // role อื่นที่ไม่ใช่ it_admin ส่งอะไรมาก็ทิ้ง ใช้ค่า default แทนเสมอ
+    const isItAdmin = req.user.role === "it_admin";
 
     // frontend ส่ง systemCode (ข้อความ เช่น "HR01") มา แต่ตาราง change_requests
     // ต้องการ system_id (เลข FK) เลยต้อง query แปลงค่าก่อน 1 รอบ
@@ -351,11 +363,11 @@ router.post("/", requireAuth, async (req, res, next) => {
         body.subject,
         body.problem || null,
         body.requestDetail || null,
-        body.impact || "none",
-        body.impactDetail || null,
-        body.downtime ? 1 : 0,    // BIT ใน SQL Server เก็บ 0/1 — แปลง true/false ของ JS ให้ตรงชนิด
-        body.duration || null,
-        body.deployDate || null,
+        isItAdmin ? (body.impact || "none") : "none",
+        isItAdmin ? (body.impactDetail || null) : null,
+        isItAdmin && body.downtime ? 1 : 0,    // BIT ใน SQL Server เก็บ 0/1 — แปลง true/false ของ JS ให้ตรงชนิด
+        isItAdmin ? (body.duration || null) : null,
+        isItAdmin ? (body.deployDate || null) : null,
         body.status === "draft" ? "draft" : "submitted"   // ค่าอื่นนอกจาก "draft" ถือเป็น submit ทันที
       ]
     );
@@ -370,7 +382,8 @@ router.post("/", requireAuth, async (req, res, next) => {
 
     // checkbox "ประเภทการเปลี่ยน" ผู้ใช้ติ๊กได้หลายอัน -> insert วนทีละแถว (1 ประเภท = 1 แถว)
     // "|| []" กันกรณี frontend ไม่ส่ง changeTypes มาเลย (undefined) ไม่งั้น for...of พังทันที
-    for (const type of body.changeTypes || []) {
+    // ไม่ใช่ it_admin -> ไม่บันทึกประเภทการเปลี่ยนเลย (ส่วนนี้เฉพาะสิทธิ์ it_admin เหมือนกัน)
+    for (const type of isItAdmin ? (body.changeTypes || []) : []) {
       await dbConnection.query(
         "INSERT INTO cr_change_types (cr_id, change_type) VALUES (?, ?)",
         [crId, type]
@@ -425,7 +438,9 @@ router.post("/", requireAuth, async (req, res, next) => {
 
     res.status(201).json({ crId, crNumber });   // 201 Created = สร้างข้อมูลใหม่สำเร็จ
   } catch (err) {
-    await dbConnection.rollback();   // ยกเลิกทุก INSERT ใน transaction (คืนสภาพเหมือนไม่เคยมีอะไรเกิดขึ้น)
+    // dbConnection อาจเป็น undefined ได้ถ้า getConnection() เองพัง (ต่อ database ไม่ติด)
+    // ต้องเช็คก่อนเรียก .rollback()/.release() ไม่งั้นได้ TypeError ซ้อน err เดิมอีกที
+    if (dbConnection) await dbConnection.rollback();   // ยกเลิกทุก INSERT ใน transaction (คืนสภาพเหมือนไม่เคยมีอะไรเกิดขึ้น)
     if (err.code === "ER_DUP_ENTRY") {
       // ชนกับ temp cr_number ของ request อื่นที่วิ่งพร้อมกันพอดี (โอกาสน้อยมาก) — ลองใหม่อีกทีได้เลย
       return res.status(409).json({ error: "สร้างเลขที่เอกสารชนกัน ลอง submit อีกครั้ง" });   // 409 Conflict
@@ -434,7 +449,7 @@ router.post("/", requireAuth, async (req, res, next) => {
   } finally {
     // finally = ทำเสมอไม่ว่าสำเร็จหรือพัง
     // คืน connection กลับสระ — ลืมคืนบ่อยเข้าสระแห้ง ทั้งระบบค้าง
-    dbConnection.release();
+    if (dbConnection) dbConnection.release();
   }
 });
 
@@ -478,8 +493,12 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
   async (req, res, next) => {
     // เส้นนี้แตะ 2 ตาราง (เพิ่มผลพิจารณา + อัปเดตสถานะใบ CR)
     // เลยใช้ transaction เหมือน LAB 4B
-    const dbConnection = await dbPool.getConnection();
+    // ประกาศนอก try ด้วย let — เผื่อ getConnection() เองพังก่อนได้ dbConnection มา
+    let dbConnection;
     try {
+      // getConnection() ต้องอยู่ "ใน" try — เดิมอยู่นอก try ทำให้ connect ล้มเหลว
+      // (SQL Server สะดุด) กลายเป็น unhandled rejection ทำ process ทั้งตัว crash (ดูเหตุผลเต็มใน POST / ด้านบน)
+      dbConnection = await dbPool.getConnection();
       const crId = req.params.id;
       // req.body ของเส้นนี้: { result, comment, approvalDate }
       const { result, comment, approvalDate } = req.body;
@@ -547,10 +566,11 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
 
       res.status(201).json({ ok: true });
     } catch (err) {
-      await dbConnection.rollback();
+      // dbConnection อาจเป็น undefined ได้ถ้า getConnection() เองพัง — เช็คก่อนเรียก
+      if (dbConnection) await dbConnection.rollback();
       next(err);
     } finally {
-      dbConnection.release();
+      if (dbConnection) dbConnection.release();
     }
   });
 
