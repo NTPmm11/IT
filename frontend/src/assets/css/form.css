@@ -3,7 +3,7 @@
    ============================================ */
 
 .container {
-  background: #d7d7d8c9;
+  background: #ffffffc9;
   width: 950px;
   padding: 35px;
   border-radius: 20px;
@@ -48,7 +48,7 @@
 
 .section-title span.note {
   font-size: 13px;
-  color: #b89d9d;
+  color: #a193c2;
   font-weight: normal;
 }
 
@@ -131,14 +131,14 @@ textarea:focus {
   align-items: center;
   gap: 5px;
   font-size: 18px;
-  color: #4b5563;
+  color: #011641;
   cursor: pointer;
 }
 
 .option-item input {
   width: 15px;
   height: 15px;
-  accent-color: #00075a;
+  accent-color: #240000;
 }
 
 /* ===== Action plan table ===== */
@@ -172,8 +172,8 @@ textarea:focus {
 }
 
 .btn-add-row {
-  background: #00075a;
-  color: #fff;
+  background: #000000;
+  color: #fffdfd;
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
@@ -229,7 +229,7 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
- background: linear-gradient(135deg, #5a0000, #00075a);
+ background:#000000;
   color: #ffffff;
   border: 1.5px solid #5e5f61;
   padding: 8px 16px;
@@ -250,4 +250,9 @@ textarea:focus {
   box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
   transform: translateY(-1px);
 }
-
+.btn-cancel {
+  background-color: #3f0110;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
+  transform: translateY(-1px);
+}
