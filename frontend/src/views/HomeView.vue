@@ -87,7 +87,7 @@ export default {
   gap: 18px;
   padding: 20px;
   border-radius: 12px;
-  border: 1.5px solid #2c1111;
+  border: 1.5px solid #b9b5b5;
   text-decoration: none;
   color: #0f0f0f;
   transition: all 0.2s;
@@ -113,9 +113,20 @@ export default {
 
 .home-card p {
   font-size: 13px;
-  color: #000000;
+  color: rgb(10, 10, 10);
+}
+
+.btn btn-cancel {
+  background-color: #000000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 </style>
+
+
 
 
 

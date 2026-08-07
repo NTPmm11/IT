@@ -53,12 +53,12 @@ body {
 }
 
 .btn-cancel {
-  background: #e5e7eb;
-  color: #1f2020;
+  background: #050505;
+  color: #eef3f3;
 }
 
 .btn-cancel:hover {
-  background: #000000;
+  background: #949292;
 }
 
 .btn-draft {
@@ -113,7 +113,7 @@ body {
        กันไม่ให้ shrink ต่ำกว่าความกว้างเนื้อหาจริง (950px) แม้ตั้ง max-width:100% ไว้แล้ว
        เนื้อหาเลยล้นขอบกระดาษโดนตัดตอน print — เปลี่ยนเป็น block ตัดปัญหานี้ทั้งกระบวนตั้งแต่ต้น */
     display: block;
-    background: #fff;
+    background: #0c0c0c;
     padding: 0;
   }
 
