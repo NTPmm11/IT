@@ -517,7 +517,7 @@ export default {
       </button>
 
       <div class="ui-action-buttons">
-        <button type="button" class="btn btn-cancel" @click="cancelForm">
+        <button type="button" class="btn btn-cancel2" @click="cancelForm">
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 

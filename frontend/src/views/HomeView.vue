@@ -123,7 +123,7 @@ export default {
   color: rgb(10, 10, 10);
 }
 
-.btn btn-cancel {
+.btn btn-cancel2 {
   background-color: #000000;
   color: white;
   border: none;

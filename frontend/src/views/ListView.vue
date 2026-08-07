@@ -151,7 +151,7 @@ export default {
 </button>
 
 
-    <div class="section-title">
+    <div class="section-title2">
       <div>ค้นหารายการ</div>
     </div>
 
@@ -182,7 +182,7 @@ export default {
       </div>
     </form>
 
-   <div class="section-title">
+   <div class="section-title2">
   <div>รายการทั้งหมด ({{ totalRows }})</div>
 </div>
 
@@ -282,6 +282,27 @@ export default {
 <style>
 @import '../assets/css/form.css';
 
+.container {
+  background: #ffffffd2;
+  width: 950px;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
+}
+
+.section-title2 {
+  background: #2c0101;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 6px;
+  margin: 25px 0 15px 0;
+  border-left: 5px solid #000000;
+  display: flex;
+  justify-content: space-between;
+}
+
 .list-container {
   width: 950px;
 }
@@ -360,5 +381,10 @@ p {
 
 .btn-icon-pdf:hover {
   background: #f5e6e6;
+}
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 15px;
+  background: #ffffff;
 }
 </style>

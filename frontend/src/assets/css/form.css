@@ -78,7 +78,7 @@
 
 label {
   font-weight: 600;
-  color: #2e0101;
+  color: #1a0101;
   text-align: left;
   font-size: 18px;
 }
@@ -163,7 +163,7 @@ textarea:focus {
 
 .action-table th {
   background: #e5e7eb;
-  color: #00075a;
+  color: #000000;
   text-align: center;
 }
 
@@ -201,7 +201,7 @@ textarea:focus {
 }
 
 .btn-submit:hover{
- background: linear-gradient(135deg, #5a0000, #00075a);
+ background: #a9aaac;
 }
 
 
@@ -250,9 +250,12 @@ textarea:focus {
   box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
   transform: translateY(-1px);
 }
-.btn-cancel {
+.btn-cancel2 {
   background-color: #3f0110;
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
+  box-shadow: 0 4px 10px rgba(43, 1, 11, 0.678);
   transform: translateY(-1px);
+}
+.btn-cancel2:hover{
+ background: #a9aaac;
 }
