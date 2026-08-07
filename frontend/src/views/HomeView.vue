@@ -73,6 +73,13 @@ export default {
 .home-container {
   width: 600px;
 }
+.container {
+  background: #ffffff;
+  width: 500px;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
+}
 
 
 .home-menu {
