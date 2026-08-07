@@ -13,7 +13,7 @@
 /* ===== Header ===== */
 .header-section {
   text-align: center;
-  border-bottom: 3px solid #00075a;
+  border-bottom: 3px solid #35373b;
   padding-bottom: 30px;
   margin-bottom: 30px;
 }
@@ -33,7 +33,7 @@
 /* ===== Section title ===== */
 .section-title {
   background: #e5e7eb;
-  color: #00075a;
+  color: #3a0404;
   padding: 10px 14px;
   font-size: 18px;
   font-weight: 700;
