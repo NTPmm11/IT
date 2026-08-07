@@ -54,7 +54,7 @@ export default {
         <i class="fa-solid fa-clock-rotate-left"></i>
         <div>
           <h3>ประวัติย้อนหลัง</h3>
-          <p>สืบค้น / ดูรายการ CR ทั้งหมด</p>
+          <p>สืบค้น / ดูรายการ Change Request ทั้งหมด</p>
         </div>
       </RouterLink>
     </div>
@@ -107,13 +107,13 @@ export default {
 }
 
 .home-card h3 {
-  font-size: 16px;
+  font-size: 18px;
   margin-bottom: 4px;
 }
 
 .home-card p {
   font-size: 13px;
-  color: #443d39;
+  color: #2e2d2c;
 }
 </style>
 
