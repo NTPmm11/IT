@@ -87,21 +87,21 @@ export default {
   gap: 18px;
   padding: 20px;
   border-radius: 12px;
-  border: 1.5px solid #868686;
+  border: 1.5px solid #2c1111;
   text-decoration: none;
-  color: #000000;
+  color: #0f0f0f;
   transition: all 0.2s;
-  box-shadow: 0 15px 35px rgba(7, 7, 7, 0.589);
+  box-shadow: 0 15px 35px rgba(102, 101, 101, 0.589);
 }
 
 .home-card:hover {
-  border-color: #000000;
+  border-color: #faf4f4;
   background: #3f3e3f73;
 }
 
 .home-card i {
   font-size: 26px;
-  color: #000000;
+  color: #470a0a;
   width: 36px;
   text-align: center;
 }
@@ -113,7 +113,7 @@ export default {
 
 .home-card p {
   font-size: 13px;
-  color: #2e2d2c;
+  color: #000000;
 }
 </style>
 

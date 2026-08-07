@@ -54,11 +54,11 @@ body {
 
 .btn-cancel {
   background: #e5e7eb;
-  color: #4b5563;
+  color: #1f2020;
 }
 
 .btn-cancel:hover {
-  background: #d1d5db;
+  background: #000000;
 }
 
 .btn-draft {
@@ -96,7 +96,7 @@ body {
   align-items: center;
   gap: 15px;
   margin-top: 35px;
-  border-top: 2px dashed #e5e7eb;
+  border-top: 2px dashed #525153;
   padding-top: 20px;
   width: 100%;
 }

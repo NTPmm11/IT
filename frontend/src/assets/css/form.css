@@ -229,8 +229,8 @@ textarea:focus {
   align-items: center;
   gap: 8px;
  background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #fcfcff;
-  border: 1.5px solid #fdfeff;
+  color: #ffffff;
+  border: 1.5px solid #5e5f61;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 16px;
@@ -238,14 +238,14 @@ textarea:focus {
   cursor: pointer;
   text-decoration: none;
   transition: all 0.25s ease;
-  box-shadow: 0 2px 5px rgba(245, 221, 221, 0.863);
+  box-shadow: 0 2px 5px rgba(32, 32, 32, 0.863);
   margin-bottom: 20px;
 }
 
 /* เอฟเฟกต์ตอนนำเมาส์ไปชี้ (Hover) */
 .btn-back:hover {
-  background-color: #ffffff;
-  color: #ffffff;
+  background-color: #000000;
+  color: #9e9797;
   box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
   transform: translateY(-1px);
 }
