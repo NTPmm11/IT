@@ -183,7 +183,7 @@ textarea:focus {
 }
 
 .btn-add-row:hover {
-  background: linear-gradient(135deg, #5a0000, #00075a);
+  background:#a9aaac;
 }
 
 .btn-delete-row {
@@ -247,7 +247,7 @@ textarea:focus {
 .btn-back:hover {
   background-color: #000000;
   color: #9e9797;
-  box-shadow: 0 4px 10px rgba(0, 7, 90, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }
 .btn-cancel2 {
@@ -258,4 +258,10 @@ textarea:focus {
 }
 .btn-cancel2:hover{
  background: #a9aaac;
+}
+.btn-submit {
+  background-color: #000000;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.678);
+  transform: translateY(-1px);
 }
