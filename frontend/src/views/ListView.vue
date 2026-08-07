@@ -283,7 +283,7 @@ export default {
 @import '../assets/css/form.css';
 
 .container {
-  background: #ffffffd2;
+  background: #ffffffde;
   width: 950px;
   padding: 35px;
   border-radius: 20px;
@@ -291,7 +291,7 @@ export default {
 }
 
 .section-title2 {
-  background: #2c0101;
+  background: #000000;
   color: #ffffff;
   padding: 10px 14px;
   font-size: 18px;
