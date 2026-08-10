@@ -283,7 +283,7 @@ export default {
 @import '../assets/css/form.css';
 
 .container {
-  background: #ffffffde;
+  background: #ffffffb4;
   width: 950px;
   padding: 35px;
   border-radius: 20px;
