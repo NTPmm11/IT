@@ -67,9 +67,7 @@ export default {
   </div>
 </template>
 
-<style>
-
-
+<style scoped>
 .home-container {
   width: 600px;
 }
