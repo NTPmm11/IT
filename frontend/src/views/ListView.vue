@@ -291,7 +291,7 @@ export default {
 }
 
 .section-title2 {
-  background: #000000;
+   background: linear-gradient(135deg, #5a0000, #00075a);
   color: #ffffff;
   padding: 10px 14px;
   font-size: 18px;
@@ -347,7 +347,7 @@ export default {
 
 /* ตอนเอาเม้าส์ไปชี้ ให้สว่างขึ้นเล็กน้อย */
 .btn-pdf:hover {
-background-color: #0a1b33;
+background-color: #101114;
 }
 h1 {
   margin-bottom: 0;
