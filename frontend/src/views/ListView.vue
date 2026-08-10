@@ -371,7 +371,7 @@ p {
 .btn-icon-pdf {
   background: none;
   border: none;
-  color: #5a0000;
+  color: #4d4f5f;
   font-size: 16px;
   cursor: pointer;
   padding: 4px 8px;
