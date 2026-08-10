@@ -549,7 +549,7 @@ export default {
 </template>
 
 
-<style>
+<style scoped>
 @import '../assets/css/form.css';
 
 /* section 3 (การประเมินผลกระทบและทรัพยากร) เฉพาะสิทธิ์ it_admin — ดู canEditImpact */
