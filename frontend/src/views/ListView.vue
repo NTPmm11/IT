@@ -385,6 +385,11 @@ p {
 .table-wrapper {
   overflow-x: auto;
   margin-top: 15px;
-  background: #ffffff;
+  background: #e0e3e6;
+}
+.input-large {
+  width: 100%;           /* ขยายความกว้างเต็มพื้นที่ (หรือกำหนดค่าพิกเซลเช่น 300px) */
+  padding: 14px 18px;    /* เพิ่มระยะห่างภายใน (ทำให้ช่องดูอ้วน/สูงขึ้น) */
+  font-size: 20px;       /* ขยายขนาดตัวหนังสือพิมพ์เข้า */
 }
 </style>
