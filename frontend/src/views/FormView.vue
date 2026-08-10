@@ -404,8 +404,7 @@ export default {
         <div class="options-group">
           <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application /
             Software</label>
-          <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database
-            Schema</label>
+          <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database</label>
           <label class="option-item"><input type="checkbox" value="Infra" v-model="form.changeTypes">
             Infrastructure</label>
         </div>
@@ -479,7 +478,7 @@ export default {
         </button>
       </div>
 
-      <div class="section-title">
+      <div class="section-title2">
         <div>แผนการกู้คืน(Roll Back Plan)</div>
       </div>
 

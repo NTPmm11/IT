@@ -44,11 +44,23 @@
   justify-content: space-between;
 }
 
+.section-title2 {
+    background: linear-gradient(135deg, #5a0000, #00075a);
+  color: #fafafa;
+  padding: 10px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 6px;
+  margin: 25px 0 15px 0;
+  border-left: 5px solid #999393;
+  display: flex;
+  justify-content: space-between;
+}
 /* หัวข้อลำดับที่ 1 (ข้อมูลทั่วไป) -> สีน้ำเงิน */
 
 .section-title span.note {
   font-size: 13px;
-  color: #a193c2;
+  color: #dbd6e6;
   font-weight: normal;
 }
 
@@ -63,8 +75,8 @@
   display: grid;
   grid-template-columns: 140px 1fr;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 10px;
+  gap: 15px;
+  margin-bottom: 16px;
  
 }
 
