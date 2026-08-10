@@ -68,7 +68,7 @@ export default {
 </template>
 
 <style>
-@import '../assets/css/form.css';
+
 
 .home-container {
   width: 600px;
