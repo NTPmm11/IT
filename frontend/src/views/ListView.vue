@@ -335,7 +335,7 @@ export default {
 }
 /* กำหนดสีปุ่ม PDF ให้เป็นสีกรมท่า (โทนเดียวกับปุ่มกลับหน้าหลัก) */
 .btn-pdf {
- background: linear-gradient(135deg, #5a0000, #00075a); /* สีกรมท่าหลัก */
+  background: #000000; /* สีกรมท่าหลัก */
   color: #ffffff !important;             /* ตัวหนังสือสีขาว */
   border: none !important;
   padding: 8px 16px;
@@ -347,7 +347,7 @@ export default {
 
 /* ตอนเอาเม้าส์ไปชี้ ให้สว่างขึ้นเล็กน้อย */
 .btn-pdf:hover {
-background-color: #101114;
+background-color: #707070;
 }
 h1 {
   margin-bottom: 0;
@@ -387,4 +387,5 @@ p {
   margin-top: 15px;
   background: #e0e3e6;
 }
+
 </style>
