@@ -32,7 +32,7 @@
 
 /* ===== Section title ===== */
 .section-title {
-    background: #000000;
+    background: linear-gradient(135deg, #5a0000, #00075a);
   color: #fafafa;
   padding: 10px 14px;
   font-size: 18px;
