@@ -17,14 +17,7 @@
 
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
-
-const STATUS_LABEL = {
-  draft: "ร่าง",
-  submitted: "รอดำเนินการ",
-  approved: "อนุมัติ",
-  rejected: "ไม่อนุมัติ",
-  more_info: "ขอข้อมูลเพิ่ม"
-};
+import { STATUS_LABEL } from "../services/constants.js";
 
 export default {
   data() {
@@ -231,10 +224,18 @@ export default {
           </span>
         </td>
         <td class="text-center">
-          <!-- @click.stop กัน event ไหลต่อไปโดน @click="openCr" ของ <tr> (ไม่งั้นเด้งไปหน้า approve ซ้อนก่อน print) -->
-          <button type="button" class="btn-icon-pdf" title="ดาวน์โหลด PDF ใบนี้" @click.stop="openCrPdf(row.cr_id)">
+          <!-- @click.stop กัน event ไหลต่อไปโดน @click="openCr" ของ <tr> (ไม่งั้นเด้งไปหน้า approve ซ้อนก่อน print)
+               PDF มีให้โหลดได้ก็ต่อเมื่อ CR ใบนี้ผ่านการอนุมัติแล้วเท่านั้น (ยังไม่อนุมัติ = ยังไม่มีผลพิจารณาให้ลงในเอกสาร) -->
+          <button
+            v-if="row.status === 'approved'"
+            type="button"
+            class="btn-icon-pdf"
+            title="ดาวน์โหลด PDF ใบนี้"
+            @click.stop="openCrPdf(row.cr_id)"
+          >
             <i class="fa-solid fa-file-pdf"></i>
           </button>
+          <span v-else style="color:#9ca3af;">–</span>
         </td>
       </tr>
     </tbody>
