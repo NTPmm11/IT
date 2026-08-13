@@ -75,7 +75,7 @@ export default {
   background: #ffffff;
   width: 500px;
   padding: 35px;
-  border-radius: 20px;
+  border-radius: 40px;
   box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
 }
 
@@ -128,6 +128,9 @@ export default {
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+}
+.header-section {
+  text-align: center;
 }
 </style>
 
