@@ -112,13 +112,13 @@ export default {
 }
 
 .home-card h3 {
-  font-size: 18px;
+  font-size: 24px;
   margin-bottom: 4px;
 }
 
 .home-card p {
-  font-size: 13px;
-  color: rgb(10, 10, 10);
+  font-size: 16px;
+  color: rgb(59, 45, 97);
 }
 
 .btn btn-cancel2 {
