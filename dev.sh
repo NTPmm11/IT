@@ -1,9 +1,9 @@
 # window
 npm install -g concurrently
-concurrently "cd backend && npm run dev" "cd frontend && npm run dev"
+concurrently "cd backend && dotnet run" "cd frontend && npm run dev"
 
 # mac
 trap 'kill 0' SIGINT
-(cd backend && npm run dev) & (cd frontend && npm run dev) & wait
+(cd backend && dotnet run) & (cd frontend && npm run dev) & wait
 
-killall -9 node
+killall -9 node dotnet

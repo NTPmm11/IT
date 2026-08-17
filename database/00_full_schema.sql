@@ -134,3 +134,13 @@ CREATE TABLE cr_rollback_plans (
   note       NVARCHAR(255) NULL
 );
 GO
+
+-- ── 8. cr_number_seq (จาก 07_cr_number_sequence.sql) ──
+-- ตัวแจกเลขที่เอกสาร — backend อ่านตัวนี้ทั้งตอน preview และตอนออกเลขจริง
+-- (ไม่ผูกกับ cr_id อีกแล้ว เลยไม่เพี้ยนเวลามีแถวถูกลบ/insert ที่ rollback)
+-- database ใหม่เริ่มที่ 0 แล้วกินทิ้ง 1 ค่า -> ใบแรกได้ CR0000001
+CREATE SEQUENCE dbo.cr_number_seq AS INT START WITH 0 INCREMENT BY 1 NO CACHE;
+GO
+
+DECLARE @burn INT = NEXT VALUE FOR dbo.cr_number_seq;
+GO

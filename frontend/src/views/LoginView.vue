@@ -70,8 +70,10 @@ export default {
           body: JSON.stringify({ username: this.username, password: this.password })
         });
 
-        // เก็บข้อมูล user ไว้ใน localStorage (ต้องแปลงเป็น string ด้วย JSON.stringify)
-        // หน้าอื่นจะอ่านค่านี้กลับมาเช็คว่า login อยู่ไหม / แนบ X-User-Id ตอนเรียก API
+        // token = สิ่งที่พิสูจน์ตัวตนจริงกับ backend (apiFetch แนบให้ทุก request)
+        localStorage.setItem("token", data.token);
+        // ส่วนก้อน user เก็บไว้ให้หน้าเว็บเอาไปโชว์ชื่อ/ซ่อนปุ่มตาม role
+        // (ต้องแปลงเป็น string ด้วย JSON.stringify) — backend ไม่เชื่อค่านี้ อ่าน role จาก database เอง
         localStorage.setItem("user", JSON.stringify(data.user));
 
         // เปลี่ยนหน้าแบบไม่ reload browser (Vue Router)

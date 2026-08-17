@@ -1,0 +1,71 @@
+using System.IdentityModel.Tokens.Jwt;
+using ChangeRequest.Api.Data;
+using ChangeRequest.Api.Models;
+using Dapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace ChangeRequest.Api.Filters;
+
+// ============================================
+// RequireAuth — ด่านเช็คว่าใครยิง request มา
+// ============================================
+//
+// 2 ชั้น:
+//   1. middleware UseAuthentication() ตรวจลายเซ็น/วันหมดอายุของ JWT ให้ก่อน
+//      (ตั้งกติกาไว้ใน Program.cs) ผ่านแล้วยัด claims ใส่ HttpContext.User
+//   2. ด่านนี้เอา claim "sub" (= user_id) ไปหา user จริงใน database อีกที
+//
+// ทำไมต้องถาม database ซ้ำทั้งที่ role อยู่ใน token แล้ว: token มีอายุหลายชั่วโมง
+// ระหว่างนั้น user อาจถูกปิดใช้งาน (is_active = 0) หรือเปลี่ยน role — อ่านสดทุก request
+// สิทธิ์ถึงจะเปลี่ยนตามทันที ไม่ต้องรอ token หมดอายุ
+//
+// user ที่ผ่านด่านแล้วเก็บไว้ที่ HttpContext.Items[CurrentUserKey]
+// อ่านต่อใน controller ผ่าน HttpContext.CurrentUser() (ดู HttpContextExtensions)
+
+/// <summary>ต้องแนบ header Authorization: Bearer &lt;token&gt; ที่ยังไม่หมดอายุ</summary>
+public sealed class RequireAuthAttribute() : TypeFilterAttribute(typeof(RequireAuthFilter));
+
+public sealed class RequireAuthFilter(ISqlConnectionFactory connections) : IAsyncAuthorizationFilter
+{
+    public const string CurrentUserKey = "CurrentUser";
+
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+    {
+        var principal = context.HttpContext.User;
+
+        if (principal.Identity?.IsAuthenticated != true)
+        {
+            // แยกข้อความ 2 กรณี: ยังไม่ได้แนบ token เลย vs แนบมาแต่ใช้ไม่ได้
+            // (หมดอายุ/ลายเซ็นผิด) — ฝั่ง frontend จะได้รู้ว่าควรพากลับไปหน้า login
+            var hasHeader = context.HttpContext.Request.Headers.Authorization.Count > 0;
+            context.Result = new UnauthorizedObjectResult(new ErrorResponse(
+                hasHeader ? "Invalid or expired token" : "Missing bearer token"));
+            return;
+        }
+
+        var subject = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (!int.TryParse(subject, out var userId))
+        {
+            context.Result = new UnauthorizedObjectResult(new ErrorResponse("Invalid or expired token"));
+            return;
+        }
+
+        await using var db = await connections.OpenAsync(context.HttpContext.RequestAborted);
+        var user = await db.QuerySingleOrDefaultAsync<CurrentUser>(
+            """
+            SELECT user_id AS UserId, username AS Username, role AS Role
+            FROM users
+            WHERE user_id = @UserId AND is_active = 1
+            """,
+            new { UserId = userId });
+
+        if (user is null)
+        {
+            context.Result = new UnauthorizedObjectResult(new ErrorResponse("Unknown user"));
+            return;
+        }
+
+        context.HttpContext.Items[CurrentUserKey] = user;
+    }
+}

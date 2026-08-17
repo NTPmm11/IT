@@ -1,2 +1,8 @@
-node_modules/
 .env
+
+# .NET build output
+bin/
+obj/
+
+# อีเมลที่ระบบเขียนลงไฟล์ตอนไม่ได้ตั้ง SMTP_HOST (โหมด dev)
+MailDrop/

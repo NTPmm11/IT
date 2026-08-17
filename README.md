@@ -1,7 +1,7 @@
 # ระบบ Change Request (CR)
 
 ฟอร์มขอเปลี่ยนแปลงระบบงาน — โปรเจคหัดเขียน full-stack:
-Vue 3 + Vite + Vue Router (หน้าบ้าน) / Node.js + Express + SQL Server (หลังบ้าน)
+Vue 3 + Vite + Vue Router (หน้าบ้าน) / C# ASP.NET Core 8 + SQL Server (หลังบ้าน)
 
 ## 👉 เริ่มตรงไหน? อ่านตามลำดับนี้
 
@@ -24,7 +24,7 @@ Vue 3 + Vite + Vue Router (หน้าบ้าน) / Node.js + Express + SQL S
 
 ```bash
 # Terminal 1 — หลังบ้าน (ครั้งแรกต้องตั้งค่าก่อน: dev-guide ภาคพิเศษ 2)
-cd backend && npm run dev        # -> http://localhost:4000
+cd backend && dotnet run         # -> http://localhost:4000
 
 # Terminal 2 — หน้าบ้าน
 cd frontend && npm install && npm run dev   # -> เทอร์มินัลบอก URL (เช่น http://localhost:5173)
@@ -65,20 +65,21 @@ IT/
 │       └── assets/
 │           ├── css/              หน้าตา (base / login / form)
 │           └── img/
-├── backend/           หลังบ้าน (Node + Express)
+├── backend/           หลังบ้าน (C# ASP.NET Core 8) — ดู backend/README.md
 │   ├── .env             รหัส database เครื่องเรา (ห้าม commit)
-│   ├── scripts/         hash-password.js — สร้าง hash รหัสผ่าน
-│   └── src/
-│       ├── index.js       จุดสตาร์ท server (port 4000)
-│       ├── db.js          ตัวต่อ SQL Server (pool)
-│       ├── middleware/    ด่านเช็ค user    ← LAB 3
-│       └── routes/
-│           ├── systems.js   dropdown ระบบ   ← LAB 1
-│           ├── auth.js      login           ← LAB 2
-│           └── cr.js        CRUD ใบ CR      ← LAB 4
+│   ├── Program.cs         จุดสตาร์ท server (port 4000)
+│   ├── Data/              ตัวต่อ SQL Server
+│   ├── Filters/           ด่านเช็ค user + role   ← LAB 3
+│   ├── Models/            รูป JSON ขาเข้า/ขาออก
+│   ├── Services/          ส่งอีเมลแจ้งเตือน
+│   └── Controllers/
+│       ├── SystemsController.cs         dropdown ระบบ   ← LAB 1
+│       ├── AuthController.cs            login           ← LAB 2
+│       └── ChangeRequestsController.cs  CRUD ใบ CR      ← LAB 4
 └── database/           พิมพ์เขียว database เต็ม (7 ตาราง, T-SQL) — รันเรียงเลขไฟล์
     ├── users_only.sql    table users — รันก่อนสุด (FK ไฟล์อื่นอ้างถึง)
     ├── 01_systems.sql    .. 06_cr_rollback_plans.sql (รันตามลำดับเลข ห้ามข้าม)
+    ├── 07_cr_number_sequence.sql  ตัวแจกเลขที่เอกสาร (ต้องรัน ไม่งั้น /next-number พัง)
     └── ...
 ```
 
@@ -106,13 +107,17 @@ LoginView ──login ผ่าน──> HomeView ─┤
 | เพิ่ม/แก้ user ที่ login ได้ | ตาราง `users` ใน database |
 | เพิ่มตัวเลือก dropdown ระบบงาน | ตาราง `systems` ใน database (`INSERT INTO systems ...`) |
 | เพิ่มหน้าใหม่ | สร้างไฟล์ใน `src/views/` + เพิ่ม route ใน `src/router/index.js` |
-| เพิ่ม API เส้นใหม่ | `backend/src/routes/` (ดู `systems.js` เป็นแบบ) |
+| เพิ่ม API เส้นใหม่ | `backend/Controllers/` (ดู `SystemsController.cs` เป็นแบบ) |
 
 ## หมายเหตุ
 
 - รหัสผ่านเช็คฝั่ง server ด้วย bcrypt hash — ห้ามเก็บรหัสดิบใน database
+- login แล้วได้ JWT กลับมา เก็บใน `localStorage.token` แล้วแนบเป็น
+  `Authorization: Bearer ...` ทุก request (`frontend/src/services/api.js`)
+  — requester เห็นเฉพาะ CR ของตัวเอง
 - `backend/.env` มีรหัสเครื่องเรา — อยู่ใน .gitignore แล้ว ห้าม commit
-- `backend/src/db.js` ห่อ driver `mssql` ให้หน้าตาเหมือน mysql2 (`pool.query`,
-  `pool.getConnection()`, `?` placeholder) — TODO/hint ใน routes ไฟล์ต่างๆ
-  เขียนโค้ดสไตล์นั้นได้ตรงๆ โดยไม่ต้องรู้ว่าเบื้องหลังเป็น SQL Server
+- backend คุย SQL Server ด้วย Dapper (เขียน SQL เอง ไม่ใช่ ORM) ผ่าน
+  `backend/Data/SqlConnectionFactory.cs` — parameter ใช้ชื่อแบบ `@Name`
+- `LABS.txt` กับ `dev-guide.txt` เขียนไว้ตอน backend ยังเป็น Node + Express
+  โจทย์/แนวคิดยังใช้ได้ แต่ชื่อไฟล์กับโค้ดตัวอย่างในนั้นเป็นของเวอร์ชันเดิม
 - ดูข้อมูลที่หน้าเว็บคุยกับ server: F12 -> แท็บ Network

@@ -15,7 +15,7 @@
 //          (...commonMethods เอา generatePDF มาใช้กับปุ่ม "Download PDF ย้อนหลัง")
 // คลิกแถวไหน -> this.$router.push("/approve?crId=...") ไปเปิด ApproveView.vue ต่อ
 
-import { apiFetch } from "../services/api.js";
+import { apiFetch, apiFetchPaged } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
 import { STATUS_LABEL } from "../services/constants.js";
 
@@ -27,7 +27,9 @@ export default {
         status: "",
         date: ""
       },
-      rows: [],
+      rows: [],          // เฉพาะแถวของหน้าที่กำลังดูอยู่ (backend ตัดหน้ามาให้แล้ว)
+      allRows: [],       // ทุกแถวตาม filter ปัจจุบัน — โหลดเฉพาะตอนจะพิมพ์ PDF
+      totalRows: 0,      // จำนวนทั้งหมดจาก header X-Total-Count
       loading: false,
       statusOptions: STATUS_LABEL,
       currentPage: 1,
@@ -45,18 +47,14 @@ export default {
   },
 
   computed: {
-    // backend ยังไม่รองรับ page/limit — filter/list ทั้งหมดมาที่เดียว แล้วตัดหน้าฝั่ง client เอา
-    totalRows() {
-      return this.rows.length;
-    },
+    // backend ตัดหน้าให้ที่ database แล้ว (?page=&pageSize=) — หน้านี้ไม่ slice เองอีก
+    // เดิมดึงทุกแถวมาแล้วค่อยตัดฝั่ง client: ข้อมูลโตขึ้นเท่าไหร่ก็โหลดมาทั้งหมดเท่านั้น
     totalPages() {
-      return Math.ceil(this.rows.length / this.pageSize) || 1;
+      return Math.ceil(this.totalRows / this.pageSize) || 1;
     },
     pagedRows() {
       // ปุ่ม "Download PDF ย้อนหลัง" ต้องได้ทุกแถว ไม่ใช่แค่หน้าที่กำลังดูอยู่บนจอ
-      if (this.printing) return this.rows;
-      const start = (this.currentPage - 1) * this.pageSize;
-      return this.rows.slice(start, start + this.pageSize);
+      return this.printing ? this.allRows : this.rows;
     }
   },
 
@@ -68,17 +66,30 @@ export default {
     },
 
     // ตัด filter ที่ว่างออกก่อนต่อ query string — ไม่ส่ง param เปล่าไป backend
+    filterParams() {
+      const params = new URLSearchParams();
+      if (this.filters.crNumber) params.set("crNumber", this.filters.crNumber);
+      if (this.filters.status) params.set("status", this.filters.status);
+      if (this.filters.date) params.set("date", this.filters.date);
+      return params;
+    },
+
+    // ค้นใหม่ -> กลับหน้า 1 เสมอ กันค้างหน้าท้ายๆ ที่ผลค้นหาใหม่ไม่มีแล้ว
     async search() {
+      this.currentPage = 1;
+      await this.loadPage();
+    },
+
+    async loadPage() {
       this.loading = true;
       try {
-        const params = new URLSearchParams();
-        if (this.filters.crNumber) params.set("crNumber", this.filters.crNumber);
-        if (this.filters.status) params.set("status", this.filters.status);
-        if (this.filters.date) params.set("date", this.filters.date);
+        const params = this.filterParams();
+        params.set("page", this.currentPage);
+        params.set("pageSize", this.pageSize);
 
-        const qs = params.toString();
-        this.rows = await apiFetch(`/change-requests${qs ? "?" + qs : ""}`);
-        this.currentPage = 1;   // ค้นใหม่ -> กลับหน้า 1 กันค้างหน้าท้ายๆ ที่ผลค้นหาใหม่ไม่มีแล้ว
+        const { rows, total } = await apiFetchPaged(`/change-requests?${params}`);
+        this.rows = rows;
+        this.totalRows = total;
       } catch (err) {
         alert("ค้นหาไม่สำเร็จ: " + err.message);
       } finally {
@@ -102,13 +113,23 @@ export default {
     },
 
     changePage(page) {
-      if (page < 1 || page > this.totalPages) return;
+      if (page < 1 || page > this.totalPages || page === this.currentPage) return;
       this.currentPage = page;
+      this.loadPage();   // เปลี่ยนหน้า = ไปขอแถวชุดใหม่จาก backend
     },
 
     // ทับ commonMethods.generatePDF (ตัวเดิมแค่ window.print() เฉยๆ) — หน้านี้ต้องสลับไปโชว์
     // ทุกแถวก่อนพิมพ์ (pagedRows อ่านค่า printing) ไม่งั้นได้ PDF แค่แถวที่เห็นในหน้าปัจจุบัน
     async generatePDF() {
+      // หน้าจอมีแค่แถวของหน้าปัจจุบัน — ต้องไปขอทุกแถวตาม filter เดิมมาก่อน
+      // (ไม่ใส่ page/pageSize = backend คืนครบทุกแถว)
+      try {
+        this.allRows = await apiFetch(`/change-requests?${this.filterParams()}`);
+      } catch (err) {
+        alert("เตรียมข้อมูลสำหรับพิมพ์ไม่สำเร็จ: " + err.message);
+        return;
+      }
+
       this.printing = true;
       await this.$nextTick();
 
