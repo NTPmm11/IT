@@ -1,93 +1,118 @@
 /* ============================================
-   login.css — index.html only
+   login.css — ใบลงชื่อเข้าใช้ระบบ
    ============================================ */
 
-body {
-  align-items: center;
-  padding: 15px;
+@import './tokens.css';
+
+/* :has(.card) จำกัดกฎนี้ไว้เฉพาะหน้าที่มีใบลงชื่อจริงๆ
+   (LoginView ถูก import ตรงๆ ใน router ไม่ได้ lazy — CSS อยู่ใน bundle หลัก
+    เขียน body เปล่าๆ จะไปจัดกึ่งกลางให้ทุกหน้า หน้าที่ยาวกว่าจอโดนตัดหัว)
+   browser ที่ยังไม่รองรับ :has() ได้ใบชิดบนแทน ใช้งานได้ปกติ */
+body:has(.card) {
+  display: grid;
+  justify-items: center;
+  /* safe center = จอเตี้ยกว่าการ์ด (มือถือแนวนอน) ให้ชิดบนแล้วเลื่อนได้
+     ถ้าใช้ center เฉยๆ ส่วนหัวการ์ดจะโดนตัดจนเลื่อนขึ้นไปดูไม่ได้ */
+  align-content: safe center;
+  min-height: 100svh;
+  /* base.css ตัดระยะขอบแนวนอนที่ <=700px (กระดาษเต็มขอบจอ)
+     แต่ใบลงชื่อเป็นใบเล็ก ต้องเหลือขอบไว้ ไม่งั้นชิดขอบจอ */
+  padding-inline: var(--half);
 }
 
+/* ใบเล็กใบเดียววางบนโต๊ะ ไม่ใช่การ์ดลอยมีเงา */
 .card {
-  background: #ffffff;
+  background: var(--sheet);
   width: 100%;
   max-width: 400px;
-  padding: 40px;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: var(--lh);
+  border: 1px solid var(--line-faint);
+  border-radius: 0;
 }
 
-h1 {
-  color: #00112c;
-  font-size: 30px;
-  margin-bottom: 24px;
-  text-align: center;
+.card-eyebrow {
+  font-size: 15px;
+  color: var(--ink-light);
 }
 
-.input-group {
-  position: relative;
-  margin-bottom: 16px;
+.card h1 {
+  font-size: 20px;
+  font-weight: 700;
+  padding-bottom: var(--quarter);
+  margin-bottom: var(--lh);
+  border-bottom: 3px double var(--line);
 }
 
-.input-group i {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #3a3a81;
+/* ชื่อช่องอยู่ซ้าย เส้นให้กรอกอยู่ขวา — อ่านต่อกันเป็นบรรทัดของแบบฟอร์ม */
+.field-line {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  align-items: center;
+  gap: var(--quarter);
+  margin-bottom: var(--half);
+}
+
+/* จอแคบมาก: ชื่อช่องขึ้นบรรทัดบน ไม่งั้นช่องกรอกเหลือนิดเดียว */
+@media screen and (max-width: 380px) {
+  .field-line {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+.field-line label {
   font-size: 16px;
+  font-weight: 600;
 }
 
-/* .card prefix beats form.css's global input[type="text"] rule */
-.card .input-group input {
+/* ช่องกรอกหน้านี้ต้องเป็นกล่องเหมือนทุกหน้าในระบบ
+   (เดิมเหลือเป็นเส้นใต้ค้างไว้ สูงแค่ 25px กดยากและไม่เข้าชุดกับที่อื่น) */
+.card .field-line input {
   width: 100%;
-  padding: 14px 14px 14px 45px;
-  border: 1px solid #535375;
-  border-radius: 50px;
-  font-size: 14px;
-  background: #fff;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 7px 10px;
+  background: var(--field);
+  border: 1px solid var(--line-faint);
+  border-radius: 0;
   outline: none;
+  transition: border-color 0.12s, background-color 0.12s;
 }
 
-.input-group input::placeholder {
-  color: #454555;
+.card .field-line input:hover {
+  border-color: var(--ink-light);
 }
 
-.input-group input:focus {
-  border-color: #00075a;
-}
-
-.flex-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  margin-bottom: 24px;
-}
-
-.remember-me {
-  color: #333335;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.card .field-line input:focus {
+  outline: 2px solid var(--official);
+  outline-offset: -2px;
+  border-color: var(--official);
+  background: var(--sheet);
 }
 
 .btn-login {
   width: 100%;
-  background: #000815;
-  color: #fff;
-  border: none;
-  padding: 14px;
-  border-radius: 50px;
+  font-family: var(--font);
   font-size: 16px;
+  font-weight: 600;
+  color: var(--sheet);
+  background: var(--official);
+  border: 1px solid var(--official);
+  border-radius: 0;
+  padding: 9px;
+  margin-top: var(--lh);
   cursor: pointer;
-  font-weight: 500;
+  transition: background-color 0.12s;
 }
 
-.btn-login:hover {
-  background: #2a2c30;
+.btn-login:hover:not(:disabled) {
+  background: #000434;
 }
 
 .btn-login:disabled {
-  background: #6b7280;
+  background: var(--ink-light);
+  border-color: var(--ink-light);
   cursor: not-allowed;
 }

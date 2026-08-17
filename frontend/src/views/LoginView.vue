@@ -16,10 +16,10 @@
 //
 // ภาพรวมการทำงาน:
 // 1. ผู้ใช้พิมพ์ username/password ลงช่องกรอก (v-model ผูกกับ data ด้านล่าง)
-// 2. กด Sign in -> เรียก login() -> ยิง POST /api/auth/login ไปที่ backend
+// 2. กด ลงชื่อเข้าใช้ -> เรียก login() -> ยิง POST /api/auth/login ไปที่ backend
 // 3. login สำเร็จ -> backend ตอบข้อมูล user กลับมา -> เก็บไว้ใน localStorage
 //    (localStorage = ที่เก็บข้อมูลฝั่ง browser อยู่ได้แม้ปิดแท็บ)
-//    หน้าอื่นจะอ่านค่านี้ไปแนบ header X-User-Id ทุกครั้งที่เรียก API (ดู services/api.js)
+//    apiFetch อ่าน token จากตรงนี้ไปแนบ Authorization: Bearer ทุกครั้งที่เรียก API (ดู services/api.js)
 // 4. เด้งไปหน้าหลัก (/home) ด้วย this.$router.push
 //
 // ทำเสร็จแล้วเช็คยังไง:
@@ -46,7 +46,6 @@ export default {
     return {
       username: "",     // ผูกกับช่อง Username
       password: "",     // ผูกกับช่อง Password
-      remember: false,  // ผูกกับ checkbox "Remember Me" (ยังไม่มี logic จำ user จริง — เก็บสถานะติ๊กไว้เฉยๆ)
       submitting: false, // true ระหว่างรอ backend ตอบ — คุมปุ่ม disable/ข้อความ
       modal: { show: false, variant: "error", title: "", message: "" }
     };
@@ -92,31 +91,27 @@ export default {
 
 <template>
   <div class="card" id="app">
-    <h1>Login</h1>
+    <p class="card-eyebrow">ระบบขออนุมัติเปลี่ยนแปลงระบบงาน</p>
+    <h1>ลงชื่อเข้าใช้</h1>
 
     <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก login() โดยไม่ reload หน้า -->
     <form @submit.prevent="login">
 
-      <div class="input-group">
-        <i class="fa-regular fa-user"></i>
+      <!-- ชื่อช่องเป็น <label> จริง ไม่ใช่ placeholder — แบบฟอร์มมีหัวข้อช่องเสมอ
+           และ placeholder หายไปตอนพิมพ์ ทำให้ลืมว่าช่องนี้คือช่องอะไร -->
+      <div class="field-line">
+        <label for="login-username">ชื่อผู้ใช้</label>
         <!-- v-model = ผูกช่องกรอกเข้ากับตัวแปรใน data() -->
-        <input type="text" v-model="username" placeholder="Username" required>
+        <input id="login-username" type="text" v-model="username" autocomplete="username" required>
       </div>
 
-      <div class="input-group">
-        <i class="fa-solid fa-key"></i>
-        <input type="password" v-model="password" placeholder="Password" required>
-      </div>
-
-      <div class="flex-row">
-        <div class="remember-me">
-          <input type="checkbox" id="remember" v-model="remember">
-          <label for="remember">Remember Me</label>
-        </div>
+      <div class="field-line">
+        <label for="login-password">รหัสผ่าน</label>
+        <input id="login-password" type="password" v-model="password" autocomplete="current-password" required>
       </div>
 
       <button type="submit" class="btn-login" :disabled="submitting">
-        {{ submitting ? "กำลังเข้าสู่ระบบ..." : "Sign in" }}
+        {{ submitting ? "กำลังลงชื่อเข้าใช้..." : "ลงชื่อเข้าใช้" }}
       </button>
 
     </form>

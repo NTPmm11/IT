@@ -1,155 +1,237 @@
 /* ============================================
-   base.css — shared styles for every page
-   (reset, body background, buttons)
+   base.css — โต๊ะ กระดาษ ปุ่ม การพิมพ์
    ============================================ */
 
-* {
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* กระดาษวางอยู่บนโต๊ะ ไม่ใช่ลอยอยู่ในอากาศ */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #5a0000, #00075a);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: var(--lh);
+  color: var(--ink);
+  background: var(--desk);
   min-height: 100vh;
-  padding: 30px 15px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  padding: var(--lh) var(--half);
 }
 
-/* ===== Nav ===== */
-.back-link {
-  display: inline-block;
-  margin-bottom: 15px;
-  color: #00075a;
-  text-decoration: none;
-  font-size: 14px;
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
 }
 
-.back-link:hover {
-  text-decoration: underline;
+a {
+  color: var(--official);
 }
 
-/* ===== Buttons ===== */
+:focus-visible {
+  outline: 2px solid var(--official);
+  outline-offset: 2px;
+}
+
+/* ===== ปุ่ม =====
+   เอกสารไม่มีปุ่มแคปซูล ปุ่มที่นี่คือกล่องสี่เหลี่ยมขอบคม เหมือนช่องให้ประทับ */
 .btn {
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-size: 14.5px;
+  font-family: var(--font);
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.2;
+  padding: 9px 22px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--sheet);
+  color: var(--ink);
   cursor: pointer;
-  border: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: var(--quarter);
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: background-color 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.btn-cancel {
-  background: #050505;
-  color: #eef3f3;
+/* ปุ่มยื่นเรื่อง — ทึบ หนึ่งหน้าจอมีได้ปุ่มเดียว */
+.btn-submit {
+  background: var(--official);
+  border-color: var(--official);
+  color: var(--sheet);
 }
 
-.btn-cancel:hover {
-  background: #949292;
+.btn-submit:hover:not(:disabled) {
+  background: #000434;
 }
 
 .btn-draft {
-  background: #fff;
-  color: #00075a;
-  border: 1.5px solid #00075a;
+  background: var(--sheet);
+  border-color: var(--line);
+  color: var(--ink);
 }
 
-.btn-draft:hover {
-  background: #f0f4ff;
+.btn-draft:hover:not(:disabled) {
+  background: #eef0f6;
 }
 
+.btn-cancel,
+.btn-cancel2 {
+  background: none;
+  border-color: var(--line-faint);
+  color: var(--ink-light);
+}
+
+.btn-cancel:hover:not(:disabled),
+.btn-cancel2:hover:not(:disabled) {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* หมึกตรายาง = การออกเอกสารฉบับจริง */
 .btn-pdf {
-  background: #5a0000;
-  color: #fff;
+  background: var(--sheet);
+  border-color: var(--seal);
+  color: var(--seal);
 }
 
-.btn-pdf:hover {
-  background: #7a1a1a;
+.btn-pdf:hover:not(:disabled) {
+  background: var(--seal);
+  color: var(--sheet);
 }
 
-.btn-submit {
-  background: #00075a;
-  color: #fff;
+/* ลิงก์ย้อนกลับ ไม่ใช่ปุ่ม — อยู่นอกกรอบเอกสาร */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--quarter);
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--ink-light);
+  background: none;
+  border: none;
+  /* เป้ากดอย่างน้อย 36px — ปุ่มสูง 19px กดพลาดบ่อยบนมือถือ */
+  padding: var(--quarter) var(--quarter) var(--quarter) 0;
+  min-height: 36px;
+  margin-bottom: var(--half);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.btn-submit:hover {
-  background: #00112c;
+.btn-back:hover {
+  color: var(--official);
 }
 
-/* Button row at the bottom of a form */
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--half);
+  color: var(--official);
+  font-size: 15px;
+}
+
+/* แถวปุ่มท้ายเรื่อง — คั่นด้วยเส้นเต็มความกว้างเหมือนเส้นปิดท้ายหนังสือ */
 .ui-action-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  gap: 15px;
-  margin-top: 35px;
-  border-top: 2px dashed #525153;
-  padding-top: 20px;
+  gap: var(--half);
+  margin-top: var(--lh);
+  padding-top: var(--half);
+  border-top: 1px solid var(--line-faint);
   width: 100%;
 }
 
-/* ===== Print (PDF button uses window.print) ===== */
+/* ===== พิมพ์ ===== */
 @page {
   size: A4;
-  margin: 12mm;
+  margin: 20mm 15mm;
 }
 
 @media print {
   body {
-    /* เดิม display:flex — .container เป็น flex item ค่า min-width:auto default
-       กันไม่ให้ shrink ต่ำกว่าความกว้างเนื้อหาจริง (950px) แม้ตั้ง max-width:100% ไว้แล้ว
-       เนื้อหาเลยล้นขอบกระดาษโดนตัดตอน print — เปลี่ยนเป็น block ตัดปัญหานี้ทั้งกระบวนตั้งแต่ต้น */
-    display: block;
-    background: #0c0c0c;
+    background: #fff;
     padding: 0;
+    font-size: 16pt;
   }
 
   .ui-action-buttons,
   .btn-add-row,
   .btn-delete-row,
+  .btn-back,
   .back-link,
   .pagination,
+  .filter-grid,
   .no-print {
-    display: none;
+    display: none !important;
+  }
+
+  /* ช่องกรอกบนกระดาษไม่ต้องมีพื้น — เหลือเส้นให้เห็นว่าตรงนี้คือค่าที่กรอกไว้ */
+  input,
+  select,
+  textarea {
+    background: none !important;
+    border-color: #999 !important;
+  }
+
+  /* ผู้ใช้ที่เปิด "print backgrounds" ไม่ควรโดนแถบทึบเต็มแนว */
+  .action-table th {
+    background: none !important;
   }
 
   .container {
-    /* !important เพราะ form.css มี .container { width: 950px } ตายตัวมาทับ — ไม่ยอม
-       ให้ fixed width เดิมชนะบน print เด็ดขาด ต้องเท่าความกว้างหน้ากระดาษเท่านั้น */
     width: 100% !important;
     max-width: 100% !important;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
+    border: none !important;
+    padding: 0 !important;
   }
 
-  /* ป้องกันข้อความยาวๆ (เช่น note ท้าย section-title) ดันความกว้างเกินหน้ากระดาษ */
-  .section-title {
-    flex-wrap: wrap;
+  .section-title,
+  .section-title2 {
+    break-after: avoid;
+  }
+
+  .action-table {
+    break-inside: avoid;
   }
 }
 
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  body {
+    padding: var(--half) 0;
+    font-size: 15px;
+  }
+
   .ui-action-buttons {
     flex-direction: column-reverse;
+    align-items: stretch;
   }
 
   .btn {
-    justify-content: center;
     width: 100%;
   }
 }

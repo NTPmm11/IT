@@ -111,13 +111,16 @@ export default {
         </div>
       </div>
 
-      <div class="grid-2col" style="margin-top: 10px;">
-        <div class="form-group">
-          <label for="approver-name">ผู้อนุมัติ (Approver):</label>
-          <input type="text" id="approver-name" v-model="form.approver" placeholder="ชื่อผู้มีสิทธิ์อนุมัติ">
+      <!-- ช่องลงชื่อท้ายหนังสือ — ชื่ออยู่บนเส้น ตำแหน่งอยู่ใต้ชื่อ วันที่ปิดท้าย
+           ตำแหน่งชิดขวาตามแบบหนังสือ ไม่ใช่สองคอลัมน์เท่ากันอย่างช่องกรอกทั่วไป -->
+      <div class="signature-block">
+        <div class="signature-line">
+          <label for="approver-name">ลงชื่อ</label>
+          <input type="text" id="approver-name" v-model="form.approver" placeholder="ชื่อผู้พิจารณา">
         </div>
-        <div class="form-group">
-          <label for="approval-date">วันที่พิจารณา:</label>
+        <p class="signature-role">ผู้พิจารณาคำขอ</p>
+        <div class="signature-line">
+          <label for="approval-date">วันที่</label>
           <input type="date" id="approval-date" v-model="form.date">
         </div>
       </div>
@@ -144,8 +147,33 @@ export default {
 .approval-fieldset:disabled input,
 .approval-fieldset:disabled select,
 .approval-fieldset:disabled textarea {
-  background-color: #eaedf2;
-  color: #6b7280;
+  color: var(--ink-light);
+  border-bottom-style: dashed;
   cursor: not-allowed;
+}
+
+.signature-block {
+  width: 300px;
+  max-width: 100%;
+  margin: var(--lh) 0 var(--half) auto;
+}
+
+.signature-line {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--quarter);
+}
+
+.signature-line label {
+  font-weight: 400;
+}
+
+/* ตำแหน่งอยู่ใต้เส้นลงชื่อเสมอ เยื้องให้ตรงกับความยาวของเส้น */
+.signature-role {
+  padding-left: 44px;
+  margin-bottom: var(--quarter);
+  font-size: 15px;
+  color: var(--ink-light);
 }
 </style>

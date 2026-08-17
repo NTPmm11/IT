@@ -1,267 +1,541 @@
 /* ============================================
-   form.css — form.html and approve.html
+   form.css — ตัวหนังสือ: หัวเรื่อง บล็อกทะเบียน ช่องกรอก ตาราง ตรายาง
+   ใช้ร่วม FormView / ApproveView / ListView / HomeView
    ============================================ */
 
+@import './tokens.css';
+
+/* ===== แผ่นกระดาษ =====
+   ขอบซ้ายกว้างกว่าขอบขวา ตามแบบหนังสือที่เผื่อไว้เข้าแฟ้ม */
 .container {
-  background: #ffffffc9;
-  width: 950px;
-  padding: 35px;
-  border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
+  background: var(--sheet);
+  width: 100%;
+  max-width: var(--sheet-width);
+  margin: 0 auto;
+  padding: calc(var(--lh) * 1.5) var(--margin-right) calc(var(--lh) * 2) var(--margin-left);
+  border: 1px solid var(--line-faint);
+  border-radius: 0;
 }
 
-/* ===== Header ===== */
+/* ===== หัวหนังสือ =====
+   จัดกึ่งกลาง ปิดท้ายด้วยเส้นคู่ — เส้นคู่คือเครื่องหมายว่าจบส่วนหัว เริ่มตัวเรื่อง
+   (ตำแหน่งนี้ในหนังสือราชการคือที่ของตราครุฑ ซึ่งเอกสารเอกชนใช้ไม่ได้) */
 .header-section {
   text-align: center;
-  border-bottom: 3px solid #0e023b;
-  padding-bottom: 30px;
-  margin-bottom: 30px;
+  padding-bottom: var(--half);
+  margin-bottom: var(--lh);
+  border-bottom: 3px double var(--line);
 }
 
 .header-section h1 {
-  color: #00112c;
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .header-section p {
-  margin-top: 5px;
-  color: #080808;
-  font-size: 14px;
+  margin-top: var(--quarter);
+  font-size: 15px;
+  color: var(--ink-light);
 }
 
-/* ===== Section title ===== */
-.section-title {
-    background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #fafafa;
-  padding: 10px 14px;
-  font-size: 18px;
-  font-weight: 700;
-  border-radius: 6px;
-  margin: 25px 0 15px 0;
-  border-left: 5px solid #000000;
+/* ===== หัวข้อในเรื่อง =====
+   ไม่ใช่แถบสี ไม่ใช่ป้ายตัวเล็ก — เป็นบรรทัดตัวหนาขีดเส้นใต้ อย่างที่หนังสือทำ
+   เลขข้อห้อยออกไปในขอบซ้าย ให้ไล่สายตาตามลำดับข้อได้จากริมกระดาษ */
+.section-title,
+.section-title2 {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--quarter) var(--half);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0 0 var(--quarter);
+  margin: var(--lh) 0 var(--half) calc(var(--indent) * -1);
 }
 
-/* หัวข้อลำดับที่ 1 (ข้อมูลทั่วไป) -> สีน้ำเงิน */
-
-.section-title span.note {
-  font-size: 13px;
-  color: #dbd6e6;
-  font-weight: normal;
+/* แผนการกู้คืนคือส่วนที่เดินย้อน — หมึกตรายางเหมือนของที่ยกเลิกได้ */
+.section-title.is-rollback,
+.section-title2.is-rollback {
+  color: var(--seal-deep);
+  border-bottom-color: var(--seal-deep);
 }
 
-/* ===== Form layout ===== */
+.section-title .note,
+.section-title2 .note {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-light);
+}
+
+/* ===== ผังช่องกรอก ===== */
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 25px;
+  gap: 0 var(--lh);
 }
 
+/* label กว้างเท่ากันทุกแถว — ช่องกรอกเริ่มตรงกันเป็นแนวเดียว กวาดตาลงมาได้
+   (คอลัมน์ auto ทำให้ช่องเริ่มไม่ตรงกันสักแถว ยาวสั้นตามความยาว label) */
 .form-group {
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: var(--label-col) 1fr;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 16px;
- 
+  gap: var(--quarter) var(--half);
+  margin-bottom: var(--half);
 }
 
 .form-group.align-top {
-  align-items: flex-start;
+  align-items: start;
 }
 
 .form-group.align-top label {
-  margin-top: 8px;
+  padding-top: 9px;
 }
 
 label {
+  font-size: 16px;
   font-weight: 600;
-  color: #1a0101;
-  text-align: left;
-  font-size: 18px;
+  color: var(--ink);
+  line-height: 1.35;
 }
 
-/* ===== Inputs ===== */
+/* ===== ช่องกรอก =====
+   แบบฟอร์มจริงมีช่องเป็นกรอบให้เห็นว่าเขียนตรงไหน ยาวแค่ไหน
+   มุมคม พื้นอ่อน ขอบเข้ม — เป็นภาษาของแบบฟอร์ม ไม่ใช่กล่องมนแบบเว็บ */
 input[type="text"],
 input[type="date"],
 input[type="time"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
-  padding: 9px 12px;
-  border: 1.5px solid #5a5e63a2;
-  border-radius: 8px;
-  font-size: 14px;
-  background-color: #ffffffa6;
-  transition: all 0.3s;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 7px 10px;
+  background: var(--field);
+  border: 1px solid var(--line-faint);
+  border-radius: 0;
+  transition: border-color 0.12s, background-color 0.12s;
 }
 
-input[readonly] {
-  background-color: #eaedf2;
-  color: #04225f;
-  cursor: not-allowed;
-  border-style: dashed;
+textarea {
+  resize: vertical;
+  min-height: calc(var(--lh) * 3);
 }
 
+/* ชี้ค้างไว้ก็รู้แล้วว่าช่องนี้แตะได้ */
+input:hover:not(:disabled):not([readonly]),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--ink-light);
+}
+
+/* กำลังกรอกช่องไหน ต้องเห็นจากอีกฟากห้อง */
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #00075a;
-  background-color: #fff;
-  outline: none;
+  outline: 2px solid var(--official);
+  outline-offset: -2px;
+  border-color: var(--official);
+  background: var(--sheet);
 }
 
-/* ===== Radio / checkbox groups ===== */
+/* กรอกไม่ได้ = ช่องเทาทึบ ไม่ใช่เส้นประ
+   (หน้าอนุมัติปิดช่องไว้ทั้งหน้า ถ้าเป็นเส้นประหมดจะอ่านไม่ออกว่าอะไรเป็นอะไร) */
+input[readonly],
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--field-locked);
+  color: var(--ink-light);
+  border-color: var(--line-faint);
+  cursor: not-allowed;
+  -webkit-text-fill-color: var(--ink-light);
+  opacity: 1;
+}
+
+/* ===== ตัวเลือก ===== */
 .options-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--quarter) var(--lh);
   align-items: center;
 }
 
 .options-group input[type="text"] {
-  width: 200px;
-  padding: 5px 10px;
+  width: 220px;
 }
 
 .option-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 18px;
-  color: #011641;
+  gap: var(--quarter);
+  font-size: 16px;
   cursor: pointer;
+  /* พื้นที่กดจริงคือ label ทั้งบรรทัด ไม่ใช่กล่องติ๊ก 17px — ต้องสูงพอสำหรับนิ้ว */
+  min-height: 36px;
+  padding: var(--quarter) 0;
 }
 
 .option-item input {
-  width: 15px;
-  height: 15px;
-  accent-color: #240000;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--official);
+  cursor: pointer;
 }
 
-/* ===== Action plan table ===== */
+/* ===== ตาราง =====
+   ตารางในแบบฟอร์มมีเส้นครบทุกด้าน ไม่ใช่เส้นใต้อย่างเดียวแบบตารางข้อมูลบนเว็บ */
+/* ตารางแผนงานมี 8 คอลัมน์ บีบให้พอดีจอเล็กแล้วอ่านไม่ออก — ให้เลื่อนแนวนอนแทน
+   เงาที่ขอบขวาบอกว่ายังมีคอลัมน์ต่อไปอีก (ไม่งั้นคนไม่รู้ว่าเลื่อนได้) */
 .table-wrapper {
   overflow-x: auto;
-  margin-bottom: 20px;
+  margin-bottom: var(--half);
+  background:
+    linear-gradient(to right, var(--sheet) 30%, rgba(255, 255, 255, 0)) left / 30px 100% no-repeat,
+    linear-gradient(to left, var(--sheet) 30%, rgba(255, 255, 255, 0)) right / 30px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(22, 24, 29, 0.16), transparent) left / 12px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(22, 24, 29, 0.16), transparent) right / 12px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* จอแท็บเล็ต — ตารางยังเป็นตาราง แต่กว้างเกินจอ บอกให้รู้ว่าเลื่อนได้ */
+@media screen and (min-width: 701px) and (max-width: 900px) {
+  .table-wrapper {
+    border-right: 2px dashed var(--line-faint);
+  }
+
+  .table-wrapper::after {
+    content: 'เลื่อนแนวนอนเพื่อดูคอลัมน์ที่เหลือ →';
+    display: block;
+    padding-top: 2px;
+    font-size: 13px;
+    color: var(--ink-light);
+  }
+
+  .list-container .table-wrapper {
+    border-right: none;
+  }
+
+  .list-container .table-wrapper::after {
+    content: none;
+  }
+}
+
+/* ===== มือถือ: ตารางแผนงานยุบเป็นการ์ดต่อขั้นตอน =====
+   8 คอลัมน์บนจอ 375px ต่อให้เลื่อนได้ก็กรอกไม่ไหว — ต้องเลื่อนไปมาทุกช่อง
+   1 แถว = 1 การ์ด ชื่อช่องมาจาก data-label บน <td>
+   ใช้ได้ทั้งตารางกรอก (FormView) และตารางอ่าน (ApproveView) */
+@media screen and (max-width: 700px) {
+  .plan-cards-wrap {
+    overflow-x: visible;
+    background: none;
+    border-right: none;
+  }
+
+  .plan-cards-wrap .action-table,
+  .plan-cards-wrap .action-table tbody,
+  .plan-cards-wrap .action-table tr,
+  .plan-cards-wrap .action-table td {
+    display: block;
+    width: auto;
+    min-width: 0;
+  }
+
+  .plan-cards-wrap .action-table {
+    border: none;
+  }
+
+  .plan-cards-wrap .action-table thead {
+    display: none;
+  }
+
+  .plan-cards-wrap .action-table tr {
+    border: 1px solid var(--line-faint);
+    padding: var(--quarter) var(--half) var(--half);
+    margin-bottom: var(--half);
+  }
+
+  .plan-cards-wrap .action-table td {
+    display: grid;
+    grid-template-columns: 108px 1fr;
+    gap: var(--half);
+    align-items: center;
+    text-align: left;
+    padding: 3px 0;
+    border: none;
+  }
+
+  .plan-cards-wrap .action-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--ink-light);
+  }
+
+  /* ลำดับเป็นหัวการ์ด ไม่ใช่ช่องข้อมูลช่องหนึ่ง */
+  .plan-cards-wrap .action-table td:first-child {
+    display: block;
+    font-weight: 700;
+    padding-bottom: var(--quarter);
+    margin-bottom: var(--quarter);
+    border-bottom: 1px solid var(--line-faint);
+  }
+
+  .plan-cards-wrap .action-table td:first-child::before {
+    content: 'ขั้นตอนที่ ';
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* ปุ่มลบเต็มความกว้างท้ายการ์ด — ในตารางเป็นปุ่มจิ๋วท้ายแถว บนการ์ดต้องกดง่าย */
+  .plan-cards-wrap .action-table td:has(.btn-delete-row) {
+    display: block;
+    margin-top: var(--quarter);
+  }
+
+  .plan-cards-wrap .action-table td:has(.btn-delete-row)::before {
+    content: none;
+  }
+
+  .plan-cards-wrap .btn-delete-row {
+    width: 100%;
+    border: 1px solid var(--seal);
+  }
+
+  /* ตารางกรอกไม่ต้องตรึงความกว้างแล้ว เพราะไม่ได้เป็นตารางบนจอนี้ */
+  .plan-cards-wrap .action-table {
+    min-width: 0;
+  }
 }
 
 .action-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.action-table th,
-.action-table td {
-  border: 1px solid #d1d5db;
-  padding: 5px;
-  font-size: 14px;
-  text-align: left;
+  font-size: 15px;
+  border: 1px solid var(--line);
 }
 
 .action-table th {
-  background: #e5e7eb;
-  color: #000000;
+  font-weight: 700;
   text-align: center;
+  color: var(--ink);
+  background: #eceef3;
+  padding: var(--quarter) var(--half);
+  border: 1px solid var(--line);
+  white-space: nowrap;
 }
 
-.action-table .text-center {
+.action-table td {
+  padding: 4px var(--quarter);
+  border: 1px solid var(--line-faint);
+  vertical-align: middle;
+}
+
+/* ช่องกรอกในตารางเต็มความกว้างช่อง มีพื้นอ่อนบอกว่าพิมพ์ได้
+   (เดิมทำเส้นใส คนมองไม่ออกว่าตรงไหนกรอกได้) */
+.action-table input[type="text"],
+.action-table input[type="date"],
+.action-table input[type="time"] {
+  font-size: 15px;
+  padding: 5px 7px;
+  border-color: transparent;
+  background: var(--field);
+}
+
+.action-table input:hover:not(:disabled) {
+  border-color: var(--line-faint);
+}
+
+.text-center {
   text-align: center;
 }
 
 .btn-add-row {
-  background: #000000;
-  color: #fffdfd;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 16px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  background: none;
+  border: 1px dashed var(--line-faint);
+  border-radius: 0;
+  padding: var(--quarter) var(--half);
+  min-height: 38px;
+  margin-top: var(--quarter);
   cursor: pointer;
-  margin-top: 10px;
 }
 
 .btn-add-row:hover {
-  background:#a9aaac;
+  border-color: var(--line);
+  border-style: solid;
 }
 
 .btn-delete-row {
-  background: #5a0000;
-  color: #fff;
+  font-size: 15px;
+  color: var(--seal);
+  background: none;
   border: none;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 16px;
+  padding: var(--quarter);
+  min-height: 36px;
+  min-width: 36px;
   cursor: pointer;
 }
 
 .btn-delete-row:hover {
-  background: #7a1a1a;
+  text-decoration: underline;
 }
 
-.btn-submit:hover{
- background: #a9aaac;
+/* ===== ตรายางบอกผล =====
+   ผลพิจารณาของหนังสือถูกประทับ ไม่ได้ติดป้าย — เส้นคู่ ตัวห่าง หมึกสีเดียว */
+.status-badge {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  padding: 1px 10px;
+  border: 2px solid currentColor;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px currentColor;
+  background: none;
+  white-space: nowrap;
 }
 
+/* ใบที่พิจารณาเสร็จแล้วประทับจริง — เอียงอย่างที่มือคนประทับ */
+.status-badge.stamp {
+  font-size: 20px;
+  padding: var(--quarter) var(--half);
+  transform: rotate(-4deg);
+}
 
-/* ===== Responsive ===== */
-/* "screen and" กันไว้ — ไม่งั้น breakpoint นี้ดันมาทำงานตอน print ด้วย
-   (หน้ากระดาษ print หัก margin แล้วมักคำนวณออกมาต่ำกว่า 768px)
-   ทำให้ grid-2col/form-group ยุบเหลือคอลัมน์เดียว ทุกช่องเรียงเป็นเส้นตรงดิ่งลงมาตอนสั่งพิมพ์ */
-@media screen and (max-width: 768px) {
+.status-draft     { color: var(--result-pending); }
+.status-submitted { color: var(--official); }
+.status-approved  { color: var(--result-approved); }
+.status-rejected  { color: var(--result-rejected); }
+.status-more_info { color: var(--result-more-info); }
+
+/* ===== เลขหน้า ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;   /* หลายหน้า + จอแคบ ต้องขึ้นบรรทัดใหม่ ไม่ใช่ล้นออกไป */
+  gap: 2px;
+  margin-top: var(--lh);
+}
+
+.pagination button {
+  font-family: var(--font);
+  font-size: 15px;
+  /* เป้ากดอย่างน้อย 36px — ปุ่มเลขหน้าสูงแค่ 24px กดพลาดบ่อยบนมือถือ */
+  min-width: 36px;
+  min-height: 36px;
+  padding: var(--quarter) var(--half);
+  color: var(--ink-light);
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+}
+
+.pagination button:hover:not(:disabled) {
+  color: var(--ink);
+  border-bottom-color: var(--line-faint);
+}
+
+.pagination button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination button.active,
+.pagination button[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 2px solid var(--official);
+}
+
+/* ===== ขนาดหน้าจอ =====
+   ไล่จากใหญ่ไปเล็ก แต่ละชั้นแก้เฉพาะสิ่งที่พังจริงในช่วงนั้น */
+
+/* แล็ปท็อปเล็ก / แท็บเล็ตแนวนอน — คอลัมน์ label กินที่มากไปเมื่อเนื้อหาแคบลง */
+@media screen and (max-width: 1024px) {
+  :root {
+    --label-col: 132px;
+  }
+}
+
+/* แท็บเล็ตแนวตั้ง — 2 คอลัมน์เริ่มบีบจนช่องกรอกสั้นกว่าข้อความที่กรอก */
+@media screen and (max-width: 860px) {
   .grid-2col {
     grid-template-columns: 1fr;
     gap: 0;
   }
+}
+
+/* มือถือ — label ขึ้นไปอยู่บรรทัดบน กระดาษเต็มขอบจอ */
+@media screen and (max-width: 700px) {
+  .container {
+    border-left: none;
+    border-right: none;
+  }
 
   .form-group {
     grid-template-columns: 1fr;
+    align-items: start;
+    gap: 2px;
   }
 
-  label {
-    text-align: left;
+  .form-group.align-top label {
+    padding-top: 0;
+  }
+
+  .section-title,
+  .section-title2 {
+    margin-left: 0;
+  }
+
+  /* ตารางกรอกข้อมูลไม่ยุบเป็นการ์ด (ยังต้องกรอกทีละช่อง) — ตรึงความกว้างไว้แล้วเลื่อนเอา
+     บีบ 8 คอลัมน์ลงจอ 375px แล้วช่องแคบจนพิมพ์ไม่ได้ */
+  .action-table {
+    min-width: 680px;
+  }
+
+  .options-group input[type="text"] {
+    width: 100%;
   }
 }
 
-/* ===== ปุ่มกลับหน้าหลัก ===== */
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
- background:#000000;
-  color: #ffffff;
-  border: 1.5px solid #5e5f61;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 5px rgba(32, 32, 32, 0.863);
-  margin-bottom: 20px;
+/* มือถือเล็ก */
+@media screen and (max-width: 420px) {
+  .container {
+    padding-top: var(--lh);
+  }
+
+  .header-section h1 {
+    font-size: 19px;
+  }
+
+  .section-title,
+  .section-title2 {
+    font-size: 16px;
+  }
+
+  .status-badge.stamp {
+    font-size: 17px;
+  }
 }
 
-/* เอฟเฟกต์ตอนนำเมาส์ไปชี้ (Hover) */
-.btn-back:hover {
-  background-color: #000000;
-  color: #9e9797;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  transform: translateY(-1px);
-}
-.btn-cancel2 {
-  background-color: #3f0110;
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(43, 1, 11, 0.678);
-  transform: translateY(-1px);
-}
-.btn-cancel2:hover{
- background: #a9aaac;
-}
-.btn-submit {
-  background-color: #030249;
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.678);
-  transform: translateY(-1px);
+/* ค่าที่เป็นข้อความยาวติดกันไม่มีเว้นวรรค (URL, ชื่อไฟล์) ดันผังจนล้นจอได้ */
+.action-table td,
+.register dd,
+.home-card p {
+  overflow-wrap: anywhere;
 }

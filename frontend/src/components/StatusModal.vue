@@ -52,7 +52,7 @@ export default {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(10, 14, 26, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,34 +61,37 @@ export default {
 }
 
 .modal-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px 28px;
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: var(--lh);
   max-width: 380px;
   width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  text-align: left;
 }
 
 .modal-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 24px;
+  margin-bottom: var(--quarter);
 }
 
-.icon-success { color: #16a34a; }
-.icon-error { color: #dc2626; }
+.icon-success { color: var(--result-approved); }
+.icon-error { color: var(--seal); }
 
 .modal-title {
   font-size: 18px;
-  color: #00112c;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--ink);
+  padding-bottom: var(--quarter);
+  margin-bottom: var(--quarter);
+  border-bottom: 1px solid var(--line-faint);
 }
 
 .modal-message {
-  font-size: 14px;
-  color: #4b5563;
-  line-height: 1.6;
-  margin-bottom: 24px;
+  font-size: 16px;
+  color: var(--ink-light);
+  line-height: var(--lh);
+  margin-bottom: var(--lh);
   white-space: pre-line;
 }
 

@@ -23,7 +23,7 @@ const CHANGE_TYPE_LABEL = { App: "Application / Software", DB: "Database Schema"
 const APPROVAL_RESULT_LABEL = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", more_info: "ขอข้อมูลเพิ่มเติม" };
 
 const NAVY = [21, 42, 82];
-const LABEL_BG = [242, 244, 248];
+const RULE = [190, 195, 205];
 
 function fmtDate(value) {
   return value ? String(value).slice(0, 10) : "-";
@@ -69,12 +69,24 @@ async function buildCrPdf(cr) {
   const marginX = 12;
   const usableWidth = pageWidth - marginX * 2;
 
-  const gridTable = (body, startY, columnStyles) => {
+  // ข้อเท็จจริงเป็นคู่ label:value — ไม่ใช่ตาราง ไม่ต้องมีกรอบทุกช่อง
+  // เหลือเส้นคั่นล่างเส้นเดียวต่อแถว พอให้สายตาไล่ลงมาได้ ไม่มีพื้นสีเลย
+  // (ของเดิม theme:"grid" + พื้นเทาคอลัมน์ label กินหมึกราว 60 ตร.ซม. ต่อหน้า
+  //  และทำให้เอกสารดูเป็นตารางเรียงกัน 5 ชุดทั้งที่มีตารางจริงแค่ 2)
+  const factTable = (body, startY, columnStyles) => {
     autoTable(doc, {
       startY,
       body,
-      theme: "grid",
-      styles: { font: "Sarabun", fontStyle: "normal", fontSize: 9.5, cellPadding: 2.2, textColor: 20, lineColor: [190, 195, 205] },
+      theme: "plain",
+      styles: {
+        font: "Sarabun",
+        fontStyle: "normal",
+        fontSize: 9.5,
+        cellPadding: { top: 1.8, bottom: 1.8, left: 0, right: 3 },
+        textColor: 20,
+        lineColor: RULE,
+        lineWidth: { bottom: 0.1 }
+      },
       columnStyles,
       margin: { left: marginX, right: marginX }
     });
@@ -122,26 +134,26 @@ async function buildCrPdf(cr) {
   let y = 42;
 
   // ── ข้อมูลผู้ร้องขอ ──────────────────────────
-  const labelStyle = { fontStyle: "bold", fillColor: LABEL_BG, cellWidth: 40 };
-  y = gridTable(
+  const labelStyle = { fontStyle: "bold", cellWidth: 42 };
+  y = factTable(
     [
       ["ผู้ร้องขอ", cr.requester || "-", "แผนก/ฝ่าย", cr.department || "-"],
       ["อีเมล/เบอร์โทร", cr.contact || "-", "ระบบที่เกี่ยวข้อง", cr.system_name || "-"],
       ["ความสำคัญ (Priority)", cr.priority || "-", "สถานะ", STATUS_LABEL[cr.status] || cr.status || "-"]
     ],
     y,
-    { 0: labelStyle, 1: { cellWidth: 53 }, 2: labelStyle, 3: { cellWidth: 53 } }
+    { 0: labelStyle, 1: { cellWidth: 51 }, 2: labelStyle, 3: { cellWidth: 51 } }
   ) + 6;
 
   // ── รายละเอียดคำขอ ───────────────────────────
   y = sectionTitle("รายละเอียดคำขอ", y);
-  y = gridTable(
+  y = factTable(
     [
       ["สถานะปัจจุบัน / ปัญหาที่พบ", cr.problem || "-"],
       ["สิ่งที่ต้องการให้ปรับปรุง", cr.request_detail || "-"]
     ],
     y,
-    { 0: { fontStyle: "bold", fillColor: LABEL_BG, cellWidth: 40, valign: "top" }, 1: { cellWidth: 146, valign: "top" } }
+    { 0: { fontStyle: "bold", cellWidth: 42, valign: "top" }, 1: { valign: "top" } }
   ) + 6;
 
   // ── การประเมินผลกระทบและทรัพยากร ──────────────
@@ -151,14 +163,14 @@ async function buildCrPdf(cr) {
   const impactText = cr.impact === "other" ? `กระทบระบบอื่น: ${cr.impact_detail || "-"}` : "ไม่มีผลกระทบส่วนอื่น";
 
   y = sectionTitle("การประเมินผลกระทบและทรัพยากร", y);
-  y = gridTable(
+  y = factTable(
     [
       ["ประเภทการเปลี่ยน", changeTypesText, "ผลกระทบระบบ", impactText],
       ["ปิดระบบชั่วคราว (Downtime)", cr.downtime ? "ต้องปิดระบบ" : "ไม่ต้องปิดระบบ", "ระยะเวลาที่คาดใช้", cr.duration || "-"],
       [{ content: "เป้าหมาย Deploy", styles: labelStyle }, { content: fmtDate(cr.deploy_date), colSpan: 3 }]
     ],
     y,
-    { 0: labelStyle, 1: { cellWidth: 53 }, 2: labelStyle, 3: { cellWidth: 53 } }
+    { 0: labelStyle, 1: { cellWidth: 51 }, 2: labelStyle, 3: { cellWidth: 51 } }
   ) + 6;
 
   // ── ตารางแผนดำเนินงาน / แผนกู้คืน ───────────────
@@ -175,7 +187,11 @@ async function buildCrPdf(cr) {
       body: rows.map((r, i) => [i + 1, r.step || "-", fmtDate(r.start_date), fmtDate(r.end_date), r.owner || "-", r.note || "-"]),
       theme: "grid",
       styles: { font: "Sarabun", fontStyle: "normal", fontSize: 9, cellPadding: 2, textColor: 20, lineColor: [190, 195, 205] },
-      headStyles: { font: "Sarabun", fontStyle: "bold", fillColor: NAVY, textColor: 255, halign: "center" },
+      // หัวตารางใช้เส้นหนาใต้หัว แทนแถบทึบเต็มแนว — เห็นชัดเท่ากันแต่ไม่กินหมึก
+      headStyles: {
+        font: "Sarabun", fontStyle: "bold", halign: "center",
+        fillColor: false, textColor: NAVY, lineColor: NAVY, lineWidth: { bottom: 0.5 }
+      },
       columnStyles: { 0: { cellWidth: 12, halign: "center" } },
       margin: { left: marginX, right: marginX }
     });

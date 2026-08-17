@@ -23,14 +23,17 @@
 import { apiFetch } from "../services/api.js";
 import { buildCrPdfBlobUrl, downloadCrPdf } from "../services/pdfExport.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
+import ChangeWindow from "../components/ChangeWindow.vue";
+import { STATUS_LABEL } from "../services/constants.js";
 
 export default {
-  components: { ApprovalSection },
+  components: { ApprovalSection, ChangeWindow },
 
   data() {
     return {
       crId: null,       // ยังไม่รู้เลข CR จนกว่า mounted() จะอ่านจาก URL มาใส่
       cr: null,         // รายละเอียด CR ใบนี้ (เลขที่, subject, ผู้ร้องขอ, ...) — ให้เห็นบริบทก่อนอนุมัติ
+      loadError: "",    // โหลดรายละเอียดไม่ได้ (ไม่ใช่ CR ของเรา / ไม่มีใบนี้) — ต้องบอกเหตุผล
       pdfPreviewUrl: "" // blob URL ของ PDF ที่กำลัง preview อยู่ ("" = ปิด modal)
     };
   },
@@ -57,7 +60,9 @@ export default {
       try {
         this.cr = await apiFetch(`/change-requests/${this.crId}`);
       } catch (err) {
-        console.error(err);
+        // เดิมแค่ console.error -> หน้าเว็บว่างเปล่าโดยไม่บอกอะไร
+        // requester ที่เปิดใบของคนอื่นจะเห็นแค่ฟอร์มเปล่า ไม่รู้ว่าทำไม
+        this.loadError = err.message;
       }
     }
 
@@ -83,6 +88,18 @@ export default {
     // ตัดเอาแค่ส่วนวันที่มาโชว์ (ไม่ต้อง parse เป็น Date object ให้ซับซ้อนเกินจำเป็น)
     fmtDate(value) {
       return value ? String(value).slice(0, 10) : "-";
+    },
+
+    statusLabel(status) {
+      return STATUS_LABEL[status] || status;
+    },
+
+    // หัวหนังสือเขียนวันที่เต็ม ไม่ใช่ 2026-08-03 — "๓ สิงหาคม ๒๕๖๙" คือรูปแบบของเอกสาร
+    fmtLongDate(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return d.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
     },
 
     // PDF เป็นไฟล์จริงที่วาดเป็น vector เอง (jsPDF+autoTable ใน services/pdfExport.js)
@@ -117,11 +134,42 @@ export default {
   <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
 </button>
 
+    <!-- โหลดใบนี้ไม่ได้ — บอกเหตุผลตรงๆ แล้วไม่ต้องโชว์ฟอร์มพิจารณาให้สับสน -->
+    <p v-if="loadError" class="load-error">
+      <i class="fa-solid fa-circle-exclamation"></i> {{ loadError }}
+    </p>
+
     <!-- สรุปว่ากำลังอนุมัติ CR ใบไหน — สำคัญมากเวลาเปิดหน้านี้ตรงจากลิงก์ในเมล -->
-    <div class="section-title" v-if="cr">
-      <div>{{ cr.cr_number }} — {{ cr.subject }}</div>
-      <span class="note">ผู้ร้องขอ: {{ cr.requester }} | ระบบ: {{ cr.system_name }} | ความสำคัญ: {{ cr.priority }}</span>
+    <div class="register-block" v-if="cr">
+      <dl class="register">
+        <dt>ที่</dt>
+        <dd>{{ cr.cr_number }}</dd>
+
+        <dt>วันที่</dt>
+        <dd>{{ fmtLongDate(cr.request_date) }}</dd>
+
+        <dt>เรื่อง</dt>
+        <dd>{{ cr.subject }}</dd>
+
+        <dt>เรียน</dt>
+        <dd>หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</dd>
+
+        <dt>จาก</dt>
+        <dd>{{ cr.requester }} — ระบบ {{ cr.system_name }} · ความสำคัญ {{ cr.priority }}</dd>
+      </dl>
+
+      <span class="status-badge stamp" :class="'status-' + cr.status">{{ statusLabel(cr.status) }}</span>
     </div>
+
+    <!-- แถบหน้าต่างการเปลี่ยนแปลง — เห็นทั้งช่วงเวลาและแผนกู้คืนก่อนตัดสินใจ -->
+    <ChangeWindow
+      v-if="cr"
+      :plan="cr.plan"
+      :rollback-plan="cr.rollbackPlan"
+      :deploy-date="cr.deploy_date"
+      :downtime="!!cr.downtime"
+      :duration="cr.duration"
+    />
 
     <!-- รายละเอียดคำขอเต็ม (อ่านอย่างเดียว) — ให้ approver เห็นว่ากำลังอนุมัติอะไร ไม่ใช่แค่หัวข้อ -->
     <template v-if="cr">
@@ -181,7 +229,8 @@ export default {
         <div class="section-title">
           <div>แผนดำเนินงาน (Action Plan)</div>
         </div>
-        <table class="action-table">
+        <div class="table-wrapper plan-cards-wrap">
+          <table class="action-table">
           <thead>
             <tr>
               <th style="width: 40px;">ลำดับ</th>
@@ -194,22 +243,24 @@ export default {
           </thead>
           <tbody>
             <tr v-for="(row, i) in cr.plan" :key="'plan-' + i">
-              <td class="text-center">{{ i + 1 }}</td>
-              <td>{{ row.step }}</td>
-              <td>{{ row.start_date }}</td>
-              <td>{{ row.end_date }}</td>
-              <td>{{ row.owner || "-" }}</td>
-              <td>{{ row.note || "-" }}</td>
+              <td data-label="ลำดับ" class="text-center">{{ i + 1 }}</td>
+              <td data-label="ขั้นตอนงาน">{{ row.step }}</td>
+              <td data-label="เริ่ม">{{ row.start_date }}</td>
+              <td data-label="สิ้นสุด">{{ row.end_date }}</td>
+              <td data-label="ผู้รับผิดชอบ">{{ row.owner || "-" }}</td>
+              <td data-label="หมายเหตุ">{{ row.note || "-" }}</td>
             </tr>
           </tbody>
         </table>
+        </div>
       </template>
 
       <template v-if="cr.rollbackPlan && cr.rollbackPlan.length">
-        <div class="section-title">
+        <div class="section-title is-rollback">
           <div>แผนการกู้คืน (Roll Back Plan)</div>
         </div>
-        <table class="action-table">
+        <div class="table-wrapper plan-cards-wrap">
+          <table class="action-table">
           <thead>
             <tr>
               <th style="width: 40px;">ลำดับ</th>
@@ -222,15 +273,16 @@ export default {
           </thead>
           <tbody>
             <tr v-for="(row, i) in cr.rollbackPlan" :key="'rb-' + i">
-              <td class="text-center">{{ i + 1 }}</td>
-              <td>{{ row.step }}</td>
-              <td>{{ row.start_date }}</td>
-              <td>{{ row.end_date }}</td>
-              <td>{{ row.owner || "-" }}</td>
-              <td>{{ row.note || "-" }}</td>
+              <td data-label="ลำดับ" class="text-center">{{ i + 1 }}</td>
+              <td data-label="ขั้นตอนงาน">{{ row.step }}</td>
+              <td data-label="เริ่ม">{{ row.start_date }}</td>
+              <td data-label="สิ้นสุด">{{ row.end_date }}</td>
+              <td data-label="ผู้รับผิดชอบ">{{ row.owner || "-" }}</td>
+              <td data-label="หมายเหตุ">{{ row.note || "-" }}</td>
             </tr>
           </tbody>
         </table>
+        </div>
       </template>
 
       <!-- มีให้กดได้ก็ต่อเมื่อ CR ผ่านการอนุมัติแล้วเท่านั้น (ดู openPdfPreview() ในสคริปต์) -->
@@ -265,8 +317,8 @@ export default {
          ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
     <div class="no-print">
       <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
-      <ApprovalSection v-if="crId" :crId="crId" />
-      <p v-else style="text-align:center; color:#6b7280;">
+      <ApprovalSection v-if="crId && !loadError" :crId="crId" />
+      <p v-else-if="!crId" class="empty-note">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
       </p>
     </div>
@@ -276,10 +328,69 @@ export default {
 <style>
 @import '../assets/css/form.css';
 
+/* ข้อความบอกว่าเปิดใบนี้ไม่ได้ — กรอบหมึกตรายาง อ่านออกทันทีว่าไม่ใช่เนื้อหาปกติ */
+.load-error {
+  display: flex;
+  align-items: baseline;
+  gap: var(--quarter);
+  padding: var(--half);
+  margin-bottom: var(--lh);
+  color: var(--seal);
+  border: 1px solid var(--seal);
+}
+
+.empty-note {
+  text-align: center;
+  color: var(--ink-light);
+  padding: var(--lh) 0;
+}
+
+/* ===== บล็อกทะเบียนหนังสือ =====
+   ที่ / วันที่ / เรื่อง / เรียน — โครงหัวหนังสือจริง เปิดจากลิงก์ในเมลมาก็อ่านออกทันที
+   ว่ากำลังพิจารณาหนังสือฉบับไหน จากใคร เรื่องอะไร */
+.register-block {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--lh);
+  margin-bottom: var(--lh);
+}
+
+.register {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  column-gap: var(--half);
+  flex: 1;
+}
+
+.register dt {
+  font-weight: 700;
+}
+
+/* ค่าวางบนเส้นบรรทัด เหมือนถูกกรอกลงในแบบฟอร์ม */
+.register dd {
+  border-bottom: 1px solid var(--line-faint);
+  padding-bottom: 1px;
+}
+
+/* ตรายางกินพื้นที่ของตัวเอง ไม่ทับข้อความ */
+.register-block .stamp {
+  flex: none;
+  margin-top: var(--quarter);
+}
+
+@media screen and (max-width: 700px) {
+  .register-block {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: var(--half);
+  }
+}
+
 .pdf-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 14, 26, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -288,10 +399,10 @@ export default {
 }
 
 .pdf-modal {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--sheet);
+  border-radius: 0;
   width: min(900px, 100%);
-  height: 90vh;
+  height: min(90svh, 900px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -301,10 +412,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: #152a52;
-  color: #fff;
-  font-weight: 600;
+  padding: var(--quarter) var(--half);
+  background: var(--official);
+  color: var(--sheet);
+  font-weight: 700;
 }
 
 .pdf-modal-close {
@@ -312,6 +423,9 @@ export default {
   border: none;
   color: #fff;
   font-size: 18px;
+  line-height: 1;
+  min-width: 36px;
+  min-height: 36px;
   cursor: pointer;
 }
 
@@ -326,7 +440,7 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 12px 16px;
-  border-top: 1px solid #e5e7eb;
+  padding: var(--quarter) var(--half);
+  border-top: 1px solid var(--line-faint);
 }
 </style>

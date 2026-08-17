@@ -439,11 +439,11 @@ export default {
 
       <!-- [ 4. แผนดำเนินงาน ] -->
       <div class="section-title">
-        <div>แผนดำเนินงาน (Action Plan)</div>
+        <div>4. แผนดำเนินงาน (Action Plan)</div>
         <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
       </div>
 
-      <div class="table-wrapper">
+      <div class="table-wrapper plan-cards-wrap">
         <table class="action-table">
           <thead>
     <tr>
@@ -459,57 +459,60 @@ export default {
   </thead>
           <tbody>
             <tr v-for="(row, index) in rows" :key="index">
-              <td class="text-center">{{ index + 1 }}</td>
-              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="row.startDate" required></td>
-              <td><input type="time" v-model="row.start" required></td>
-              <td><input type="date" v-model="row.endDate" required></td>
-              <td><input type="time" v-model="row.end" required></td>
-              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
-              <td class="text-center">
-                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+              <td class="text-center" data-label="ลำดับ">{{ index + 1 }}</td>
+              <td data-label="ขั้นตอนงาน"><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td data-label="วันที่เริ่ม"><input type="date" v-model="row.startDate" required></td>
+              <td data-label="เวลาเริ่ม"><input type="time" v-model="row.start" required></td>
+              <td data-label="วันที่สิ้นสุด"><input type="date" v-model="row.endDate" required></td>
+              <td data-label="เวลาสิ้นสุด"><input type="time" v-model="row.end" required></td>
+              <td data-label="หมายเหตุ"><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+              <td class="text-center" data-label="">
+                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบขั้นตอนนี้</button>
               </td>
             </tr>
           </tbody>
         </table>
-
-        <button type="button" class="btn-add-row" @click="addRow">
-          + เพิ่มขั้นตอนงาน
-        </button>
       </div>
 
-      <div class="section-title2">
-        <div>แผนการกู้คืน(Roll Back Plan)</div>
+      <button type="button" class="btn-add-row" @click="addRow">
+        + เพิ่มขั้นตอนงาน
+      </button>
+
+      <div class="section-title2 is-rollback">
+        <div>5. แผนการกู้คืน (Roll Back Plan)</div>
+        <span class="note">*ขั้นตอนย้อนกลับเมื่อเปลี่ยนแล้วไม่สำเร็จ</span>
       </div>
 
-      <table class="action-table">
-        <thead>
-          <tr>
-      <th style="width: 40px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">เวลาเริ่ม</th>
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">สิ้นสุด</th>
-      <th>หมายเหตุ</th>
-      <th style="width: 50px;">ลบ</th>
-    </tr>
-  </thead>
-        <tbody>
-          <tr v-for="(row2, index) in rows2" :key="index">
-            <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row2.startDate" required></td>
-            <td><input type="time" v-model="row2.start" required></td>
-            <td><input type="date" v-model="row2.endDate" required></td>
-            <td><input type="time" v-model="row2.end" required></td>
-            <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
-            <td class="text-center">
-              <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrapper plan-cards-wrap">
+        <table class="action-table">
+          <thead>
+            <tr>
+        <th style="width: 40px;">ลำดับ</th>
+        <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
+        <th style="width: 95px;">วัน/เดือน/ปี</th>
+        <th style="width: 85px;">เวลาเริ่ม</th>
+        <th style="width: 95px;">วัน/เดือน/ปี</th>
+        <th style="width: 85px;">สิ้นสุด</th>
+        <th>หมายเหตุ</th>
+        <th style="width: 50px;">ลบ</th>
+      </tr>
+    </thead>
+          <tbody>
+            <tr v-for="(row2, index) in rows2" :key="index">
+              <td class="text-center" data-label="ลำดับ">{{ index + 1 }}</td>
+              <td data-label="ขั้นตอนงาน"><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td data-label="วันที่เริ่ม"><input type="date" v-model="row2.startDate" required></td>
+              <td data-label="เวลาเริ่ม"><input type="time" v-model="row2.start" required></td>
+              <td data-label="วันที่สิ้นสุด"><input type="date" v-model="row2.endDate" required></td>
+              <td data-label="เวลาสิ้นสุด"><input type="time" v-model="row2.end" required></td>
+              <td data-label="หมายเหตุ"><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
+              <td class="text-center" data-label="">
+                <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบขั้นตอนนี้</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <button type="button" class="btn-add-row" @click="addRow2">
         + เพิ่มขั้นตอนงาน
@@ -561,8 +564,8 @@ export default {
 .section3-fieldset:disabled input,
 .section3-fieldset:disabled select,
 .section3-fieldset:disabled textarea {
-  background-color: #eaedf2;
-  color: #6b7280;
+  color: var(--ink-light);
+  border-bottom-style: dashed;
   cursor: not-allowed;
 }
 </style>

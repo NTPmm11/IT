@@ -70,71 +70,51 @@ export default {
 </template>
 
 <style scoped>
+@import '../assets/css/form.css';
+
 .home-container {
-  width: 600px;
-}
-.container {
-  background: #ffffff;
-  width: 500px;
-  padding: 35px;
-  border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
+  max-width: 620px;
 }
 
-
+/* สารบัญ ไม่ใช่การ์ด — รายการเรื่องที่ทำได้ เรียงเป็นบรรทัด มีเส้นคั่นระหว่างรายการ
+   เส้นประเชื่อมชื่อเรื่องไปหาลูกศร อย่างที่สารบัญเชื่อมหัวข้อไปหาเลขหน้า */
 .home-menu {
-  display: grid;
-  gap: 16px;
-  margin: 10px 0 20px;
+  border-top: 1px solid var(--line);
+  margin-bottom: var(--lh);
 }
 
 .home-card {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1.5px solid #b9b5b5;
+  align-items: baseline;
+  gap: var(--half);
+  padding: var(--half) var(--quarter);
+  color: var(--ink);
   text-decoration: none;
-  color: #0f0f0f;
-  transition: all 0.2s;
-  box-shadow: 0 15px 35px rgba(102, 101, 101, 0.589);
+  border-bottom: 1px solid var(--line-faint);
 }
 
-.home-card:hover {
-  border-color: #faf4f4;
-  background: #3f3e3f73;
+.home-card:hover,
+.home-card:focus-visible {
+  background: rgba(0, 7, 90, 0.045);
 }
 
 .home-card i {
-  font-size: 26px;
-  color: #470a0a;
-  width: 36px;
-  text-align: center;
+  color: var(--official);
+  width: 22px;
+  flex: none;
+}
+
+.home-card > div {
+  flex: 1;
 }
 
 .home-card h3 {
-  font-size: 18px;
-  margin-bottom: 4px;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .home-card p {
-  font-size: 13px;
-  color: rgb(10, 10, 10);
-}
-
-.btn btn-cancel2 {
-  background-color: #000000;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
+  font-size: 15px;
+  color: var(--ink-light);
 }
 </style>
-
-
-
-
-
-

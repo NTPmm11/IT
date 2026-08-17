@@ -222,7 +222,7 @@ export default {
 
       <!-- 2. กรณีไม่มีข้อมูล -->
       <tr v-else-if="rows.length === 0">
-        <td colspan="8" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
+        <td colspan="8" class="text-center" style="padding: 28px; color: var(--ink-light);">ไม่พบข้อมูล</td>
       </tr>
 
       <!-- 3. แสดงข้อมูล (ใช้ rows และตัวแปรเดิมของคุณ) -->
@@ -233,18 +233,18 @@ export default {
         class="row-click" 
         @click="openCr(row.cr_id)"
       >
-        <td class="text-center"><strong>{{ row.cr_number }}</strong></td>
-        <td class="text-center">{{ row.request_date ? new Date(row.request_date).toLocaleDateString('th-TH') : '-' }}</td>
-        <td>{{ row.subject }}</td>
-        <td>{{ row.requester }}</td>
-        <td>{{ row.system_name }}</td>
-        <td class="text-center">{{ row.priority }}</td>
-        <td class="text-center">
+        <td class="text-center" data-label="เลขที่ CR"><strong>{{ row.cr_number }}</strong></td>
+        <td class="text-center" data-label="วันที่ร้องขอ">{{ row.request_date ? new Date(row.request_date).toLocaleDateString('th-TH') : '-' }}</td>
+        <td data-label="หัวข้อ">{{ row.subject }}</td>
+        <td data-label="ผู้ร้องขอ">{{ row.requester }}</td>
+        <td data-label="ระบบ">{{ row.system_name }}</td>
+        <td class="text-center" data-label="ความสำคัญ">{{ row.priority }}</td>
+        <td class="text-center" data-label="สถานะ">
           <span class="status-badge" :class="'status-' + row.status">
             {{ statusLabel(row.status) }}
           </span>
         </td>
-        <td class="text-center">
+        <td class="text-center" data-label="PDF">
           <!-- @click.stop กัน event ไหลต่อไปโดน @click="openCr" ของ <tr> (ไม่งั้นเด้งไปหน้า approve ซ้อนก่อน print)
                PDF มีให้โหลดได้ก็ต่อเมื่อ CR ใบนี้ผ่านการอนุมัติแล้วเท่านั้น (ยังไม่อนุมัติ = ยังไม่มีผลพิจารณาให้ลงในเอกสาร) -->
           <button
@@ -256,7 +256,7 @@ export default {
           >
             <i class="fa-solid fa-file-pdf"></i>
           </button>
-          <span v-else style="color:#9ca3af;">–</span>
+          <span v-else style="color: var(--ink-light);">–</span>
         </td>
       </tr>
     </tbody>
@@ -294,7 +294,8 @@ export default {
     
 
     <div class="ui-action-buttons">
-      <button type="button" class="btn btn-pdf" @click="generatePDF">
+      <!-- ไม่มีรายการก็ไม่มีอะไรให้พิมพ์ — ปิดปุ่มไว้ ไม่ใช่ปล่อยให้กดแล้วได้กระดาษเปล่า -->
+      <button type="button" class="btn btn-pdf" :disabled="totalRows === 0" @click="generatePDF">
         <i class="fa-solid fa-file-pdf"></i> Download PDF ย้อนหลัง
       </button>
     </div>
@@ -304,38 +305,27 @@ export default {
 <style>
 @import '../assets/css/form.css';
 
-.container {
-  background: #ffffffb4;
-  width: 950px;
-  padding: 35px;
-  border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
-}
-
-.section-title2 {
-   background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #ffffff;
-  padding: 10px 14px;
-  font-size: 18px;
-  font-weight: 700;
-  border-radius: 6px;
-  margin: 25px 0 15px 0;
-  border-left: 5px solid #000000;
-  display: flex;
-  justify-content: space-between;
-}
-
+/* ทะเบียนเรื่องต้องการความกว้างมากกว่าหนังสือหนึ่งฉบับ */
 .list-container {
-  width: 950px;
+  max-width: 1120px;
 }
 
+/* แถบค้นหาแยกตัวออกจากตาราง ด้วยพื้นอ่อนกับกรอบ — อ่านออกทันทีว่าส่วนนี้ไว้กรอกเงื่อนไข
+   ไม่ใช่ข้อมูลผลลัพธ์ */
 .filter-grid {
-  align-items: end;
+  padding: var(--half);
+  margin-bottom: var(--lh);
+  background: #f4f6f9;
+  border: 1px solid var(--line-faint);
+}
+
+.filter-grid .form-group {
+  margin-bottom: var(--quarter);
 }
 
 .filter-actions {
   border-top: none;
-  margin-top: 0;
+  margin-top: var(--quarter);
   padding-top: 0;
   justify-content: flex-start;
 }
@@ -345,69 +335,100 @@ export default {
 }
 
 .row-click:hover {
-  background: #f5f7ff;
+  background: rgba(0, 7, 90, 0.045);
 }
 
-.status-badge {
-  padding: 3px 10px;
-  border-radius: 50px;
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-/* กำหนดสีปุ่ม PDF ให้เป็นสีกรมท่า (โทนเดียวกับปุ่มกลับหน้าหลัก) */
-.btn-pdf {
-  background: #000000; /* สีกรมท่าหลัก */
-  color: #ffffff !important;             /* ตัวหนังสือสีขาว */
-  border: none !important;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+/* เลขที่หนังสือคือสิ่งที่คนกวาดตาหาก่อนเสมอ */
+.action-table td:first-child strong {
+  font-weight: 700;
 }
 
-/* ตอนเอาเม้าส์ไปชี้ ให้สว่างขึ้นเล็กน้อย */
-.btn-pdf:hover {
-background-color: #707070;
-}
-h1 {
-  margin-bottom: 0;
-  font-size: 26px;
-  font-weight: 600;
-  color: #1e3a8a;
-}
-p {
-  margin-top: 4px;
-  color: #2d3036;
-  font-size: 16px;
-}
-
-.status-draft       { background: #e5e7eb; color: #4b5563; }
-.status-submitted    { background: #fef3c7; color: #92400e; }
-.status-approved     { background: #d1fae5; color: #065f46; }
-.status-rejected     { background: #fee2e2; color: #991b1b; }
-.status-more_info    { background: #dbeafe; color: #1e40af; }
-
-/* ปุ่ม PDF ต่อแถว — ไอคอนเล็กๆ ในตาราง ไม่ใช่ปุ่มเต็มแบบ .btn-pdf ท้ายหน้า */
+/* ปุ่มออกเอกสารต่อแถว — ไอคอนในตาราง ไม่ใช่ปุ่มเต็มใบ */
 .btn-icon-pdf {
   background: none;
   border: none;
-  color: #4d4f5f;
+  color: var(--ink-light);
   font-size: 16px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
+  padding: var(--quarter);
+  min-height: 36px;
+  min-width: 36px;
 }
 
 .btn-icon-pdf:hover {
-  background: #f5e6e6;
-}
-.table-wrapper {
-  overflow-x: auto;
-  margin-top: 15px;
-  background: #e0e3e6;
+  color: var(--seal);
 }
 
+/* ===== มือถือ: ทะเบียนเปลี่ยนจากตารางเป็นการ์ดรายฉบับ =====
+   ตาราง 8 คอลัมน์บนจอ 375px ต่อให้เลื่อนแนวนอนได้ก็อ่านทีละแถวไม่ไหว
+   (ต่างจากตารางแผนงานที่ต้องกรอกทีละช่อง ตารางนี้อ่านอย่างเดียว ยุบเป็นการ์ดได้)
+   ชื่อคอลัมน์มาจาก data-label บนแต่ละ <td> */
+@media screen and (max-width: 700px) {
+  .list-container .table-wrapper {
+    overflow-x: visible;
+    background: none;
+  }
+
+  .list-container .action-table,
+  .list-container .action-table tbody,
+  .list-container .action-table tr,
+  .list-container .action-table td {
+    display: block;
+    width: auto;
+    min-width: 0;
+  }
+
+  .list-container .action-table {
+    border: none;
+  }
+
+  .list-container .action-table thead {
+    display: none;
+  }
+
+  .list-container .action-table tr {
+    border: 1px solid var(--line-faint);
+    margin-bottom: var(--half);
+    padding: var(--quarter) var(--half);
+  }
+
+  /* แถว "กำลังโหลด" / "ไม่พบข้อมูล" มี td เดียว ไม่ต้องมีป้ายชื่อคอลัมน์ */
+  .list-container .action-table td[colspan] {
+    text-align: center;
+  }
+
+  .list-container .action-table td:not([colspan]) {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    gap: var(--half);
+    align-items: baseline;
+    text-align: left;
+    padding: 3px 0;
+    border: none;
+  }
+
+  /* ตรายางกว้างตามข้อความ ไม่ยืดเต็มคอลัมน์ */
+  .list-container .action-table .status-badge {
+    justify-self: start;
+  }
+
+  .list-container .action-table td:not([colspan])::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--ink-light);
+  }
+
+  /* เลขที่ CR เป็นหัวการ์ด ไม่ใช่แถวข้อมูลแถวหนึ่ง */
+  .list-container .action-table td:first-child {
+    display: block;
+    padding-bottom: var(--quarter);
+    margin-bottom: var(--quarter);
+    border-bottom: 1px solid var(--line-faint);
+    font-size: 17px;
+  }
+
+  .list-container .action-table td:first-child::before {
+    content: none;
+  }
+}
 </style>
