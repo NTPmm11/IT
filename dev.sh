@@ -5,6 +5,9 @@
 #
 #   ./dev.sh        แล้วกด Ctrl+C ครั้งเดียวเพื่อปิดทั้งคู่
 #
+# Windows ใช้ dev.ps1 แทน (lsof/trap/kill ไม่มีบน Windows)
+# ตรรกะเดียวกันเป๊ะ — แก้ที่ไหนแก้อีกที่ด้วย
+#
 # ทำไมไม่ใช้ `trap 'kill 0' SIGINT` เฉยๆ แบบเดิม:
 # `dotnet run` เป็นแค่ตัวห่อ — มันไปสตาร์ต bin/Debug/net8.0/ChangeRequest.API
 # อีกที พอตัวห่อตาย ตัวจริงกลายเป็น orphan (PPID 1) หลุดจาก process group
