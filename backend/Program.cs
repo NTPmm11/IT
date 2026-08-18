@@ -35,7 +35,10 @@ if (args is ["hash", var plainPassword, ..])
 }
 
 // .env ต้องโหลดก่อนสร้าง builder — configuration อ่าน environment variables ตอนนั้นเลย
+// เช็คทั้งสองที่: current directory (dotnet run ทั่วไป) และ AppContext.BaseDirectory
+// (จำเป็นตอนรันผ่าน IIS in-process — current directory ตอนนั้นไม่ใช่โฟลเดอร์แอป)
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+DotEnv.Load(Path.Combine(AppContext.BaseDirectory, ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -202,6 +205,7 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "IT Change Request API v1");
     options.RoutePrefix = "api-docs";   // เปิดที่ http://localhost:4000/api-docs
+    options.DefaultModelsExpandDepth(-1);   // ซ่อนส่วน Schemas ท้ายหน้า
 });
 
 app.MapControllers();
