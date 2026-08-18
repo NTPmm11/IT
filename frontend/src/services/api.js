@@ -13,7 +13,7 @@
 // ไม่อยากให้แต่ละหน้าเขียน fetch + error handling ซ้ำๆ กัน 6-7 ที่
 
 // ที่อยู่ backend — ถ้า deploy จริงค่อยเปลี่ยนเป็น domain จริง
-export const API_BASE = "http://localhost:4000/api";
+export const API_BASE = "http://10.31.1.106:8080/api";
 
 // apiFetch = fetch ที่แถม 3 อย่างให้อัตโนมัติ:
 // 1. แนบ token (JWT) บอก server ว่าเราคือใคร — เก็บไว้ตอน login สำเร็จ
