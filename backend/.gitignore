@@ -3,6 +3,7 @@
 # .NET build output
 bin/
 obj/
+publish/
 
 # อีเมลที่ระบบเขียนลงไฟล์ตอนไม่ได้ตั้ง SMTP_HOST (โหมด dev)
 MailDrop/

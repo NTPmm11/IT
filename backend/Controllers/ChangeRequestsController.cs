@@ -203,7 +203,7 @@ public sealed class ChangeRequestsController(
     {
         var currentUser = HttpContext.CurrentUser();
 
-        var error = Validate(body, currentUser, out var input);
+        var error = Validate(body, out var input);
         if (error is not null) return error;
 
         await using var db = await connections.OpenAsync(ct);
@@ -296,7 +296,7 @@ public sealed class ChangeRequestsController(
             return BadRequest(new ErrorResponse("Invalid CR id"));
         }
 
-        var error = Validate(body, currentUser, out var input);
+        var error = Validate(body, out var input);
         if (error is not null) return error;
 
         await using var db = await connections.OpenAsync(ct);
@@ -545,7 +545,7 @@ public sealed class ChangeRequestsController(
         List<string> ChangeTypes,
         string Status);
 
-    private ActionResult? Validate(CreateChangeRequestInput body, CurrentUser user, out ValidatedInput input)
+    private ActionResult? Validate(CreateChangeRequestInput body, out ValidatedInput input)
     {
         input = null!;
 
@@ -581,17 +581,13 @@ public sealed class ChangeRequestsController(
             return BadRequest(new ErrorResponse($"priority ต้องเป็น {string.Join("/", AllowedPriorities)}"));
         }
 
-        var isItAdmin = user.Role == "it_admin";
-
-        var impact = isItAdmin && !string.IsNullOrWhiteSpace(body.Impact) ? body.Impact : "none";
+        var impact = !string.IsNullOrWhiteSpace(body.Impact) ? body.Impact : "none";
         if (!AllowedImpacts.Contains(impact))
         {
             return BadRequest(new ErrorResponse($"impact ต้องเป็น {string.Join("/", AllowedImpacts)}"));
         }
 
-        List<string> changeTypes = isItAdmin
-            ? (body.ChangeTypes ?? []).Distinct().ToList()
-            : [];
+        List<string> changeTypes = (body.ChangeTypes ?? []).Distinct().ToList();
         if (changeTypes.Any(t => !AllowedChangeTypes.Contains(t)))
         {
             return BadRequest(new ErrorResponse($"changeTypes ต้องเป็น {string.Join("/", AllowedChangeTypes)}"));
@@ -599,12 +595,12 @@ public sealed class ChangeRequestsController(
 
         input = new ValidatedInput(
             RequestDate: requestDate,
-            DeployDate: isItAdmin ? deployDate : null,
+            DeployDate: deployDate,
             Priority: priority,
             Impact: impact,
-            ImpactDetail: isItAdmin ? NullIfBlank(body.ImpactDetail) : null,
-            Downtime: isItAdmin && body.Downtime,
-            Duration: isItAdmin ? NullIfBlank(body.Duration) : null,
+            ImpactDetail: NullIfBlank(body.ImpactDetail),
+            Downtime: body.Downtime,
+            Duration: NullIfBlank(body.Duration),
             ChangeTypes: changeTypes,
             Status: body.Status == "draft" ? "draft" : "submitted");
 

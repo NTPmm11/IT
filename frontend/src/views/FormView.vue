@@ -38,7 +38,6 @@ export default {
 
       systems: [],
 
-      userRole: "",
 
       submittedCrId: null,
       submittedCrNumber: "",
@@ -59,7 +58,6 @@ export default {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     this.form.requester = user.fullName || "";
     this.form.department = user.department || "";
-    this.userRole = user.role || "";
 
     this.form.requestDate = new Date().toLocaleDateString("sv-SE");
 
@@ -78,10 +76,6 @@ export default {
   },
 
   computed: {
-    canEditImpact() {
-      return this.userRole === "it_admin";
-    },
-
     planDuration() {
       const starts = this.rows.map(r => r.startDate).filter(Boolean);
       const ends = this.rows.map(r => r.endDate).filter(Boolean);
@@ -155,19 +149,17 @@ export default {
       this.checkPlanRows(this.rows, "plan", "แผนดำเนินงาน (ข้อ 4)", problems);
       this.checkPlanRows(this.rows2, "rollback", "แผนการกู้คืน (ข้อ 5)", problems);
 
-      if (this.canEditImpact) {
-        if (this.form.changeTypes.length === 0) {
-          fail("cr-change-types", "ประเภทการเปลี่ยน: ยังไม่ได้เลือกสักอย่าง");
-        }
-        if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
-          fail("cr-impact-detail", "ระบบที่ได้รับผลกระทบ: เลือก \"กระทบระบบอื่น\" แล้วแต่ยังไม่ได้ระบุ");
-        }
-        if (!this.planDuration) {
-          fail("cr-duration", "ระยะเวลาที่คาดใช้: คำนวณไม่ได้ เพราะวันที่ในแผนดำเนินงาน (ข้อ 4) ยังไม่ครบ");
-        }
-        if (!this.form.deployDate) {
-          fail("cr-deploy-date", "เป้าหมาย Deploy: ยังไม่ได้เลือก");
-        }
+      if (this.form.changeTypes.length === 0) {
+        fail("cr-change-types", "ประเภทการเปลี่ยน: ยังไม่ได้เลือกสักอย่าง");
+      }
+      if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
+        fail("cr-impact-detail", "ระบบที่ได้รับผลกระทบ: เลือก \"กระทบระบบอื่น\" แล้วแต่ยังไม่ได้ระบุ");
+      }
+      if (!this.planDuration) {
+        fail("cr-duration", "ระยะเวลาที่คาดใช้: คำนวณไม่ได้ เพราะวันที่ในแผนดำเนินงาน (ข้อ 4) ยังไม่ครบ");
+      }
+      if (!this.form.deployDate) {
+        fail("cr-deploy-date", "เป้าหมาย Deploy: ยังไม่ได้เลือก");
       }
 
       return problems;
@@ -396,10 +388,9 @@ export default {
 
       <div class="section-title">
         <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
-        <span class="note" v-if="!canEditImpact">*คุณดูได้อย่างเดียว</span>
       </div>
 
-      <fieldset :disabled="!canEditImpact" class="section3-fieldset">
+      <fieldset class="section3-fieldset">
 
       <div class="form-group">
         <label>ประเภทการเปลี่ยน:</label>
@@ -419,7 +410,7 @@ export default {
             ไม่มีผลกระทบส่วนอื่น</label>
           <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น
             (ระบุ):</label>
-          <input type="text" id="cr-impact-detail" v-model="form.impactDetail" :disabled="!canEditImpact || form.impact !== 'other'"
+          <input type="text" id="cr-impact-detail" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
             placeholder="ระบุระบบที่ได้รับผลกระทบ...">
           <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว
             (Downtime)</label>
@@ -435,7 +426,7 @@ export default {
         </div>
         <div class="form-group">
           <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
-          <input type="date" id="cr-deploy-date" v-model="form.deployDate" :required="canEditImpact">
+          <input type="date" id="cr-deploy-date" v-model="form.deployDate">
         </div>
       </div>
 
