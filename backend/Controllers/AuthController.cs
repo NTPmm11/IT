@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using ChangeRequest.Api.Configuration;
 using ChangeRequest.Api.Data;
 using ChangeRequest.Api.Models;
@@ -13,15 +14,13 @@ namespace ChangeRequest.Api.Controllers;
 [Tags("Auth")]
 public sealed class AuthController(
     ISqlConnectionFactory connections,
-    ITokenService tokens,
-    JwtOptions jwtOptions,
+    ISsoService sso,
     ILogger<AuthController> logger) : ControllerBase
 {
     private sealed class UserRow
     {
         public int UserId { get; set; }
         public string Username { get; set; } = "";
-        public string PasswordHash { get; set; } = "";
         public string FullName { get; set; } = "";
         public string? Department { get; set; }
         public string Role { get; set; } = "";
@@ -39,18 +38,53 @@ public sealed class AuthController(
             return BadRequest(new ErrorResponse("ต้องกรอก username และ password"));
         }
 
+        // password ไม่ได้เก็บในระบบนี้แล้ว — ส่งไปให้ SSO ของ ONEE ตรวจกับ AD
+        var result = await sso.LoginAsync(body.Username, body.Password, ct);
+        if (!result.Ok)
+        {
+            return StatusCode(result.StatusCode, new ErrorResponse(result.Error ?? "เข้าสู่ระบบไม่สำเร็จ"));
+        }
+
+        var subject = sso.ReadSubject(result.AccessToken!);
+        if (subject is null)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway,
+                new ErrorResponse("token จากระบบยืนยันตัวตนไม่มีข้อมูลผู้ใช้"));
+        }
+
+        var (username, fullName) = subject.Value;
+
         await using var db = await connections.OpenAsync(ct);
         var user = await db.QuerySingleOrDefaultAsync<UserRow>(
             """
-            SELECT user_id, username, password_hash, full_name, department, role
+            SELECT user_id AS UserId, username AS Username, full_name AS FullName,
+                   department AS Department, role AS Role
             FROM users
             WHERE username = @Username AND is_active = 1
             """,
-            new { body.Username });
+            new { Username = username });
 
-        if (user is null || !VerifyPassword(body.Password, user.PasswordHash))
+        // AD ยืนยันตัวตนผ่านแล้วแต่ยังไม่เคยเข้าระบบนี้ — เปิดสิทธิ์ requester ให้อัตโนมัติ
+        // (ยื่นคำขอได้อย่างเดียว ส่วนอนุมัติ/ประเมินผลกระทบยังต้องให้ admin เลื่อน role ให้)
+        if (user is null)
         {
-            return Unauthorized(new ErrorResponse("Username หรือ password ไม่ถูกต้อง"));
+            var userId = await db.QuerySingleAsync<int>(
+                """
+                INSERT INTO users (username, full_name, role)
+                OUTPUT INSERTED.user_id
+                VALUES (@Username, @FullName, 'requester')
+                """,
+                new { Username = username, FullName = string.IsNullOrWhiteSpace(fullName) ? username : fullName });
+
+            logger.LogInformation("สร้าง user ใหม่จาก AD: {Username} (user_id {UserId})", username, userId);
+
+            user = new UserRow
+            {
+                UserId = userId,
+                Username = username,
+                FullName = fullName,
+                Role = "requester"
+            };
         }
 
         return Ok(new LoginResponse
@@ -63,21 +97,21 @@ public sealed class AuthController(
                 Department = user.Department,
                 Role = user.Role
             },
-            Token = tokens.Create(user.UserId, user.Username, user.Role),
-            ExpiresAt = DateTime.UtcNow.AddHours(jwtOptions.ExpiresHours)
+            // token ของ SSO ส่งต่อให้ frontend ตรงๆ — ระบบนี้ไม่ได้ออก token เอง
+            Token = result.AccessToken!,
+            ExpiresAt = ReadExpiry(result.AccessToken!)
         });
     }
 
-    private bool VerifyPassword(string password, string hash)
+    private static DateTime ReadExpiry(string token)
     {
         try
         {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
+            return new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo;
         }
-        catch (BCrypt.Net.SaltParseException)
+        catch
         {
-            logger.LogWarning("password_hash ใน database ไม่ใช่ bcrypt hash ที่ถูกต้อง");
-            return false;
+            return DateTime.UtcNow.AddHours(8);
         }
     }
 }

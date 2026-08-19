@@ -49,12 +49,12 @@ export default {
     <form @submit.prevent="login">
 
       <div class="field-line">
-        <label for="login-username">ชื่อผู้ใช้</label>
+        <label for="login-username">ชื่อผู้ใช้ (AD)</label>
         <input id="login-username" type="text" v-model="username" autocomplete="username" required>
       </div>
 
       <div class="field-line">
-        <label for="login-password">รหัสผ่าน</label>
+        <label for="login-password">รหัสผ่าน (AD)</label>
         <input id="login-password" type="password" v-model="password" autocomplete="current-password" required>
       </div>
 

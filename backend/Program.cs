@@ -12,12 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-if (args is ["hash", var plainPassword, ..])
-{
-    Console.WriteLine(BCrypt.Net.BCrypt.HashPassword(plainPassword));
-    return;
-}
-
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 DotEnv.Load(Path.Combine(AppContext.BaseDirectory, ".env"));
 
@@ -29,9 +23,20 @@ builder.Services.AddSingleton<ISqlConnectionFactory>(
     _ => new SqlConnectionFactory(SqlConnectionFactory.BuildConnectionString(builder.Configuration)));
 builder.Services.AddSingleton<IMailService, MailService>();
 
-var jwtOptions = JwtOptions.FromConfiguration(builder.Configuration);
-builder.Services.AddSingleton(jwtOptions);
-builder.Services.AddSingleton<ITokenService, TokenService>();
+// ระบบนี้ไม่ได้ออก token เอง — password ส่งไปตรวจที่ SSO ของ ONEE แล้วรับ token ของ SSO มาใช้ต่อ
+// (แพทเทิร์นเดียวกับ ONEE-Library / ONEE-ESS) role ยังอ่านจากตาราง users ของระบบนี้เหมือนเดิม
+var ssoOptions = SsoOptions.FromConfiguration(builder.Configuration);
+builder.Services.AddSingleton(ssoOptions);
+builder.Services.AddSingleton<ISsoService, SsoService>();
+builder.Services.AddHttpClient(SsoOptions.HttpClientName)
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        // SSO อยู่บน IP ภายในและใช้ cert ที่เซ็นเอง — ตั้ง SSO_VERIFY_CERT=true เมื่อมี cert จริง
+        ServerCertificateCustomValidationCallback = ssoOptions.AcceptAnyCertificate
+            ? HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            : null
+    });
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -40,11 +45,11 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtOptions.Issuer,
+            ValidIssuer = ssoOptions.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtOptions.Audience,
+            ValidAudience = ssoOptions.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = jwtOptions.SigningKey,
+            IssuerSigningKey = ssoOptions.SigningKey,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30),
             RoleClaimType = "role"
@@ -163,6 +168,7 @@ app.MapGet("/api/health", () => Results.Json(new { ok = true }));
 
 app.MapFallback(() => Results.Json(new ErrorResponse("Not found"), statusCode: StatusCodes.Status404NotFound));
 
-if (jwtOptions.StartupWarning is not null) app.Logger.LogWarning("[auth] {Warning}", jwtOptions.StartupWarning);
+if (ssoOptions.StartupWarning is not null) app.Logger.LogWarning("[auth] {Warning}", ssoOptions.StartupWarning);
+app.Logger.LogInformation("[auth] ตรวจ password ผ่าน SSO {BaseUrl}{TokenPath}", ssoOptions.BaseUrl, ssoOptions.TokenPath);
 app.Logger.LogInformation("API server running at http://localhost:{Port}", port);
 app.Run();
