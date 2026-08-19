@@ -139,6 +139,14 @@ textarea:disabled {
   opacity: 1;
 }
 
+.is-invalid,
+.is-invalid input,
+.is-invalid select {
+  border-color: var(--seal);
+  background: rgba(155, 27, 27, 0.06);
+  outline: 1px solid var(--seal);
+}
+
 .field-hint {
   display: block;
   margin-top: 4px;

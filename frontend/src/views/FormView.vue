@@ -45,6 +45,7 @@ export default {
       previewCrNumber: "",
 
       submitting: false,
+      firstInvalidId: "",
       modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
@@ -131,40 +132,72 @@ export default {
     },
 
     validateForm() {
+      const problems = [];
+      const fail = (id, message) => problems.push({ id, message });
+
+      if (!this.form.requestDate) fail("cr-request-date", "วันที่ร้องขอ: ยังไม่ได้เลือก");
+      if (!this.form.requester.trim()) fail("cr-requester", "ผู้ร้องขอ: ยังไม่ได้กรอก");
+      if (!this.form.department.trim()) fail("cr-department", "แผนก/ฝ่าย: ยังไม่ได้กรอก");
+      if (!this.form.system) fail("cr-system", "ระบบที่เกี่ยวข้อง: ยังไม่ได้เลือก");
+
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const phoneRe = /^0\d{8,9}$/;
       const extRe = /^\d{4}$/;
       const contact = this.form.contact.trim();
-      if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact) && !extRe.test(contact))) {
-        return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล, เบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก หรือเบอร์โต๊ะ 4 หลัก)";
+      if (!contact) {
+        fail("cr-contact", "อีเมล/เบอร์โทร: ยังไม่ได้กรอก");
+      } else if (!emailRe.test(contact) && !phoneRe.test(contact) && !extRe.test(contact)) {
+        fail("cr-contact", `อีเมล/เบอร์โทร: "${contact}" ไม่ตรงรูปแบบ (อีเมล, เบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก หรือเบอร์โต๊ะ 4 หลัก)`);
       }
-      for (let i = 0; i < this.rows.length; i++) {
-        const row = this.rows[i];
-        if (!row.startDate || !row.endDate) continue;
 
-        if (row.endDate < row.startDate) {
-          return `แผนดำเนินงานขั้นที่ ${i + 1}: วันสิ้นสุดมาก่อนวันเริ่ม`;
-        }
-        if (row.endDate === row.startDate && row.start && row.end && row.end < row.start) {
-          return `แผนดำเนินงานขั้นที่ ${i + 1}: เวลาสิ้นสุดมาก่อนเวลาเริ่ม`;
-        }
-      }
+      if (!this.form.subject.trim()) fail("cr-subject", "หัวข้อการเปลี่ยน: ยังไม่ได้กรอก");
+
+      this.checkPlanRows(this.rows, "plan", "แผนดำเนินงาน (ข้อ 4)", problems);
+      this.checkPlanRows(this.rows2, "rollback", "แผนการกู้คืน (ข้อ 5)", problems);
 
       if (this.canEditImpact) {
         if (this.form.changeTypes.length === 0) {
-          return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
+          fail("cr-change-types", "ประเภทการเปลี่ยน: ยังไม่ได้เลือกสักอย่าง");
         }
         if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
-          return "กรุณาระบุระบบที่ได้รับผลกระทบ";
+          fail("cr-impact-detail", "ระบบที่ได้รับผลกระทบ: เลือก \"กระทบระบบอื่น\" แล้วแต่ยังไม่ได้ระบุ");
         }
         if (!this.planDuration) {
-          return "กรุณากรอกวันที่เริ่ม-สิ้นสุดในแผนดำเนินงาน (ข้อ 4) ให้ครบ — ระยะเวลาที่คาดใช้คำนวณจากตรงนั้น";
+          fail("cr-duration", "ระยะเวลาที่คาดใช้: คำนวณไม่ได้ เพราะวันที่ในแผนดำเนินงาน (ข้อ 4) ยังไม่ครบ");
         }
         if (!this.form.deployDate) {
-          return "กรุณาระบุเป้าหมาย Deploy";
+          fail("cr-deploy-date", "เป้าหมาย Deploy: ยังไม่ได้เลือก");
         }
       }
-      return "";
+
+      return problems;
+    },
+
+    checkPlanRows(rows, prefix, label, problems) {
+      rows.forEach((row, i) => {
+        const at = `${label} ขั้นที่ ${i + 1}`;
+        const id = field => `${prefix}-${i}-${field}`;
+
+        if (!row.step.trim()) problems.push({ id: id("step"), message: `${at}: ยังไม่ได้กรอกขั้นตอนงาน` });
+        if (!row.startDate) problems.push({ id: id("startDate"), message: `${at}: ยังไม่ได้เลือกวันที่เริ่ม` });
+        if (!row.start) problems.push({ id: id("start"), message: `${at}: ยังไม่ได้เลือกเวลาเริ่ม` });
+        if (!row.endDate) problems.push({ id: id("endDate"), message: `${at}: ยังไม่ได้เลือกวันที่สิ้นสุด` });
+        if (!row.end) problems.push({ id: id("end"), message: `${at}: ยังไม่ได้เลือกเวลาสิ้นสุด` });
+
+        if (row.startDate && row.endDate) {
+          if (row.endDate < row.startDate) {
+            problems.push({ id: id("endDate"), message: `${at}: วันสิ้นสุด (${row.endDate}) มาก่อนวันเริ่ม (${row.startDate})` });
+          } else if (row.endDate === row.startDate && row.start && row.end && row.end < row.start) {
+            problems.push({ id: id("end"), message: `${at}: เวลาสิ้นสุด (${row.end}) มาก่อนเวลาเริ่ม (${row.start})` });
+          }
+        }
+      });
+    },
+
+    markInvalid(problems) {
+      document.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+      problems.forEach(p => document.getElementById(p.id)?.classList.add("is-invalid"));
+      this.firstInvalidId = problems.length ? problems[0].id : "";
     },
 
     combineRow(row) {
@@ -196,9 +229,15 @@ export default {
     },
 
     async handleSubmit() {
-      const validationError = this.validateForm();
-      if (validationError) {
-        this.modal = { show: true, variant: "error", title: "กรอกข้อมูลไม่ครบ", message: validationError };
+      const problems = this.validateForm();
+      this.markInvalid(problems);
+      if (problems.length) {
+        this.modal = {
+          show: true,
+          variant: "error",
+          title: `กรอกข้อมูลไม่ครบ (${problems.length} จุด)`,
+          message: problems.map((p, i) => `${i + 1}. ${p.message}`).join("\n")
+        };
         return;
       }
 
@@ -246,6 +285,19 @@ export default {
 
     closeModal() {
       this.modal.show = false;
+
+      if (this.firstInvalidId) {
+        const el = document.getElementById(this.firstInvalidId);
+        this.firstInvalidId = "";
+        if (el) {
+          this.$nextTick(() => {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus({ preventScroll: true });
+          });
+          return;
+        }
+      }
+
       if (this.submittedCrId) {
         this.$nextTick(() => {
           this.$refs.approvalSection?.$el.scrollIntoView({ behavior: "smooth" });
@@ -267,7 +319,7 @@ export default {
   <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
 </button>
 
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="handleSubmit" novalidate>
 
       <div class="section-title">
         <div>1. ข้อมูลทั่วไป (General Information)</div>
@@ -351,7 +403,7 @@ export default {
 
       <div class="form-group">
         <label>ประเภทการเปลี่ยน:</label>
-        <div class="options-group">
+        <div class="options-group" id="cr-change-types" tabindex="-1">
           <label class="option-item"><input type="checkbox" value="App" v-model="form.changeTypes"> Application /
             Software</label>
           <label class="option-item"><input type="checkbox" value="DB" v-model="form.changeTypes"> Database</label>
@@ -367,7 +419,7 @@ export default {
             ไม่มีผลกระทบส่วนอื่น</label>
           <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น
             (ระบุ):</label>
-          <input type="text" v-model="form.impactDetail" :disabled="!canEditImpact || form.impact !== 'other'"
+          <input type="text" id="cr-impact-detail" v-model="form.impactDetail" :disabled="!canEditImpact || form.impact !== 'other'"
             placeholder="ระบุระบบที่ได้รับผลกระทบ...">
           <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว
             (Downtime)</label>
@@ -411,11 +463,11 @@ export default {
           <tbody>
             <tr v-for="(row, index) in rows" :key="index">
               <td class="text-center" data-label="ลำดับ">{{ index + 1 }}</td>
-              <td data-label="ขั้นตอนงาน"><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td data-label="วันที่เริ่ม"><input type="date" v-model="row.startDate" required></td>
-              <td data-label="เวลาเริ่ม"><input type="time" v-model="row.start" required></td>
-              <td data-label="วันที่สิ้นสุด"><input type="date" v-model="row.endDate" required></td>
-              <td data-label="เวลาสิ้นสุด"><input type="time" v-model="row.end" required></td>
+              <td data-label="ขั้นตอนงาน"><input type="text" :id="'plan-' + index + '-step'" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td data-label="วันที่เริ่ม"><input type="date" :id="'plan-' + index + '-startDate'" v-model="row.startDate" required></td>
+              <td data-label="เวลาเริ่ม"><input type="time" :id="'plan-' + index + '-start'" v-model="row.start" required></td>
+              <td data-label="วันที่สิ้นสุด"><input type="date" :id="'plan-' + index + '-endDate'" v-model="row.endDate" required></td>
+              <td data-label="เวลาสิ้นสุด"><input type="time" :id="'plan-' + index + '-end'" v-model="row.end" required></td>
               <td data-label="หมายเหตุ"><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center" data-label="">
                 <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบขั้นตอนนี้</button>
@@ -451,11 +503,11 @@ export default {
           <tbody>
             <tr v-for="(row2, index) in rows2" :key="index">
               <td class="text-center" data-label="ลำดับ">{{ index + 1 }}</td>
-              <td data-label="ขั้นตอนงาน"><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td data-label="วันที่เริ่ม"><input type="date" v-model="row2.startDate" required></td>
-              <td data-label="เวลาเริ่ม"><input type="time" v-model="row2.start" required></td>
-              <td data-label="วันที่สิ้นสุด"><input type="date" v-model="row2.endDate" required></td>
-              <td data-label="เวลาสิ้นสุด"><input type="time" v-model="row2.end" required></td>
+              <td data-label="ขั้นตอนงาน"><input type="text" :id="'rollback-' + index + '-step'" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td data-label="วันที่เริ่ม"><input type="date" :id="'rollback-' + index + '-startDate'" v-model="row2.startDate" required></td>
+              <td data-label="เวลาเริ่ม"><input type="time" :id="'rollback-' + index + '-start'" v-model="row2.start" required></td>
+              <td data-label="วันที่สิ้นสุด"><input type="date" :id="'rollback-' + index + '-endDate'" v-model="row2.endDate" required></td>
+              <td data-label="เวลาสิ้นสุด"><input type="time" :id="'rollback-' + index + '-end'" v-model="row2.end" required></td>
               <td data-label="หมายเหตุ"><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
               <td class="text-center" data-label="">
                 <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบขั้นตอนนี้</button>

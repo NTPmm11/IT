@@ -67,8 +67,7 @@ export default {
 
     <div class="section-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
-      <span class="note" v-if="canApprove">*เฉพาะสิทธิ์ Approver / PM</span>
-      <span class="note" v-else>*เฉพาะสิทธิ์ Approver / PM — คุณดูได้อย่างเดียว</span>
+      <span class="note" v-if="!canApprove">*คุณดูได้อย่างเดียว</span>
     </div>
 
     <fieldset :disabled="!canApprove" class="approval-fieldset">

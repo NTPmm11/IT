@@ -43,7 +43,7 @@ export default {
   border: 1px solid var(--line);
   border-radius: 0;
   padding: var(--lh);
-  max-width: 380px;
+  max-width: 460px;
   width: 100%;
   text-align: left;
 }
@@ -71,6 +71,8 @@ export default {
   line-height: var(--lh);
   margin-bottom: var(--lh);
   white-space: pre-line;
+  max-height: 45vh;
+  overflow-y: auto;
 }
 
 .modal-close-btn {
