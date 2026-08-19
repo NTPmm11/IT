@@ -1,11 +1,3 @@
--- ============================================
--- 05_cr_approvals.sql — ผลพิจารณาของ approver (LAB 4C: POST /:id/approval)
--- SQL Server (T-SQL)
--- รันหลัง 02_change_requests.sql (FK อ้าง change_requests + users)
---
--- result เก็บตามที่หน้าเว็บส่ง (more-info ขีดกลาง)
--- ต่างจาก status ใน change_requests ที่ใช้ more_info ขีดล่าง
--- ============================================
 
 USE CR;
 GO

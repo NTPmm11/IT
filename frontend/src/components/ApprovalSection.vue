@@ -1,23 +1,4 @@
 <script>
-// ============================================
-// ApprovalSection.vue — ส่วนตรวจสอบและอนุมัติ (ใช้ร่วมใน FormView / ApproveView)
-// ============================================
-//
-// รับเลข CR ผ่าน prop crId แล้วยิง POST /change-requests/:id/approval
-//
-// สิทธิ์: อ่าน role จาก localStorage.user
-//   - approver / it_admin  -> กรอก + กดบันทึกได้
-//   - requester            -> เห็นทุกช่องแต่ disabled ทั้งหมด (ดูได้อย่างเดียว)
-// backend กันซ้ำอีกชั้นด้วย requireRole("approver", "it_admin") อยู่แล้ว
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง (import ไฟล์นี้): views/FormView.vue (ต่อท้ายฟอร์มหลัง submit สำเร็จ) และ
-//                          views/ApproveView.vue (เปิดตรงจากลิงก์ในเมล /approve?crId=)
-//                          ทั้งสองส่ง prop crId เข้ามา — component นี้ไม่รู้จัก URL/route เลย
-// ปลายทาง: services/api.js (apiFetch) -> backend routes/cr.js POST /:id/approval
-//          + components/StatusModal.vue (โชว์ผลสำเร็จ/พลาด)
-// แยกเป็น component ต่างหาก (ไม่เขียนสดใน FormView/ApproveView) เพราะ "ฟอร์มอนุมัติ" หน้าตา
-// เดียวกันเป๊ะ ต้องใช้ซ้ำ 2 ที่ — เขียนซ้ำสองรอบเสี่ยงแก้ไม่ครบเวลามีบั๊ก/เปลี่ยนฟิลด์
 
 import { apiFetch } from "../services/api.js";
 import StatusModal from "./StatusModal.vue";
@@ -37,25 +18,22 @@ export default {
       user,
       form: {
         comment: "",
-        result: "",     // approved / rejected / more-info
+        result: "",
         approver: user.fullName || "",
         date: ""
       },
-      submitting: false, // true ระหว่างรอ backend ตอบ — คุมปุ่ม disable/ข้อความ
+      submitting: false,
       modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
   computed: {
-    // requester = ดูได้อย่างเดียว
     canApprove() {
       return ["approver", "it_admin"].includes(this.user.role);
     }
   },
 
   methods: {
-    // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ
-    // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่
     async submitApproval() {
       if (!this.form.result) {
         this.modal = { show: true, variant: "error", title: "ยังเลือกผลไม่ครบ", message: "กรุณาเลือกผลการพิจารณา" };
@@ -87,14 +65,12 @@ export default {
 <template>
   <form @submit.prevent="submitApproval">
 
-    <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
     <div class="section-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
       <span class="note" v-if="canApprove">*เฉพาะสิทธิ์ Approver / PM</span>
       <span class="note" v-else>*เฉพาะสิทธิ์ Approver / PM — คุณดูได้อย่างเดียว</span>
     </div>
 
-    <!-- fieldset disabled = ปิดทุก input/radio ข้างในทีเดียว -->
     <fieldset :disabled="!canApprove" class="approval-fieldset">
 
       <div class="form-group">
@@ -111,8 +87,6 @@ export default {
         </div>
       </div>
 
-      <!-- ช่องลงชื่อท้ายหนังสือ — ชื่ออยู่บนเส้น ตำแหน่งอยู่ใต้ชื่อ วันที่ปิดท้าย
-           ตำแหน่งชิดขวาตามแบบหนังสือ ไม่ใช่สองคอลัมน์เท่ากันอย่างช่องกรอกทั่วไป -->
       <div class="signature-block">
         <div class="signature-line">
           <label for="approver-name">ลงชื่อ</label>
@@ -169,7 +143,6 @@ export default {
   font-weight: 400;
 }
 
-/* ตำแหน่งอยู่ใต้เส้นลงชื่อเสมอ เยื้องให้ตรงกับความยาวของเส้น */
 .signature-role {
   padding-left: 44px;
   margin-bottom: var(--quarter);

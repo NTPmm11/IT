@@ -1,29 +1,4 @@
 <script>
-// ============================================
-// FormView.vue — เดิมคือ form.html + js/form.js
-// ============================================
-//
-// ★ LAB 6 — ส่งฟอร์มลง database จริง (ต้องผ่าน LAB 1, 4B ฝั่ง backend ก่อน)
-//
-// ภาพรวมการทำงาน (ของเดิมที่ยังใช้อยู่):
-// 1. ทุกช่องกรอกผูกกับตัวแปรใน form ผ่าน v-model
-// 2. ตาราง action plan เก็บเป็น array ชื่อ rows แล้วให้ v-for วาดแถวตามข้อมูล
-//    - เพิ่มแถว = push เข้า array / ลบแถว = splice ออก -> Vue วาดจอให้เอง
-//
-// ของใหม่ที่ LAB นี้ต้องทำ:
-// - โหลด dropdown ระบบจาก API ตอนหน้าเปิด (mounted)
-// - กด Submit แล้วส่งข้อมูลทั้งฟอร์มไปเก็บลง database
-//
-// ติดตรงไหนดูเฉลย:  git diff main solution -- frontend/js/form.js
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง: router/index.js -> path "/form" (lazy load) — HomeView.vue มีลิงก์มาที่นี่
-// ปลายทาง:
-//   services/api.js         apiFetch -> GET /api/systems (dropdown), GET /change-requests/next-number
-//                            (preview เลขที่), POST /change-requests (submit จริง)
-//   services/commonActions.js  ...commonMethods (cancelForm/generatePDF)
-//   components/ApprovalSection.vue  โผล่ท้ายฟอร์มหลัง submit สำเร็จ (ส่ง crId ให้ผ่าน prop)
-//   components/StatusModal.vue      โชว์ผล submit สำเร็จ/พลาด + error ตอน validate ฝั่งหน้าเว็บ
 
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
@@ -36,27 +11,24 @@ export default {
   data() {
     return {
 
-      // ข้อมูลฟอร์มหลัก — 1 ตัวแปรต่อ 1 ช่องกรอก (ผูกด้วย v-model)
       form: {
-        requestDate: "",    // วันที่ร้องขอ
-        requester: "",      // ชื่อผู้ร้องขอ
-        department: "",     // แผนก/ฝ่าย
-        system: "",         // dropdown ระบบที่เกี่ยวข้อง
-        contact: "",        // อีเมล/เบอร์โทร
-        priority: "Low",    // radio — ค่าเริ่มต้นเลือก Low ไว้ก่อน
-        subject: "",        // หัวข้อการเปลี่ยน
-        problem: "",        // ปัญหาที่พบ
-        request: "",        // สิ่งที่ต้องการให้ปรับปรุง
-        changeTypes: [],    // checkbox หลายอัน — ติ๊กอันไหน ค่าเข้า array นี้
-        impact: "none",     // radio ผลกระทบ — เริ่มที่ "ไม่มีผลกระทบ"
-        impactDetail: "",   // ช่องระบุระบบที่กระทบ (เปิดใช้เมื่อ impact = "other")
-        downtime: false,    // checkbox เดี่ยว — ติ๊ก = true
-        duration: "",       // ระยะเวลาที่คาดใช้
-        deployDate: ""      // เป้าหมาย deploy
+        requestDate: "",
+        requester: "",
+        department: "",
+        system: "",
+        contact: "",
+        priority: "Low",
+        subject: "",
+        problem: "",
+        request: "",
+        changeTypes: [],
+        impact: "none",
+        impactDetail: "",
+        downtime: false,
+        duration: "",
+        deployDate: ""
       },
 
-      // ตาราง action plan — 1 object ใน array = 1 แถวในตาราง
-      // startDate/endDate แยกกันคนละช่อง (ของเดิมใช้ชื่อ Date ซ้ำกัน 2 ช่อง เลยเผลอผูกพร้อมกัน)
       rows: [
         { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
       ],
@@ -64,51 +36,38 @@ export default {
         { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
       ],
 
-      // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
-      // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
       systems: [],
 
-      // role ของ user ที่ login อยู่ (เติมใน mounted จาก localStorage)
-      // ใช้ล็อกส่วน "3. การประเมินผลกระทบและทรัพยากร" — เฉพาะสิทธิ์ it_admin เท่านั้น (ดู canEditImpact)
       userRole: "",
 
-      // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
       submittedCrId: null,
-      submittedCrNumber: "",   // เลขที่เอกสารจริง (backend generate ตอน submit จริง — authoritative)
-      previewCrNumber: "",     // เลขที่ preview ตั้งแต่เปิดหน้า (อาจไม่ตรงเป๊ะถ้ามีคนอื่น submit แทรกก่อน)
+      submittedCrNumber: "",
+      previewCrNumber: "",
 
-      submitting: false, // true ระหว่างรอ backend ตอบ POST /change-requests — คุมปุ่ม disable/ข้อความ
+      submitting: false,
       modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
-  // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ (ไม่ต้องมีใครกดอะไร)
-  // async เพราะข้างในต้องรอ apiFetch คุยกับ backend ก่อน
   async mounted() {
-    // ยังไม่เคย login (ไม่มี user เก็บใน localStorage) -> เด้งกลับหน้า login ทันที
     if (!localStorage.getItem("user")) {
       this.$router.push("/");
       return;
     }
 
-    // เอาชื่อ/แผนกจาก user ที่ login ไว้ มาเติมให้ในฟอร์มอัตโนมัติ (ไม่ต้องพิมพ์เอง)
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     this.form.requester = user.fullName || "";
     this.form.department = user.department || "";
     this.userRole = user.role || "";
 
-    // วันที่ร้องขอ default เป็นวันนี้ — <input type="date"> ต้องการรูปแบบ YYYY-MM-DD
     this.form.requestDate = new Date().toLocaleDateString("sv-SE");
 
-    // ★ LAB 6: โหลดรายชื่อระบบจาก GET /api/systems (LAB 1) มาใส่ dropdown
-    // this.systems เปลี่ยนค่า -> Vue วาด <option v-for="s in systems"> ใหม่ให้เองอัตโนมัติ
     try {
       this.systems = await apiFetch("/systems");
     } catch (err) {
       console.error(err);
     }
 
-    // preview เลขที่เอกสารให้เห็นตั้งแต่เปิดหน้า (ไม่ต้องรอ submit เสร็จ)
     try {
       const next = await apiFetch("/change-requests/next-number");
       this.previewCrNumber = next.crNumber;
@@ -118,24 +77,39 @@ export default {
   },
 
   computed: {
-    // ส่วน "3. การประเมินผลกระทบและทรัพยากร" เฉพาะสิทธิ์ it_admin (ดู label ในฟอร์ม)
-    // role อื่น (requester/approver) เห็นช่องพวกนี้แต่กรอกไม่ได้ (fieldset disabled ใน template)
-    // backend กันซ้ำอีกชั้นแล้วเหมือนกัน (routes/cr.js: isItAdmin) — ฝั่งนี้แค่ทำ UX ให้ตรงสิทธิ์จริง
     canEditImpact() {
       return this.userRole === "it_admin";
+    },
+
+    planDuration() {
+      const starts = this.rows.map(r => r.startDate).filter(Boolean);
+      const ends = this.rows.map(r => r.endDate).filter(Boolean);
+      if (starts.length === 0 || ends.length === 0) return "";
+
+      const min = starts.reduce((a, b) => (a < b ? a : b));
+      const max = ends.reduce((a, b) => (a > b ? a : b));
+
+      const days = Math.round((new Date(max) - new Date(min)) / 86400000) + 1;
+      return days > 0 ? `${days} วัน` : "";
+    }
+  },
+
+  watch: {
+    planDuration: {
+      immediate: true,
+      handler(value) {
+        this.form.duration = value;
+      }
     }
   },
 
   methods: {
-    // ดึงปุ่มร่วม (ยกเลิก / บันทึกร่าง / PDF) มาจาก services/commonActions.js
     ...commonMethods,
 
-    // ปุ่ม "+ เพิ่มขั้นตอนงาน" (@click="addRow")
     addRow() {
       this.rows.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
     },
 
-    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow(index)")
     deleteRow(index) {
       if (this.rows.length > 1) {
         this.rows.splice(index, 1);
@@ -148,7 +122,6 @@ export default {
       this.rows2.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
     },
 
-    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
     deleteRow2(index) {
       if (this.rows2.length > 1) {
         this.rows2.splice(index, 1);
@@ -157,18 +130,26 @@ export default {
       }
     },
 
-    // เช็คช่องที่ required attribute เดี่ยวๆ คุมไม่ได้ (checkbox group / conditional field / format)
-    // return string ข้อความ error ตัวแรกที่เจอ, ผ่านหมด return ""
     validateForm() {
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const phoneRe = /^0\d{8,9}$/;
+      const extRe = /^\d{4}$/;
       const contact = this.form.contact.trim();
-      if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact))) {
-        return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล หรือเบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก)";
+      if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact) && !extRe.test(contact))) {
+        return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล, เบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก หรือเบอร์โต๊ะ 4 หลัก)";
       }
-      // ช่องพวกนี้อยู่ใน section 3 (เฉพาะสิทธิ์ it_admin) — role อื่น field ถูก disable
-      // ไว้เป็นค่า default เสมอ (v-model แก้ไม่ได้) เลยไม่บังคับกรอกกับ role อื่น
-      // ไม่งั้น requester/approver submit CR ไม่ผ่านเลยสักใบ (validate ค่า default ที่ตัวเองแก้ไม่ได้)
+      for (let i = 0; i < this.rows.length; i++) {
+        const row = this.rows[i];
+        if (!row.startDate || !row.endDate) continue;
+
+        if (row.endDate < row.startDate) {
+          return `แผนดำเนินงานขั้นที่ ${i + 1}: วันสิ้นสุดมาก่อนวันเริ่ม`;
+        }
+        if (row.endDate === row.startDate && row.start && row.end && row.end < row.start) {
+          return `แผนดำเนินงานขั้นที่ ${i + 1}: เวลาสิ้นสุดมาก่อนเวลาเริ่ม`;
+        }
+      }
+
       if (this.canEditImpact) {
         if (this.form.changeTypes.length === 0) {
           return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
@@ -176,8 +157,8 @@ export default {
         if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
           return "กรุณาระบุระบบที่ได้รับผลกระทบ";
         }
-        if (!this.form.duration.trim()) {
-          return "กรุณาระบุระยะเวลาที่คาดใช้";
+        if (!this.planDuration) {
+          return "กรุณากรอกวันที่เริ่ม-สิ้นสุดในแผนดำเนินงาน (ข้อ 4) ให้ครบ — ระยะเวลาที่คาดใช้คำนวณจากตรงนั้น";
         }
         if (!this.form.deployDate) {
           return "กรุณาระบุเป้าหมาย Deploy";
@@ -186,17 +167,12 @@ export default {
       return "";
     },
 
-    // ตาราง action plan / rollback plan ให้กรอกวันที่กับเวลาแยกช่อง (startDate+start, endDate+end)
-    // แต่ column ปลายทาง (cr_action_plans.start_date/end_date) เก็บได้ช่องเดียว (NVARCHAR)
-    // เลยรวมวันที่+เวลาเป็นข้อความเดียวก่อนส่ง กันวันที่หายตอน backend insert แค่ start/end
     combineRow(row) {
       const start = row.startDate && row.start ? `${row.startDate} ${row.start}` : (row.start || row.startDate || "");
       const end = row.endDate && row.end ? `${row.endDate} ${row.end}` : (row.end || row.endDate || "");
       return { step: row.step, start, end, owner: row.owner, note: row.note };
     },
 
-    // รวม field ของฟอร์มเป็น payload เดียว ใช้ร่วมกันทั้ง submit จริงและ save draft
-    // (ต่างกันแค่ status — backend ดูค่านี้ตัดสินว่าจะส่งเมลแจ้ง approver ไหม ดู routes/cr.js)
     buildPayload(status) {
       return {
         requestDate: this.form.requestDate,
@@ -214,16 +190,11 @@ export default {
         deployDate: this.form.deployDate,
         changeTypes: this.form.changeTypes,
         plan: this.rows.map(this.combineRow),
-        rollbackPlan: this.rows2.map(this.combineRow),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
+        rollbackPlan: this.rows2.map(this.combineRow),
         status
       };
     },
 
-    // ถูกเรียกตอนกดปุ่ม Submit (@submit.prevent="handleSubmit")
-    // ★ LAB 6: ยิง POST /api/change-requests (LAB 4B ฝั่ง backend) พร้อมข้อมูลทั้งฟอร์ม
-    //
-    // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ/เข้าใจว่าไม่มีอะไรเกิดขึ้น
-    // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่ — ให้ feedback ชัดเจน คุมสไตล์เองได้
     async handleSubmit() {
       const validationError = this.validateForm();
       if (validationError) {
@@ -233,15 +204,11 @@ export default {
 
       this.submitting = true;
       try {
-        // key ฝั่งซ้าย (เช่น requestDate) ต้องตรงกับที่ backend คาด (ดู routes/cr.js บรรทัด req.body)
-        // ไม่ต้องส่ง crNumber แล้ว — backend สร้างให้เองจาก cr_id หลัง insert
         const data = await apiFetch("/change-requests", {
           method: "POST",
           body: JSON.stringify(this.buildPayload("submitted"))
         });
 
-        // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์มไว้เลย (อยู่หลัง modal) แล้วค่อยเลื่อนจอลงไปหา
-        // ตอนปิด modal (ดู closeModal ด้านล่าง)
         this.submittedCrId = data.crId;
         this.submittedCrNumber = data.crNumber;
         this.modal = {
@@ -257,10 +224,6 @@ export default {
       }
     },
 
-    // ปุ่ม "บันทึกร่าง (Save Draft)" — ยิงไปตาราง change_requests เหมือน submit จริง
-    // แต่ status: "draft" -> backend ข้ามการส่งเมลแจ้ง approver (ดู routes/cr.js: if (body.status !== "draft"))
-    // ไม่เรียก validateForm() เพราะ draft ตั้งใจให้กรอกไม่ครบได้ (นั่นคือประเด็นของการ "ร่าง")
-    // backend เองมีด่านขั้นต่ำอยู่แล้ว (ต้องมี subject + systemCode ไม่งั้น 400) พอสำหรับ draft
     async handleSaveDraft() {
       this.submitting = true;
       try {
@@ -281,7 +244,6 @@ export default {
       }
     },
 
-    // ปิด modal — ถ้าเพิ่ง submit สำเร็จ (มี submittedCrId แล้ว) เลื่อนจอลงไปหาส่วนอนุมัติต่อเลย
     closeModal() {
       this.modal.show = false;
       if (this.submittedCrId) {
@@ -305,19 +267,13 @@ export default {
   <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
 </button>
 
-
-
-    <!-- @submit.prevent = ส่งฟอร์มแล้วเรียก handleSubmit() โดยไม่ reload หน้า -->
     <form @submit.prevent="handleSubmit">
 
-      <!-- [ 1. ข้อมูลทั่วไป ] -->
       <div class="section-title">
         <div>1. ข้อมูลทั่วไป (General Information)</div>
       </div>
 
       <div class="grid-2col">
-
-    
 
         <div class="form-group">
           <label for="cr-request-date">วันที่ร้องขอ:</label>
@@ -346,7 +302,7 @@ export default {
 
         <div class="form-group">
           <label for="cr-contact">อีเมล/เบอร์โทร:</label>
-          <input type="text" id="cr-contact" v-model="form.contact" placeholder="ระบุอีเมลหรือเบอร์โทรติดต่อ">
+          <input type="text" id="cr-contact" v-model="form.contact" placeholder="อีเมล, เบอร์โทร หรือเบอร์โต๊ะ 4 หลัก">
         </div>
 
       </div>
@@ -364,10 +320,8 @@ export default {
         </div>
       </div>
 
-      <!-- [ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
       <div class="section-title">
         <div>2. รายละเอียดการขอเปลี่ยนระบบ (Change Details)</div>
-        <span class="note">*ส่วนสำหรับผู้ร้องขอกรอก</span>
       </div>
 
       <div class="form-group">
@@ -388,15 +342,11 @@ export default {
           placeholder="ระบุรายละเอียด เงื่อนไข หรือขั้นตอนของระบบใหม่ที่ต้องการให้พัฒนา..."></textarea>
       </div>
 
-      <!-- [ 3. การประเมินผลกระทบ ] -->
       <div class="section-title">
         <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
-        <span class="note" v-if="canEditImpact">*เฉพาะสิทธิ์ IT / Admin</span>
-        <span class="note" v-else>*เฉพาะสิทธิ์ IT / Admin — คุณดูได้อย่างเดียว</span>
+        <span class="note" v-if="!canEditImpact">*คุณดูได้อย่างเดียว</span>
       </div>
 
-      <!-- fieldset disabled = ปิดทุก input/checkbox/radio ข้างในทีเดียว ให้ role อื่นนอกจาก it_admin
-           กันซ้ำอีกชั้นฝั่ง backend แล้ว (routes/cr.js: isItAdmin) เผื่อมีคนยิง POST ตรงๆ ข้าม UI -->
       <fieldset :disabled="!canEditImpact" class="section3-fieldset">
 
       <div class="form-group">
@@ -427,7 +377,9 @@ export default {
       <div class="grid-2col" style="margin-top: 10px;">
         <div class="form-group">
           <label for="cr-duration">ระยะเวลาที่คาดใช้:</label>
-          <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" :required="canEditImpact">
+          <input type="text" id="cr-duration" :value="planDuration" readonly placeholder="คำนวณจากวันที่ในข้อ 4 อัตโนมัติ" title="คำนวณจากวันที่เริ่ม-สิ้นสุดในแผนดำเนินงาน (ข้อ 4)">
+
+          <small class="field-hint">คำนวณอัตโนมัติจากวันที่เริ่ม–สิ้นสุดในข้อ 4</small>
         </div>
         <div class="form-group">
           <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
@@ -437,7 +389,6 @@ export default {
 
       </fieldset>
 
-      <!-- [ 4. แผนดำเนินงาน ] -->
       <div class="section-title">
         <div>4. แผนดำเนินงาน (Action Plan)</div>
         <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
@@ -448,7 +399,7 @@ export default {
           <thead>
     <tr>
       <th style="width: 40px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
+      <th style="width: 250px;">ขั้นตอนงาน</th>
       <th style="width: 95px;">วัน/เดือน/ปี</th>
       <th style="width: 85px;">เวลาเริ่ม</th>
       <th style="width: 95px;">วัน/เดือน/ปี</th>
@@ -488,7 +439,7 @@ export default {
           <thead>
             <tr>
         <th style="width: 40px;">ลำดับ</th>
-        <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
+        <th style="width: 250px;">ขั้นตอนงาน</th>
         <th style="width: 95px;">วัน/เดือน/ปี</th>
         <th style="width: 85px;">เวลาเริ่ม</th>
         <th style="width: 95px;">วัน/เดือน/ปี</th>
@@ -523,8 +474,6 @@ export default {
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 
-        <!-- type="button" ตั้งใจ — ไม่ใช่ submit เพราะไม่อยากให้ required attribute ของช่องอื่น
-             บล็อกการบันทึกร่าง (ร่างกรอกไม่ครบได้ นั่นคือประเด็นของมัน) -->
         <button type="button" class="btn btn-draft" @click="handleSaveDraft" :disabled="submitting">
           <i class="fa-solid fa-floppy-disk"></i>
           {{ submitting ? "กำลังบันทึก..." : "บันทึกร่าง (Save Draft)" }}
@@ -538,9 +487,6 @@ export default {
 
     </form>
 
-    <!-- ส่วนอนุมัติ — โผล่หลัง Submit CR สำเร็จ / requester เห็นแต่กดไม่ได้
-         no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
-         ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
     <div class="no-print">
       <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
     </div>
@@ -550,11 +496,9 @@ export default {
   </div>
 </template>
 
-
 <style scoped>
 @import '../assets/css/form.css';
 
-/* section 3 (การประเมินผลกระทบและทรัพยากร) เฉพาะสิทธิ์ it_admin — ดู canEditImpact */
 .section3-fieldset {
   border: none;
   padding: 0;

@@ -1,8 +1,3 @@
--- ============================================
--- 03_cr_change_types.sql — checkbox ประเภทการเปลี่ยน (1 ติ๊ก = 1 แถว)
--- SQL Server (T-SQL)
--- รันหลัง 02_change_requests.sql (FK อ้าง change_requests)
--- ============================================
 
 USE CR;
 GO

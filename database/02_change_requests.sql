@@ -1,8 +1,3 @@
--- ============================================
--- 02_change_requests.sql — ใบ CR หลัก (LAB 4B: POST /api/change-requests)
--- SQL Server (T-SQL)
--- รันหลัง 01_systems.sql (FK อ้าง users + systems)
--- ============================================
 
 USE CR;
 GO
@@ -26,7 +21,6 @@ CREATE TABLE change_requests (
   downtime       BIT           NOT NULL DEFAULT 0,
   duration       NVARCHAR(50)  NULL,
   deploy_date    DATE          NULL,
-  -- more_info ใช้ขีดล่าง (ฝั่ง route แปลง more-info -> more_info ให้แล้ว)
   status         NVARCHAR(20)  NOT NULL DEFAULT 'submitted'
                  CHECK (status IN ('draft','submitted','approved','rejected','more_info')),
   created_at     DATETIME      NOT NULL DEFAULT GETDATE(),

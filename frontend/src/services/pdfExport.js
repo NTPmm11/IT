@@ -1,19 +1,3 @@
-// ============================================
-// pdfExport.js — สร้างไฟล์ PDF จริงของ CR ใบเดียว (vector, ไม่ใช่ screenshot)
-// ============================================
-//
-// ก่อนหน้านี้ปุ่ม "Download PDF" แค่เรียก window.print() -> โผล่ print dialog ของ browser
-// เจอ header/footer ของ browser เอง (URL, วันที่, เลขหน้า) ติดมาด้วย ไม่สวย/ไม่ใช่ไฟล์ PDF จริง
-//
-// ไฟล์นี้วาด PDF เองทั้งใบด้วย jsPDF + jspdf-autotable (ตารางเส้นขอบ auto wrap/auto page break)
-// ไม่ได้ capture DOM มาเป็นรูป — เลยคมชัด, เลือกข้อความได้, ไฟล์เล็ก
-//
-// ฟอนต์ไทย: jsPDF ตัว core font (Helvetica ฯลฯ) ไม่มีตัวอักษรไทย ต้อง embed ฟอนต์เอง
-// ใช้ Sarabun (SIL Open Font License — embed ได้อิสระ) เก็บไฟล์ .ttf ไว้ที่ ../assets/fonts/
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง: views/ApproveView.vue -> buildCrPdfBlobUrl(this.cr) (โชว์ preview) / downloadCrPdf(this.cr)
-// ปลายทาง: services/constants.js (STATUS_LABEL) + assets/fonts/Sarabun-*.ttf
 
 import { STATUS_LABEL } from "./constants.js";
 import sarabunRegularUrl from "../assets/fonts/Sarabun-Regular.ttf?url";
@@ -29,8 +13,6 @@ function fmtDate(value) {
   return value ? String(value).slice(0, 10) : "-";
 }
 
-// ArrayBuffer -> base64 แบบแบ่ง chunk กัน "Maximum call stack size exceeded"
-// (String.fromCharCode.apply กับ array ยาวๆ ในทีเดียวพังได้ในบาง engine)
 function bufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -47,7 +29,6 @@ async function loadFontBase64(url) {
   return bufferToBase64(buffer);
 }
 
-// สร้างเอกสารในหน่วยความจำ (ยังไม่ save) — ตัวเรียกเลือกเองว่าจะเอาไป preview หรือโหลดลงเครื่อง
 async function buildCrPdf(cr) {
   const [{ jsPDF }, autoTableModule, regularBase64, boldBase64] = await Promise.all([
     import("jspdf"),
@@ -69,10 +50,6 @@ async function buildCrPdf(cr) {
   const marginX = 12;
   const usableWidth = pageWidth - marginX * 2;
 
-  // ข้อเท็จจริงเป็นคู่ label:value — ไม่ใช่ตาราง ไม่ต้องมีกรอบทุกช่อง
-  // เหลือเส้นคั่นล่างเส้นเดียวต่อแถว พอให้สายตาไล่ลงมาได้ ไม่มีพื้นสีเลย
-  // (ของเดิม theme:"grid" + พื้นเทาคอลัมน์ label กินหมึกราว 60 ตร.ซม. ต่อหน้า
-  //  และทำให้เอกสารดูเป็นตารางเรียงกัน 5 ชุดทั้งที่มีตารางจริงแค่ 2)
   const factTable = (body, startY, columnStyles) => {
     autoTable(doc, {
       startY,
@@ -102,11 +79,9 @@ async function buildCrPdf(cr) {
     return y + 5;
   };
 
-  // ── หัวเอกสาร ──────────────────────────────
   doc.setDrawColor(...NAVY);
   doc.setLineWidth(0.4);
 
-  // กรอบขวา: เลขที่เอกสาร / วันที่ร้องขอ
   doc.rect(pageWidth - marginX - 55, 10, 55, 20);
   doc.setFont("Sarabun", "bold");
   doc.setFontSize(9);
@@ -118,8 +93,6 @@ async function buildCrPdf(cr) {
   doc.setFont("Sarabun", "normal");
   doc.text(fmtDate(cr.request_date), pageWidth - marginX - 5, 23, { align: "right" });
 
-  // ซ้าย: หัวข้อเอกสาร (กรอบซ้ายถูกตัดออกแล้ว หัวข้อเลยเลื่อนมาชิดซ้ายแทนกึ่งกลาง
-  // ไม่งั้นบรรทัดยาวจะไปชนกรอบเลขที่เอกสารทางขวา)
   doc.setFont("Sarabun", "bold");
   doc.setFontSize(15);
   doc.text("CHANGE REQUEST FORM (CR)", marginX, 18);
@@ -133,7 +106,6 @@ async function buildCrPdf(cr) {
 
   let y = 42;
 
-  // ── ข้อมูลผู้ร้องขอ ──────────────────────────
   const labelStyle = { fontStyle: "bold", cellWidth: 42 };
   y = factTable(
     [
@@ -145,7 +117,6 @@ async function buildCrPdf(cr) {
     { 0: labelStyle, 1: { cellWidth: 51 }, 2: labelStyle, 3: { cellWidth: 51 } }
   ) + 6;
 
-  // ── รายละเอียดคำขอ ───────────────────────────
   y = sectionTitle("รายละเอียดคำขอ", y);
   y = factTable(
     [
@@ -156,7 +127,6 @@ async function buildCrPdf(cr) {
     { 0: { fontStyle: "bold", cellWidth: 42, valign: "top" }, 1: { valign: "top" } }
   ) + 6;
 
-  // ── การประเมินผลกระทบและทรัพยากร ──────────────
   const changeTypesText = (cr.changeTypes || []).length
     ? cr.changeTypes.map(t => CHANGE_TYPE_LABEL[t] || t).join(", ")
     : "-";
@@ -173,7 +143,6 @@ async function buildCrPdf(cr) {
     { 0: labelStyle, 1: { cellWidth: 51 }, 2: labelStyle, 3: { cellWidth: 51 } }
   ) + 6;
 
-  // ── ตารางแผนดำเนินงาน / แผนกู้คืน ───────────────
   const planTable = (title, rows) => {
     if (!rows || !rows.length) return;
     if (y > pageHeight - 40) {
@@ -187,7 +156,6 @@ async function buildCrPdf(cr) {
       body: rows.map((r, i) => [i + 1, r.step || "-", fmtDate(r.start_date), fmtDate(r.end_date), r.owner || "-", r.note || "-"]),
       theme: "grid",
       styles: { font: "Sarabun", fontStyle: "normal", fontSize: 9, cellPadding: 2, textColor: 20, lineColor: [190, 195, 205] },
-      // หัวตารางใช้เส้นหนาใต้หัว แทนแถบทึบเต็มแนว — เห็นชัดเท่ากันแต่ไม่กินหมึก
       headStyles: {
         font: "Sarabun", fontStyle: "bold", halign: "center",
         fillColor: false, textColor: NAVY, lineColor: NAVY, lineWidth: { bottom: 0.5 }
@@ -201,16 +169,12 @@ async function buildCrPdf(cr) {
   planTable("แผนดำเนินงาน (Action Plan)", cr.plan);
   planTable("แผนการกู้คืน (Roll Back Plan)", cr.rollbackPlan);
 
-  // ── ผลการพิจารณา + ช่องลงชื่อ ──────────────────
   const approval =
     (cr.approvals || []).slice().reverse().find(a => a.result === "approved") ||
     (cr.approvals || [])[cr.approvals.length - 1];
 
   if (approval) {
     doc.setFontSize(10.5);
-    // ความเห็นยาวแค่ไหนไม่รู้ล่วงหน้า -> ตัดบรรทัดก่อน แล้วค่อยคำนวณความสูงกรอบจากจำนวนบรรทัดจริง
-    // (กรอบสูงตายตัวเจอ 2 ปัญหา: ความเห็นยาวๆ ทะลุกรอบไปทับเส้นลงชื่อ / ความเห็นสั้นๆ ก็ยังกิน
-    //  พื้นที่เท่าเดิมจนถูกดันไปขึ้นหน้าใหม่ทั้งที่หน้าเดิมยังว่างพอ)
     const commentLines = doc.splitTextToSize(String(approval.comment || "-"), usableWidth - 40);
     const boxH = 27 + commentLines.length * 5.5;
 
@@ -245,7 +209,6 @@ async function buildCrPdf(cr) {
     y += boxH + 4;
   }
 
-  // ── เลขหน้า ────────────────────────────────
   const pageCount = doc.internal.getNumberOfPages();
   doc.setFont("Sarabun", "normal");
   doc.setFontSize(8);
@@ -258,8 +221,6 @@ async function buildCrPdf(cr) {
   return doc;
 }
 
-// preview: คืน blob URL เอาไปใส่ <iframe src> ให้ดูก่อนตัดสินใจโหลด
-// ตัวเรียกต้อง URL.revokeObjectURL() เองตอนปิด preview ไม่งั้น blob ค้างใน memory
 export async function buildCrPdfBlobUrl(cr) {
   const doc = await buildCrPdf(cr);
   return URL.createObjectURL(doc.output("blob"));

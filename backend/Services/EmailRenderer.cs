@@ -3,35 +3,12 @@ using System.Text;
 
 namespace ChangeRequest.Api.Services;
 
-// ============================================
-// EmailRenderer — ประกอบ HTML ของอีเมลแจ้งเตือน
-// ============================================
-//
-// หน้าตาแบบ "ใบเอกสาร" ให้เข้าธีมกับฟอร์มจริงในเว็บ ไม่ใช่การ์ด SaaS ทั่วไป
-// inline CSS ทั้งหมด — mail client ส่วนใหญ่ตัด <style> ทิ้ง
-//
-// สี/ฟอนต์/เลย์เอาต์ยกมาจาก frontend/src/assets/css จริง:
-//   letterhead (เส้นคั่นล่างหนา จัดกลาง)  = .header-section
-//   field label:value 2 คอลัมน์            = .form-group
-//   navy #00075a / maroon #5a0000          = สีหลักของเว็บ
-//   ปุ่ม pill navy                          = .btn-submit
-
-/// <summary>1 แถว label:value ในอีเมล</summary>
-/// <param name="Label">หัวข้อคอลัมน์ซ้าย</param>
-/// <param name="Value">ค่าคอลัมน์ขวา</param>
-/// <param name="Raw">true = แปะ HTML ตรงๆ ไม่ escape (ใช้เฉพาะค่าที่ backend สร้างเอง)</param>
 public readonly record struct EmailField(string Label, string? Value, bool Raw = false);
 
 public static class EmailRenderer
 {
     public static string Escape(string? value) => WebUtility.HtmlEncode(value ?? "");
 
-    /// <param name="heading">หัวเรื่องของอีเมลนี้</param>
-    /// <param name="fields">แถว label:value — Value ถูก escape ให้อัตโนมัติเว้นแต่ Raw = true</param>
-    /// <param name="statusText">ผลพิจารณา (ข้อความตัวหนาสีเดียว ไม่ทำ badge — เอกสารทางการไม่ใช้)</param>
-    /// <param name="statusColor">สีของ statusText</param>
-    /// <param name="ctaText">ข้อความบนปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)</param>
-    /// <param name="ctaUrl">ปลายทางของปุ่มลิงก์</param>
     public static string Render(
         string heading,
         IEnumerable<EmailField>? fields = null,

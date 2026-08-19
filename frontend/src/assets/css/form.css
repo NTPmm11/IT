@@ -1,12 +1,6 @@
-/* ============================================
-   form.css — ตัวหนังสือ: หัวเรื่อง บล็อกทะเบียน ช่องกรอก ตาราง ตรายาง
-   ใช้ร่วม FormView / ApproveView / ListView / HomeView
-   ============================================ */
 
 @import './tokens.css';
 
-/* ===== แผ่นกระดาษ =====
-   ขอบซ้ายกว้างกว่าขอบขวา ตามแบบหนังสือที่เผื่อไว้เข้าแฟ้ม */
 .container {
   background: var(--sheet);
   width: 100%;
@@ -17,9 +11,6 @@
   border-radius: 0;
 }
 
-/* ===== หัวหนังสือ =====
-   จัดกึ่งกลาง ปิดท้ายด้วยเส้นคู่ — เส้นคู่คือเครื่องหมายว่าจบส่วนหัว เริ่มตัวเรื่อง
-   (ตำแหน่งนี้ในหนังสือราชการคือที่ของตราครุฑ ซึ่งเอกสารเอกชนใช้ไม่ได้) */
 .header-section {
   text-align: center;
   padding-bottom: var(--half);
@@ -38,9 +29,6 @@
   color: var(--ink-light);
 }
 
-/* ===== หัวข้อในเรื่อง =====
-   ไม่ใช่แถบสี ไม่ใช่ป้ายตัวเล็ก — เป็นบรรทัดตัวหนาขีดเส้นใต้ อย่างที่หนังสือทำ
-   เลขข้อห้อยออกไปในขอบซ้าย ให้ไล่สายตาตามลำดับข้อได้จากริมกระดาษ */
 .section-title,
 .section-title2 {
   display: flex;
@@ -59,7 +47,6 @@
   margin: var(--lh) 0 var(--half) calc(var(--indent) * -1);
 }
 
-/* แผนการกู้คืนคือส่วนที่เดินย้อน — หมึกตรายางเหมือนของที่ยกเลิกได้ */
 .section-title.is-rollback,
 .section-title2.is-rollback {
   color: var(--seal-deep);
@@ -73,15 +60,12 @@
   color: var(--ink-light);
 }
 
-/* ===== ผังช่องกรอก ===== */
 .grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 var(--lh);
 }
 
-/* label กว้างเท่ากันทุกแถว — ช่องกรอกเริ่มตรงกันเป็นแนวเดียว กวาดตาลงมาได้
-   (คอลัมน์ auto ทำให้ช่องเริ่มไม่ตรงกันสักแถว ยาวสั้นตามความยาว label) */
 .form-group {
   display: grid;
   grid-template-columns: var(--label-col) 1fr;
@@ -105,9 +89,6 @@ label {
   line-height: 1.35;
 }
 
-/* ===== ช่องกรอก =====
-   แบบฟอร์มจริงมีช่องเป็นกรอบให้เห็นว่าเขียนตรงไหน ยาวแค่ไหน
-   มุมคม พื้นอ่อน ขอบเข้ม — เป็นภาษาของแบบฟอร์ม ไม่ใช่กล่องมนแบบเว็บ */
 input[type="text"],
 input[type="date"],
 input[type="time"],
@@ -131,14 +112,12 @@ textarea {
   min-height: calc(var(--lh) * 3);
 }
 
-/* ชี้ค้างไว้ก็รู้แล้วว่าช่องนี้แตะได้ */
 input:hover:not(:disabled):not([readonly]),
 select:hover:not(:disabled),
 textarea:hover:not(:disabled) {
   border-color: var(--ink-light);
 }
 
-/* กำลังกรอกช่องไหน ต้องเห็นจากอีกฟากห้อง */
 input:focus,
 select:focus,
 textarea:focus {
@@ -148,8 +127,6 @@ textarea:focus {
   background: var(--sheet);
 }
 
-/* กรอกไม่ได้ = ช่องเทาทึบ ไม่ใช่เส้นประ
-   (หน้าอนุมัติปิดช่องไว้ทั้งหน้า ถ้าเป็นเส้นประหมดจะอ่านไม่ออกว่าอะไรเป็นอะไร) */
 input[readonly],
 input:disabled,
 select:disabled,
@@ -162,7 +139,13 @@ textarea:disabled {
   opacity: 1;
 }
 
-/* ===== ตัวเลือก ===== */
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-light);
+}
+
 .options-group {
   display: flex;
   flex-wrap: wrap;
@@ -180,7 +163,6 @@ textarea:disabled {
   gap: var(--quarter);
   font-size: 16px;
   cursor: pointer;
-  /* พื้นที่กดจริงคือ label ทั้งบรรทัด ไม่ใช่กล่องติ๊ก 17px — ต้องสูงพอสำหรับนิ้ว */
   min-height: 36px;
   padding: var(--quarter) 0;
 }
@@ -192,10 +174,6 @@ textarea:disabled {
   cursor: pointer;
 }
 
-/* ===== ตาราง =====
-   ตารางในแบบฟอร์มมีเส้นครบทุกด้าน ไม่ใช่เส้นใต้อย่างเดียวแบบตารางข้อมูลบนเว็บ */
-/* ตารางแผนงานมี 8 คอลัมน์ บีบให้พอดีจอเล็กแล้วอ่านไม่ออก — ให้เลื่อนแนวนอนแทน
-   เงาที่ขอบขวาบอกว่ายังมีคอลัมน์ต่อไปอีก (ไม่งั้นคนไม่รู้ว่าเลื่อนได้) */
 .table-wrapper {
   overflow-x: auto;
   margin-bottom: var(--half);
@@ -207,7 +185,6 @@ textarea:disabled {
   background-attachment: local, local, scroll, scroll;
 }
 
-/* จอแท็บเล็ต — ตารางยังเป็นตาราง แต่กว้างเกินจอ บอกให้รู้ว่าเลื่อนได้ */
 @media screen and (min-width: 701px) and (max-width: 900px) {
   .table-wrapper {
     border-right: 2px dashed var(--line-faint);
@@ -230,10 +207,6 @@ textarea:disabled {
   }
 }
 
-/* ===== มือถือ: ตารางแผนงานยุบเป็นการ์ดต่อขั้นตอน =====
-   8 คอลัมน์บนจอ 375px ต่อให้เลื่อนได้ก็กรอกไม่ไหว — ต้องเลื่อนไปมาทุกช่อง
-   1 แถว = 1 การ์ด ชื่อช่องมาจาก data-label บน <td>
-   ใช้ได้ทั้งตารางกรอก (FormView) และตารางอ่าน (ApproveView) */
 @media screen and (max-width: 700px) {
   .plan-cards-wrap {
     overflow-x: visible;
@@ -280,7 +253,6 @@ textarea:disabled {
     color: var(--ink-light);
   }
 
-  /* ลำดับเป็นหัวการ์ด ไม่ใช่ช่องข้อมูลช่องหนึ่ง */
   .plan-cards-wrap .action-table td:first-child {
     display: block;
     font-weight: 700;
@@ -295,7 +267,6 @@ textarea:disabled {
     font-weight: 700;
   }
 
-  /* ปุ่มลบเต็มความกว้างท้ายการ์ด — ในตารางเป็นปุ่มจิ๋วท้ายแถว บนการ์ดต้องกดง่าย */
   .plan-cards-wrap .action-table td:has(.btn-delete-row) {
     display: block;
     margin-top: var(--quarter);
@@ -310,7 +281,6 @@ textarea:disabled {
     border: 1px solid var(--seal);
   }
 
-  /* ตารางกรอกไม่ต้องตรึงความกว้างแล้ว เพราะไม่ได้เป็นตารางบนจอนี้ */
   .plan-cards-wrap .action-table {
     min-width: 0;
   }
@@ -339,8 +309,6 @@ textarea:disabled {
   vertical-align: middle;
 }
 
-/* ช่องกรอกในตารางเต็มความกว้างช่อง มีพื้นอ่อนบอกว่าพิมพ์ได้
-   (เดิมทำเส้นใส คนมองไม่ออกว่าตรงไหนกรอกได้) */
 .action-table input[type="text"],
 .action-table input[type="date"],
 .action-table input[type="time"] {
@@ -392,8 +360,6 @@ textarea:disabled {
   text-decoration: underline;
 }
 
-/* ===== ตรายางบอกผล =====
-   ผลพิจารณาของหนังสือถูกประทับ ไม่ได้ติดป้าย — เส้นคู่ ตัวห่าง หมึกสีเดียว */
 .status-badge {
   display: inline-block;
   font-size: 14px;
@@ -408,7 +374,6 @@ textarea:disabled {
   white-space: nowrap;
 }
 
-/* ใบที่พิจารณาเสร็จแล้วประทับจริง — เอียงอย่างที่มือคนประทับ */
 .status-badge.stamp {
   font-size: 20px;
   padding: var(--quarter) var(--half);
@@ -421,12 +386,11 @@ textarea:disabled {
 .status-rejected  { color: var(--result-rejected); }
 .status-more_info { color: var(--result-more-info); }
 
-/* ===== เลขหน้า ===== */
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;   /* หลายหน้า + จอแคบ ต้องขึ้นบรรทัดใหม่ ไม่ใช่ล้นออกไป */
+  flex-wrap: wrap;
   gap: 2px;
   margin-top: var(--lh);
 }
@@ -434,7 +398,6 @@ textarea:disabled {
 .pagination button {
   font-family: var(--font);
   font-size: 15px;
-  /* เป้ากดอย่างน้อย 36px — ปุ่มเลขหน้าสูงแค่ 24px กดพลาดบ่อยบนมือถือ */
   min-width: 36px;
   min-height: 36px;
   padding: var(--quarter) var(--half);
@@ -462,17 +425,12 @@ textarea:disabled {
   border-bottom: 2px solid var(--official);
 }
 
-/* ===== ขนาดหน้าจอ =====
-   ไล่จากใหญ่ไปเล็ก แต่ละชั้นแก้เฉพาะสิ่งที่พังจริงในช่วงนั้น */
-
-/* แล็ปท็อปเล็ก / แท็บเล็ตแนวนอน — คอลัมน์ label กินที่มากไปเมื่อเนื้อหาแคบลง */
 @media screen and (max-width: 1024px) {
   :root {
     --label-col: 132px;
   }
 }
 
-/* แท็บเล็ตแนวตั้ง — 2 คอลัมน์เริ่มบีบจนช่องกรอกสั้นกว่าข้อความที่กรอก */
 @media screen and (max-width: 860px) {
   .grid-2col {
     grid-template-columns: 1fr;
@@ -480,7 +438,6 @@ textarea:disabled {
   }
 }
 
-/* มือถือ — label ขึ้นไปอยู่บรรทัดบน กระดาษเต็มขอบจอ */
 @media screen and (max-width: 700px) {
   .container {
     border-left: none;
@@ -502,8 +459,6 @@ textarea:disabled {
     margin-left: 0;
   }
 
-  /* ตารางกรอกข้อมูลไม่ยุบเป็นการ์ด (ยังต้องกรอกทีละช่อง) — ตรึงความกว้างไว้แล้วเลื่อนเอา
-     บีบ 8 คอลัมน์ลงจอ 375px แล้วช่องแคบจนพิมพ์ไม่ได้ */
   .action-table {
     min-width: 680px;
   }
@@ -513,7 +468,6 @@ textarea:disabled {
   }
 }
 
-/* มือถือเล็ก */
 @media screen and (max-width: 420px) {
   .container {
     padding-top: var(--lh);
@@ -533,7 +487,6 @@ textarea:disabled {
   }
 }
 
-/* ค่าที่เป็นข้อความยาวติดกันไม่มีเว้นวรรค (URL, ชื่อไฟล์) ดันผังจนล้นจอได้ */
 .action-table td,
 .register dd,
 .home-card p {

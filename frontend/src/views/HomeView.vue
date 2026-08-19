@@ -1,16 +1,4 @@
 <script>
-// ============================================
-// HomeView.vue — หน้าหลักระบบ (หลัง login สำเร็จ)
-// ============================================
-//
-// จุดกลางให้เลือกไปต่อ: สร้าง CR ใหม่ / ดูประวัติย้อนหลัง / logout
-// (ตาม flowchart: Login -> หน้าหลักระบบ -> แยกไป "กรอก CR ใหม่" หรือ "สืบค้นประวัติย้อนหลัง")
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง: router/index.js -> path "/home" (lazy load) — LoginView.vue push มาที่นี่หลัง login สำเร็จ
-// ปลายทาง: ไม่เรียก apiFetch เลย (ไม่มี logic คุย backend) — มีแค่ <RouterLink> ไปหน้าอื่น
-//          (to="/form", to="/list") + ปุ่ม logout ที่ล้าง session แล้วเด้งกลับ "/"
-// หน้านี้เป็นแค่ "ทางแยก" ไม่มี state/ฟอร์มอะไรให้จัดการ เลยไม่ต้องมี StatusModal/submitting
 
 import { clearSession } from "../services/api";
 
@@ -29,7 +17,7 @@ export default {
 
   methods: {
     logout() {
-      clearSession();   // ล้างทั้ง token และ user (ดู services/api.js)
+      clearSession();
       this.$router.push("/");
     }
   }
@@ -76,8 +64,6 @@ export default {
   max-width: 620px;
 }
 
-/* สารบัญ ไม่ใช่การ์ด — รายการเรื่องที่ทำได้ เรียงเป็นบรรทัด มีเส้นคั่นระหว่างรายการ
-   เส้นประเชื่อมชื่อเรื่องไปหาลูกศร อย่างที่สารบัญเชื่อมหัวข้อไปหาเลขหน้า */
 .home-menu {
   border-top: 1px solid var(--line);
   margin-bottom: var(--lh);
