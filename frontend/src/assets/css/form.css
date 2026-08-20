@@ -130,7 +130,7 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 18px;
+  font-size: 20px;
   color: #011641;
   cursor: pointer;
 }
