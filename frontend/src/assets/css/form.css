@@ -20,14 +20,14 @@
 
 .header-section h1 {
   color: #00112c;
-  font-size: 26px;
+  font-size: 40px;
   font-weight: 800;
 }
 
 .header-section p {
   margin-top: 5px;
   color: #080808;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 /* ===== Section title ===== */
@@ -47,7 +47,7 @@
 /* หัวข้อลำดับที่ 1 (ข้อมูลทั่วไป) -> สีน้ำเงิน */
 
 .section-title span.note {
-  font-size: 13px;
+  font-size: 18px;
   color: #dbd6e6;
   font-weight: normal;
 }
@@ -68,7 +68,6 @@
  
 }
 
-
 .form-group.align-top {
   align-items: flex-start;
 }
@@ -81,7 +80,7 @@ label {
   font-weight: 600;
   color: #1a0101;
   text-align: left;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 /* ===== Inputs ===== */
