@@ -29,6 +29,9 @@ export default {
       },
       rows: [],
       loading: false,
+      // backend กรองให้ requester เห็นเฉพาะใบของตัวเอง (routes/cr.js GET /)
+      // เก็บ role ไว้เพื่อให้ข้อความบนหน้าตรงกับสิ่งที่เห็นจริง ไม่เขียนว่า "ทั้งหมด" ทั้งที่ถูกกรอง
+      userRole: JSON.parse(localStorage.getItem("user") || "{}").role || "",
       statusOptions: STATUS_LABEL,
       currentPage: 1,
       pageSize: 10,
@@ -48,6 +51,14 @@ export default {
     // backend ยังไม่รองรับ page/limit — filter/list ทั้งหมดมาที่เดียว แล้วตัดหน้าฝั่ง client เอา
     totalRows() {
       return this.rows.length;
+    },
+
+    // requester เห็นเฉพาะคำขอที่ตัวเองยื่น
+    seesOwnOnly() {
+      return this.userRole === "requester";
+    },
+    scopeLabel() {
+      return this.seesOwnOnly ? "คำขอของฉัน" : "รายการทั้งหมด";
     },
     totalPages() {
       return Math.ceil(this.rows.length / this.pageSize) || 1;
@@ -136,7 +147,8 @@ export default {
   <div class="container list-container">
     <div class="header-section">
       <h1>ประวัติ Change Request ย้อนหลัง</h1>
-      <p>สืบค้น / ดูรายการ CR ทั้งหมดในระบบ</p>
+      <p v-if="seesOwnOnly">สืบค้น / ดูคำขอ CR ที่คุณเป็นผู้ยื่น</p>
+      <p v-else>สืบค้น / ดูรายการ CR ทั้งหมดในระบบ</p>
     </div>
 
    <button type="button" class="btn-back" @click="$router.push('/home')">
@@ -176,7 +188,7 @@ export default {
     </form>
 
    <div class="section-title2">
-  <div>รายการทั้งหมด ({{ totalRows }})</div>
+  <div>{{ scopeLabel }} ({{ totalRows }})</div>
 </div>
 
 <div class="table-wrapper">
@@ -280,7 +292,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 @import '../assets/css/form.css';
 
 .container {

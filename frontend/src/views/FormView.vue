@@ -30,6 +30,14 @@ import { commonMethods } from "../services/commonActions.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 import StatusModal from "../components/StatusModal.vue";
 
+// ตัวนับกลาง แจกเลขประจำแถวไม่ซ้ำตลอดอายุหน้า
+// ใช้เป็น :key ของ v-for แทน index — index เปลี่ยนความหมายทุกครั้งที่ลบแถวกลาง
+// Vue เลย reuse DOM ผิดแถว (ค่าที่พิมพ์ค้าง/focus กระโดด) ทั้งที่ข้อมูลถูกต้องแล้ว
+let rowUid = 0;
+function makeRow() {
+  return { uid: ++rowUid, step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" };
+}
+
 export default {
   components: { ApprovalSection, StatusModal },
 
@@ -57,12 +65,9 @@ export default {
 
       // ตาราง action plan — 1 object ใน array = 1 แถวในตาราง
       // startDate/endDate แยกกันคนละช่อง (ของเดิมใช้ชื่อ Date ซ้ำกัน 2 ช่อง เลยเผลอผูกพร้อมกัน)
-      rows: [
-        { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
-      ],
-      rows2: [
-        { step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" }
-      ],
+      // uid = กุญแจถาวรประจำแถว ใช้เป็น :key แทน index (ดู makeRow)
+      rows: [makeRow()],
+      rows2: [makeRow()],
 
       // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
       // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
@@ -75,6 +80,11 @@ export default {
       // เลข CR หลัง submit สำเร็จ — มีค่าแล้วส่วนอนุมัติจะโผล่ท้ายหน้า
       submittedCrId: null,
       submittedCrNumber: "",   // เลขที่เอกสารจริง (backend generate ตอน submit จริง — authoritative)
+
+      // ฟอร์มใบนี้ถูกบันทึกลง database ไปแล้วหรือยัง (นับทั้งบันทึกร่างและส่งจริง)
+      // POST /change-requests สร้างแถวใหม่เสมอ ไม่มีเส้น update — กดซ้ำ = ได้ CR คนละใบ
+      // เลยต้องล็อกปุ่มหลังบันทึกสำเร็จครั้งแรก ให้ไปเริ่มใบใหม่จากหน้าฟอร์มเปล่าแทน
+      savedCrId: null,
       previewCrNumber: "",     // เลขที่ preview ตั้งแต่เปิดหน้า (อาจไม่ตรงเป๊ะถ้ามีคนอื่น submit แทรกก่อน)
 
       submitting: false, // true ระหว่างรอ backend ตอบ POST /change-requests — คุมปุ่ม disable/ข้อความ
@@ -83,38 +93,13 @@ export default {
   },
 
   // mounted() = ทำงานอัตโนมัติ 1 ครั้งตอนหน้าเปิดเสร็จ (ไม่ต้องมีใครกดอะไร)
-  // async เพราะข้างในต้องรอ apiFetch คุยกับ backend ก่อน
-  async mounted() {
+  mounted() {
     // ยังไม่เคย login (ไม่มี user เก็บใน localStorage) -> เด้งกลับหน้า login ทันที
     if (!localStorage.getItem("user")) {
       this.$router.push("/");
       return;
     }
-
-    // เอาชื่อ/แผนกจาก user ที่ login ไว้ มาเติมให้ในฟอร์มอัตโนมัติ (ไม่ต้องพิมพ์เอง)
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    this.form.requester = user.fullName || "";
-    this.form.department = user.department || "";
-    this.userRole = user.role || "";
-
-    // วันที่ร้องขอ default เป็นวันนี้ — <input type="date"> ต้องการรูปแบบ YYYY-MM-DD
-    this.form.requestDate = new Date().toLocaleDateString("sv-SE");
-
-    // ★ LAB 6: โหลดรายชื่อระบบจาก GET /api/systems (LAB 1) มาใส่ dropdown
-    // this.systems เปลี่ยนค่า -> Vue วาด <option v-for="s in systems"> ใหม่ให้เองอัตโนมัติ
-    try {
-      this.systems = await apiFetch("/systems");
-    } catch (err) {
-      console.error(err);
-    }
-
-    // preview เลขที่เอกสารให้เห็นตั้งแต่เปิดหน้า (ไม่ต้องรอ submit เสร็จ)
-    try {
-      const next = await apiFetch("/change-requests/next-number");
-      this.previewCrNumber = next.crNumber;
-    } catch (err) {
-      console.error(err);
-    }
+    this.initForm();
   },
 
   computed: {
@@ -123,6 +108,11 @@ export default {
     // backend กันซ้ำอีกชั้นแล้วเหมือนกัน (routes/cr.js: isItAdmin) — ฝั่งนี้แค่ทำ UX ให้ตรงสิทธิ์จริง
     canEditImpact() {
       return this.userRole === "it_admin";
+    },
+
+    // บันทึกไปแล้ว = ห้ามยิงซ้ำ (ทั้งปุ่มร่างและปุ่ม submit)
+    isSaved() {
+      return this.savedCrId !== null;
     }
   },
 
@@ -130,9 +120,39 @@ export default {
     // ดึงปุ่มร่วม (ยกเลิก / บันทึกร่าง / PDF) มาจาก services/commonActions.js
     ...commonMethods,
 
+    // เติมค่าเริ่มต้นของฟอร์ม + โหลดข้อมูลที่ต้องพึ่ง backend
+    // แยกออกจาก mounted() เพราะ startNewForm() ต้องเรียกซ้ำตอนเริ่มใบใหม่
+    // (lifecycle hook ไม่ถูกผูกบน instance — this.mounted() คือ undefined)
+    async initForm() {
+      // เอาชื่อ/แผนกจาก user ที่ login ไว้ มาเติมให้ในฟอร์มอัตโนมัติ (ไม่ต้องพิมพ์เอง)
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      this.form.requester = user.fullName || "";
+      this.form.department = user.department || "";
+      this.userRole = user.role || "";
+
+      // วันที่ร้องขอ default เป็นวันนี้ — <input type="date"> ต้องการรูปแบบ YYYY-MM-DD
+      this.form.requestDate = new Date().toLocaleDateString("sv-SE");
+
+      // ★ LAB 6: โหลดรายชื่อระบบจาก GET /api/systems (LAB 1) มาใส่ dropdown
+      // this.systems เปลี่ยนค่า -> Vue วาด <option v-for="s in systems"> ใหม่ให้เองอัตโนมัติ
+      try {
+        this.systems = await apiFetch("/systems");
+      } catch (err) {
+        console.error(err);
+      }
+
+      // preview เลขที่เอกสารให้เห็นตั้งแต่เปิดหน้า (ไม่ต้องรอ submit เสร็จ)
+      try {
+        const next = await apiFetch("/change-requests/next-number");
+        this.previewCrNumber = next.crNumber;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
     // ปุ่ม "+ เพิ่มขั้นตอนงาน" (@click="addRow")
     addRow() {
-      this.rows.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
+      this.rows.push(makeRow());
     },
 
     // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow(index)")
@@ -145,7 +165,7 @@ export default {
     },
 
     addRow2() {
-      this.rows2.push({ step: "", startDate: "", start: "", endDate: "", end: "", owner: "", note: "" });
+      this.rows2.push(makeRow());
     },
 
     // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
@@ -195,6 +215,16 @@ export default {
       return { step: row.step, start, end, owner: row.owner, note: row.note };
     },
 
+    // ตารางแผนเริ่มด้วยแถวเปล่า 1 แถวเสมอ และ deleteRow ไม่ยอมให้ลบแถวสุดท้าย
+    // ส่งดิบๆ = ทุก CR ได้แถวว่างติดลง cr_action_plans / cr_rollback_plans
+    // เลยกรองแถวที่ไม่มีอะไรกรอกเลยทิ้งก่อนส่ง (แถวที่กรอกบางช่องยังส่งไป ให้ backend ตอบว่าขาดอะไร)
+    planRowsToSend(rows) {
+      return rows
+        .map(this.combineRow)
+        .filter(row => [row.step, row.start, row.end, row.owner, row.note]
+          .some(value => String(value ?? "").trim() !== ""));
+    },
+
     // รวม field ของฟอร์มเป็น payload เดียว ใช้ร่วมกันทั้ง submit จริงและ save draft
     // (ต่างกันแค่ status — backend ดูค่านี้ตัดสินว่าจะส่งเมลแจ้ง approver ไหม ดู routes/cr.js)
     buildPayload(status) {
@@ -213,8 +243,8 @@ export default {
         duration: this.form.duration,
         deployDate: this.form.deployDate,
         changeTypes: this.form.changeTypes,
-        plan: this.rows.map(this.combineRow),
-        rollbackPlan: this.rows2.map(this.combineRow),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
+        plan: this.planRowsToSend(this.rows),
+        rollbackPlan: this.planRowsToSend(this.rows2),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
         status
       };
     },
@@ -225,6 +255,9 @@ export default {
     // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ/เข้าใจว่าไม่มีอะไรเกิดขึ้น
     // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่ — ให้ feedback ชัดเจน คุมสไตล์เองได้
     async handleSubmit() {
+      // กันยิงซ้ำ: กดรัวก่อน submitting จะ re-render, หรือกดใหม่หลังบันทึกสำเร็จไปแล้ว
+      if (this.submitting || this.isSaved) return;
+
       const validationError = this.validateForm();
       if (validationError) {
         this.modal = { show: true, variant: "error", title: "กรอกข้อมูลไม่ครบ", message: validationError };
@@ -242,6 +275,7 @@ export default {
 
         // ไม่ redirect แล้ว — โชว์ส่วนอนุมัติต่อท้ายฟอร์มไว้เลย (อยู่หลัง modal) แล้วค่อยเลื่อนจอลงไปหา
         // ตอนปิด modal (ดู closeModal ด้านล่าง)
+        this.savedCrId = data.crId;
         this.submittedCrId = data.crId;
         this.submittedCrNumber = data.crNumber;
         this.modal = {
@@ -262,12 +296,16 @@ export default {
     // ไม่เรียก validateForm() เพราะ draft ตั้งใจให้กรอกไม่ครบได้ (นั่นคือประเด็นของการ "ร่าง")
     // backend เองมีด่านขั้นต่ำอยู่แล้ว (ต้องมี subject + systemCode ไม่งั้น 400) พอสำหรับ draft
     async handleSaveDraft() {
+      if (this.submitting || this.isSaved) return;
+
       this.submitting = true;
       try {
         const data = await apiFetch("/change-requests", {
           method: "POST",
           body: JSON.stringify(this.buildPayload("draft"))
         });
+        this.savedCrId = data.crId;
+        this.submittedCrNumber = data.crNumber;
         this.modal = {
           show: true,
           variant: "success",
@@ -279,6 +317,14 @@ export default {
       } finally {
         this.submitting = false;
       }
+    },
+
+    // ล้างฟอร์มกลับเป็นใบเปล่า เพื่อกรอก CR ใบถัดไปโดยไม่ต้อง reload
+    // $options.data() = เรียก data() ต้นฉบับใหม่ ได้ค่าเริ่มต้นชุดเดิมเป๊ะ ไม่ต้องไล่ล้างทีละ field
+    startNewForm() {
+      Object.assign(this.$data, this.$options.data.call(this));
+      this.initForm();
+      this.$nextTick(() => this.$el.scrollIntoView({ behavior: "smooth" }));
     },
 
     // ปิด modal — ถ้าเพิ่ง submit สำเร็จ (มี submittedCrId แล้ว) เลื่อนจอลงไปหาส่วนอนุมัติต่อเลย
@@ -326,7 +372,10 @@ export default {
 
         <div class="form-group">
           <label for="cr-requester">ผู้ร้องขอ (Requester):</label>
-          <input type="text" id="cr-requester" v-model="form.requester" placeholder="ชื่อ-สกุลผู้ร้องขอ">
+          <!-- อ่านอย่างเดียว: backend บันทึก requester_id จาก user ที่ login เสมอ
+               (routes/cr.js ไม่รับ requesterId จาก body) พิมพ์แก้ตรงนี้ค่าจะถูกทิ้ง -->
+          <input type="text" id="cr-requester" :value="form.requester" readonly
+            title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>
 
         <div class="form-group">
@@ -458,7 +507,7 @@ export default {
     </tr>
   </thead>
           <tbody>
-            <tr v-for="(row, index) in rows" :key="index">
+            <tr v-for="(row, index) in rows" :key="row.uid">
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
               <td><input type="date" v-model="row.startDate" required></td>
@@ -479,7 +528,8 @@ export default {
       </div>
 
       <div class="section-title2">
-        <div>แผนการกู้คืน(Roll Back Plan)</div>
+        <div>แผนการกู้คืน (Roll Back Plan)</div>
+        <span class="note">*ไม่บังคับ — กรอกเมื่อมีแผนกู้คืน</span>
       </div>
 
       <table class="action-table">
@@ -496,13 +546,13 @@ export default {
     </tr>
   </thead>
         <tbody>
-          <tr v-for="(row2, index) in rows2" :key="index">
+          <tr v-for="(row2, index) in rows2" :key="row2.uid">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน" required></td>
-            <td><input type="date" v-model="row2.startDate" required></td>
-            <td><input type="time" v-model="row2.start" required></td>
-            <td><input type="date" v-model="row2.endDate" required></td>
-            <td><input type="time" v-model="row2.end" required></td>
+            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
+            <td><input type="date" v-model="row2.startDate" :required="!!row2.step"></td>
+            <td><input type="time" v-model="row2.start" :required="!!row2.step"></td>
+            <td><input type="date" v-model="row2.endDate" :required="!!row2.step"></td>
+            <td><input type="time" v-model="row2.end" :required="!!row2.step"></td>
             <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
@@ -522,16 +572,21 @@ export default {
 
         <!-- type="button" ตั้งใจ — ไม่ใช่ submit เพราะไม่อยากให้ required attribute ของช่องอื่น
              บล็อกการบันทึกร่าง (ร่างกรอกไม่ครบได้ นั่นคือประเด็นของมัน) -->
-        <button type="button" class="btn btn-draft" @click="handleSaveDraft" :disabled="submitting">
+        <button type="button" class="btn btn-draft" @click="handleSaveDraft" :disabled="submitting || isSaved">
           <i class="fa-solid fa-floppy-disk"></i>
           {{ submitting ? "กำลังบันทึก..." : "บันทึกร่าง (Save Draft)" }}
         </button>
 
-        <button type="submit" class="btn btn-submit" :disabled="submitting">
+        <button type="submit" class="btn btn-submit" :disabled="submitting || isSaved">
           <i class="fa-solid fa-paper-plane"></i>
           {{ submitting ? "กำลังส่ง..." : "ส่งคำขออนุมัติ (Submit CR)" }}
         </button>
       </div>
+
+      <p v-if="isSaved" class="saved-hint">
+        บันทึกเลขที่ {{ submittedCrNumber }} ลงระบบแล้ว — กดซ้ำจะได้ CR คนละใบ
+        <a href="#" @click.prevent="startNewForm">เริ่มคำขอใบใหม่</a>
+      </p>
 
     </form>
 
@@ -556,6 +611,18 @@ export default {
   border: none;
   padding: 0;
   margin: 0;
+}
+
+.saved-hint {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: #6b7280;
+  text-align: right;
+}
+
+.saved-hint a {
+  color: #00075a;
+  font-weight: 600;
 }
 
 .section3-fieldset:disabled input,

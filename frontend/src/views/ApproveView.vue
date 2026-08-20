@@ -54,11 +54,7 @@ export default {
 
     // ดึงรายละเอียด CR มาโชว์ — คนคลิกจากลิงก์ในเมลจะได้เห็นว่ากำลังอนุมัติใบไหน
     if (this.crId) {
-      try {
-        this.cr = await apiFetch(`/change-requests/${this.crId}`);
-      } catch (err) {
-        console.error(err);
-      }
+      await this.loadCr();
     }
 
     // มาจากปุ่ม PDF ใน ListView (ดู openCrPdf ใน ListView.vue -> push ?print=1 ต่อท้าย)
@@ -81,6 +77,23 @@ export default {
   methods: {
     // request_date/deploy_date มาจาก backend เป็น ISO datetime เต็ม ("2026-07-21T00:00:00.000Z")
     // ตัดเอาแค่ส่วนวันที่มาโชว์ (ไม่ต้อง parse เป็น Date object ให้ซับซ้อนเกินจำเป็น)
+    // ดึงรายละเอียด CR ใบนี้ใหม่จาก backend
+    // แยกเป็น method เพราะต้องเรียกซ้ำหลังบันทึกผลพิจารณา (ดู onApproved)
+    async loadCr() {
+      try {
+        this.cr = await apiFetch(`/change-requests/${this.crId}`);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // ApprovalSection บันทึกผลเสร็จแล้ว emit "approved" ขึ้นมา
+    // ต้องโหลด CR ใหม่ ไม่งั้นหน้ายังโชว์ status เดิม และปุ่ม PDF (เช็ค status === 'approved')
+    // ไม่โผล่จนกว่าผู้ใช้จะ reload เอง
+    async onApproved() {
+      await this.loadCr();
+    },
+
     fmtDate(value) {
       return value ? String(value).slice(0, 10) : "-";
     },
@@ -265,7 +278,7 @@ export default {
          ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
     <div class="no-print">
       <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
-      <ApprovalSection v-if="crId" :crId="crId" />
+      <ApprovalSection v-if="crId" :crId="crId" @approved="onApproved" />
       <p v-else style="text-align:center; color:#6b7280;">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
       </p>
@@ -273,7 +286,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 @import '../assets/css/form.css';
 
 .pdf-modal-backdrop {

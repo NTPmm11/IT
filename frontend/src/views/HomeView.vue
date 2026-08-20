@@ -54,7 +54,9 @@ export default {
         <i class="fa-solid fa-clock-rotate-left"></i>
         <div>
           <h3>ประวัติย้อนหลัง</h3>
-          <p>สืบค้น / ดูรายการ Change Request ทั้งหมด</p>
+          <!-- requester เห็นเฉพาะใบของตัวเอง (backend กรองที่ routes/cr.js GET /) -->
+          <p v-if="user.role === 'requester'">สืบค้น / ดูคำขอ Change Request ของคุณ</p>
+          <p v-else>สืบค้น / ดูรายการ Change Request ทั้งหมด</p>
         </div>
       </RouterLink>
     </div>
@@ -120,19 +122,4 @@ export default {
   font-size: 13px;
   color: rgb(10, 10, 10);
 }
-
-.btn btn-cancel2 {
-  background-color: #000000;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-}
 </style>
-
-
-
-
-
-

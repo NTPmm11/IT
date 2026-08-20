@@ -48,7 +48,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 .modal-overlay {
   position: fixed;
   inset: 0;

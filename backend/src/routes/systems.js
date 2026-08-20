@@ -22,6 +22,7 @@
 
 const express = require("express");
 const dbPool = require("../db");   // ตัวคุยกับ SQL Server — ใช้ผ่าน dbPool.query(...)
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -36,7 +37,9 @@ const router = express.Router();
  *     responses:
  *       200: { description: รายการระบบที่ยังเปิดใช้งาน }
  */
-router.get("/", async (req, res, next) => {
+// requireAuth เหมือนทุก route อื่น — รายชื่อระบบภายในองค์กรไม่ควรเปิดให้คนนอกดึงได้
+// (เส้นนี้ถูกเรียกจาก FormView ตอนโหลด dropdown ซึ่งเกิดหลัง login อยู่แล้ว)
+router.get("/", requireAuth, async (req, res, next) => {
   try {
     // ไม่มีเงื่อนไขจาก user เลยไม่ต้องมี "?" placeholder เหมือนไฟล์อื่น
     // is_active = 1 = กรองเอาเฉพาะระบบที่ยังเปิดใช้งาน (ไม่โชว์ระบบที่ปิดไปแล้ว)

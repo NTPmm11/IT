@@ -20,13 +20,25 @@ import sarabunRegularUrl from "../assets/fonts/Sarabun-Regular.ttf?url";
 import sarabunBoldUrl from "../assets/fonts/Sarabun-Bold.ttf?url";
 
 const CHANGE_TYPE_LABEL = { App: "Application / Software", DB: "Database Schema", Infra: "Infrastructure" };
-const APPROVAL_RESULT_LABEL = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", more_info: "ขอข้อมูลเพิ่มเติม" };
+// key ต้องตรงกับค่าที่ cr_approvals.result เก็บจริง — CHECK constraint คือ 'more-info' (ขีดกลาง)
+// ไม่ใช่ 'more_info' (ขีดล่าง) ที่ change_requests.status ใช้ ดู STATUS_LABEL ใน constants.js
+const APPROVAL_RESULT_LABEL = { approved: "อนุมัติ", rejected: "ไม่อนุมัติ", "more-info": "ขอข้อมูลเพิ่มเติม" };
 
 const NAVY = [21, 42, 82];
 const LABEL_BG = [242, 244, 248];
 
+// สำหรับคอลัมน์ DATE จริง (request_date, deploy_date, approval_date) ที่ backend ส่งมาเป็น
+// ISO string เต็ม — เอาแค่ YYYY-MM-DD
 function fmtDate(value) {
   return value ? String(value).slice(0, 10) : "-";
+}
+
+// สำหรับ cr_action_plans/cr_rollback_plans.start_date|end_date ซึ่งเป็น NVARCHAR(50)
+// เก็บ "YYYY-MM-DD HH:MM" ที่ FormView.combineRow รวมวันที่+เวลามาให้ — slice(0,10) แบบ
+// fmtDate จะตัดเวลาทิ้ง ทำให้ PDF เสียข้อมูลที่ฟอร์มตั้งใจเก็บ เลยโชว์ทั้งก้อนตามที่เก็บไว้
+function fmtPlanDate(value) {
+  const text = String(value ?? "").trim();
+  return text || "-";
 }
 
 // ArrayBuffer -> base64 แบบแบ่ง chunk กัน "Maximum call stack size exceeded"
@@ -172,7 +184,7 @@ async function buildCrPdf(cr) {
     autoTable(doc, {
       startY: y,
       head: [["ลำดับ", "ขั้นตอนงาน", "เริ่ม", "สิ้นสุด", "ผู้รับผิดชอบ", "หมายเหตุ"]],
-      body: rows.map((r, i) => [i + 1, r.step || "-", fmtDate(r.start_date), fmtDate(r.end_date), r.owner || "-", r.note || "-"]),
+      body: rows.map((r, i) => [i + 1, r.step || "-", fmtPlanDate(r.start_date), fmtPlanDate(r.end_date), r.owner || "-", r.note || "-"]),
       theme: "grid",
       styles: { font: "Sarabun", fontStyle: "normal", fontSize: 9, cellPadding: 2, textColor: 20, lineColor: [190, 195, 205] },
       headStyles: { font: "Sarabun", fontStyle: "bold", fillColor: NAVY, textColor: 255, halign: "center" },
@@ -186,9 +198,12 @@ async function buildCrPdf(cr) {
   planTable("แผนการกู้คืน (Roll Back Plan)", cr.rollbackPlan);
 
   // ── ผลการพิจารณา + ช่องลงชื่อ ──────────────────
+  // เก็บไว้ตัวแปรเดียว — เดิมเขียน (cr.approvals || []) สองรอบแต่ตกไปอ่าน cr.approvals.length
+  // ตรงๆ ในวงเล็บที่สอง ทำให้พังด้วย TypeError ถ้า approvals เป็น undefined
+  const approvals = cr.approvals || [];
   const approval =
-    (cr.approvals || []).slice().reverse().find(a => a.result === "approved") ||
-    (cr.approvals || [])[cr.approvals.length - 1];
+    approvals.slice().reverse().find(a => a.result === "approved") ||
+    approvals[approvals.length - 1];
 
   if (approval) {
     doc.setFontSize(10.5);

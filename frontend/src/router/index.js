@@ -38,12 +38,23 @@ import LoginView from "../views/LoginView.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: "/", name: "login", component: LoginView },
+    // meta.public = เข้าได้โดยไม่ต้อง login (มีหน้าเดียวคือหน้า login เอง)
+    { path: "/", name: "login", component: LoginView, meta: { public: true } },
     { path: "/home", name: "home", component: () => import("../views/HomeView.vue") },
     { path: "/form", name: "form", component: () => import("../views/FormView.vue") },
     { path: "/approve", name: "approve", component: () => import("../views/ApproveView.vue") },
     { path: "/list", name: "list", component: () => import("../views/ListView.vue") }
   ]
+});
+
+// ด่านตรวจก่อนเข้าทุกหน้า
+// เดิมแต่ละ view เช็ค localStorage.user เองใน mounted() ซึ่งสายเกินไป — component ถูกสร้าง
+// และ mounted() ยิง apiFetch ออกไปแล้วกว่าจะ redirect (ได้ 401 เปล่าๆ + หน้าวาบขึ้นมาแวบหนึ่ง)
+// ย้ายมาไว้ที่เดียวตรงนี้ กันครบทุก route รวมถึงหน้าใหม่ที่เพิ่มทีหลังโดยไม่ต้องจำไปเช็คเอง
+router.beforeEach((to) => {
+  if (to.meta.public) return true;
+  if (localStorage.getItem("user")) return true;
+  return { name: "login" };
 });
 
 // export default = ไฟล์อื่น import router from "./router" เอาไปใช้ได้

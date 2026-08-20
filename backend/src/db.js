@@ -149,9 +149,22 @@ async function getConnection() {
     },
     async commit() {
       await transaction.commit();
+      // commit แล้ว transaction จบชีวิต — mssql คืน connection ให้ pool และเคลียร์
+      // _acquiredConnection ทิ้ง เรียก rollback() ต่อจะได้ TransactionError('ENOTBEGUN')
+      // ปิดธงตรงนี้ ให้ rollback() ที่ตามมาใน catch กลายเป็น no-op แทนที่จะ throw ทับ error จริง
+      started = false;
     },
     async rollback() {
-      if (started) await transaction.rollback();
+      if (!started) return;
+      // ปิดธงก่อนรอ เพื่อไม่ให้ rollback ซ้อนสองรอบ (catch + finally) ยิงเข้า mssql สองครั้ง
+      started = false;
+      try {
+        await transaction.rollback();
+      } catch (err) {
+        // rollback ล้มเหลว (connection หลุดไปแล้ว ฯลฯ) ไม่ควรกลบ error ต้นทางที่พาเรามาถึง catch
+        // แค่ log ไว้พอ — คนเรียกกำลังจัดการ error ตัวจริงอยู่
+        console.error("rollback failed:", err.message);
+      }
     },
     release() {
       // mssql จัดการคืน connection ให้ pool เองอัตโนมัติ — ไม่ต้องทำอะไรเพิ่ม
