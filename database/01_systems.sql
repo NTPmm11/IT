@@ -16,9 +16,10 @@ CREATE TABLE systems (
 GO
 
 INSERT INTO systems (system_code, system_name) VALUES
-  (N'WEB',  N'Web Portal'),
-  (N'ERP',  N'ERP System'),
-  (N'CRM',  N'CRM System'),
-  (N'HR',   N'HR Management'),
-  (N'ACC',  N'Accounting System');
+  (N'SRV', N'Server'),
+  (N'NET', N'Network'),
+  (N'DB',  N'Database'),
+  (N'APP', N'Application'),
+  (N'UPS', N'UPS'),
+  (N'BAK', N'Backup');
 GO

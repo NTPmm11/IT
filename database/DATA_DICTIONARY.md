@@ -44,13 +44,13 @@ users ──< change_requests >── systems
 | Column | Type | Null | Default | คำอธิบาย |
 |---|---|---|---|---|
 | system_id | INT IDENTITY(1,1) | NOT NULL | auto | PK |
-| system_code | NVARCHAR(20) | NOT NULL | - | รหัสระบบ เช่น `WEB`, `ERP` — UNIQUE |
+| system_code | NVARCHAR(20) | NOT NULL | - | รหัสระบบ เช่น `SRV`, `NET` — UNIQUE |
 | system_name | NVARCHAR(100) | NOT NULL | - | ชื่อระบบเต็ม |
 | is_active | BIT | NOT NULL | `1` | โชว์ใน dropdown เฉพาะ `1` |
 
 **Key:** PK `system_id`, UNIQUE `system_code`
 
-**ข้อมูลเริ่มต้น:** WEB, ERP, CRM, HR, ACC
+**ข้อมูลเริ่มต้น:** SRV (Server), NET (Network), DB (Database), APP (Application), UPS (UPS), BAK (Backup)
 
 ---
 
