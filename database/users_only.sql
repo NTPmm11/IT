@@ -1,37 +1,27 @@
 -- ============================================
 -- users_only.sql — เฉพาะของ login (users table)
--- SQL Server (T-SQL)
+-- MySQL 
 -- รันไฟล์นี้ก่อนได้ ค่อยเพิ่ม table อื่น (systems, change_requests, ...)
 -- ทีหลังจาก schema.sql ตอนพร้อมทำ LAB ถัดไป
 -- ============================================
 
-IF DB_ID('CR') IS NULL
-BEGIN
-    CREATE DATABASE CR;
-END
-GO
-
+CREATE DATABASE IF NOT EXISTS CR CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE CR;
-GO
 
 CREATE TABLE users (
-  user_id       INT IDENTITY(1,1) PRIMARY KEY,
-  username      NVARCHAR(50)  NOT NULL UNIQUE,
-  password_hash NVARCHAR(255) NOT NULL,              -- เก็บ hash เท่านั้น ห้ามเก็บ plain text
-  full_name     NVARCHAR(100) NOT NULL,
-  email         NVARCHAR(100),
-  department    NVARCHAR(100),
-  role          NVARCHAR(20)  NOT NULL DEFAULT 'requester'
-                CHECK (role IN ('requester','it_admin','approver')),
-  is_active     BIT           NOT NULL DEFAULT 1,
-  created_at    DATETIME      NOT NULL DEFAULT GETDATE(),
-  updated_at    DATETIME      NOT NULL DEFAULT GETDATE()
+  user_id       INT AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(50)  NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name     VARCHAR(100) NOT NULL,
+  email         VARCHAR(100),
+  department    VARCHAR(100),
+  role          ENUM('requester','it_admin','approver') NOT NULL DEFAULT 'requester',
+  is_active     TINYINT(1)   NOT NULL DEFAULT 1,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-GO
 
--- N'...' = string เป็น Unicode (จำเป็นสำหรับภาษาไทยใน NVARCHAR)
 INSERT INTO users (username, password_hash, full_name, email, department, role) VALUES
-  (N'admin',     N'$2y$10$REPLACE_WITH_REAL_HASH', N'ผู้ดูแลระบบ',    N'pungzaza44@gmail.com', N'IT',        N'it_admin'),
-  (N'somchai',   N'$2y$10$REPLACE_WITH_REAL_HASH', N'สมชาย ใจดี',     N'somchai@company.com',  N'Marketing', N'requester'),
-  (N'approver1', N'$2y$10$REPLACE_WITH_REAL_HASH', N'หัวหน้าฝ่าย IT', N'approver@company.com', N'IT',        N'approver');
-GO
+  ('admin',     '$REPLACE_WITH_REAL_HASH', 'ผู้ดูแลระบบ',    'pungzaza44@gmail.com', 'IT',        'it_admin'),
+  ('somchai',   '$REPLACE_WITH_REAL_HASH', 'สมชาย ใจดี',     'somchai@company.com',  'Marketing', 'requester'),
+  ('approver1', '$REPLACE_WITH_REAL_HASH', 'หัวหน้าฝ่าย IT', 'approver@company.com', 'IT',        'approver');

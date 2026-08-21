@@ -1,25 +1,22 @@
 -- ============================================
 -- 01_systems.sql — ตัวเลือก dropdown "ระบบที่เกี่ยวข้อง"
--- SQL Server (T-SQL)
+-- MySQL 
 -- รันหลัง users_only.sql / รันก่อน 02_change_requests.sql (โดน FK อ้างถึง)
 -- ============================================
 
 USE CR;
-GO
 
 CREATE TABLE systems (
-  system_id   INT IDENTITY(1,1) PRIMARY KEY,
-  system_code NVARCHAR(20)  NOT NULL UNIQUE,
-  system_name NVARCHAR(100) NOT NULL,
-  is_active   BIT           NOT NULL DEFAULT 1
+  system_id   INT AUTO_INCREMENT PRIMARY KEY,
+  system_code VARCHAR(20)  NOT NULL UNIQUE,
+  system_name VARCHAR(100) NOT NULL,
+  is_active   TINYINT(1)   NOT NULL DEFAULT 1
 );
-GO
 
 INSERT INTO systems (system_code, system_name) VALUES
-  (N'SRV', N'Server'),
-  (N'NET', N'Network'),
-  (N'DB',  N'Database'),
-  (N'APP', N'Application'),
-  (N'UPS', N'UPS'),
-  (N'BAK', N'Backup');
-GO
+  ('SRV', 'Server'),
+  ('NET', 'Network'),
+  ('DB',  'Database'),
+  ('APP', 'Application'),
+  ('UPS', 'UPS'),
+  ('BAK', 'Backup');

@@ -66,7 +66,7 @@ const CHANGE_TYPES = ["App", "DB", "Infra"];
 router.get("/next-number", requireAuth, async (req, res, next) => {
   try {
     const [[row]] = await dbPool.query(
-      "SELECT ISNULL(MAX(cr_id), 0) + 1 AS nextId FROM change_requests"
+      "SELECT COALESCE(MAX(cr_id), 0) + 1 AS nextId FROM change_requests" //เปลี่ยนมาใช้ COALESCE(A,B) แทน ISNULL(A,B) เนื่องจาก SQL Server ใช้ ISNULL เพื่อบอกว่า ถ้าค่า A เป็น null ให้ใช้ค่า B แทน แต่ใน MySQL ไม่มี ISNULL(A) รับค่าได้แค่ตัวเดียว เอาไว้แค่เช็คว่า A เป็น null ไหม จึงต้องเปลี่ยนมาใช้ COALESCE เพื่อให้การทำงานของฟังก์ชันยังเป็นรูปแบบเดิม เนื่องจากมันทำงานเหมืนอกัย 
     );
     res.json({ crNumber: `CR${String(row.nextId).padStart(7, "0")}` });
   } catch (err) {
