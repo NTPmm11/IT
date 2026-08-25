@@ -351,18 +351,29 @@ export default {
 
       </div>
 
-      <div class="form-group" style="margin-top: 10px;">
-        <label>ระดับความสำคัญ (Priority):</label>
-        <div class="options-group">
-          <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low
-            (ไม่กระทบงานหลัก)</label>
-          <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium
-            (มีระบบสำรอง)</label>
-          <label class="option-item"><input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)</label>
-          <label class="option-item"><input type="radio" value="Critical" v-model="form.priority"> Critical
-            (ระบบหยุดทำงาน)</label>
-        </div>
-      </div>
+     <div class="form-group" style="margin-top: 10px;">
+  <label>ระดับความสำคัญ (Priority):</label>
+  <div class="options-group" style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <!-- แถวที่ 1: Low และ Medium -->
+    <div style="display: flex; gap: 15px; width: 100%;">
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Low" v-model="form.priority"> Low (ไม่กระทบงานหลัก)
+      </label>
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Medium" v-model="form.priority"> Medium (มีระบบสำรอง)
+      </label>
+    </div>
+    <!-- แถวที่ 2: High และ Critical -->
+    <div style="display: flex; gap: 15px; width: 100%;">
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)
+      </label>
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Critical" v-model="form.priority"> Critical (ระบบหยุดทำงาน)
+      </label>
+    </div>
+  </div>
+</div>
 
       <!-- [ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
       <div class="section-title">

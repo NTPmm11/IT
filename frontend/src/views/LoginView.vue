@@ -126,4 +126,4 @@ export default {
 
 <style>
 @import '../assets/css/login.css';
-</style>
+</style>                                                                                        

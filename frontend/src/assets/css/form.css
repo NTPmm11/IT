@@ -144,7 +144,8 @@ textarea:focus {
 /* ===== Action plan table ===== */
 .table-wrapper {
   overflow-x: auto;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  font-size: 26px;
 }
 
 .action-table {
@@ -157,7 +158,7 @@ textarea:focus {
 .action-table td {
   border: 1px solid #d1d5db;
   padding: 5px;
-  font-size: 14px;
+  font-size: 20px;
   text-align: left;
 }
 
