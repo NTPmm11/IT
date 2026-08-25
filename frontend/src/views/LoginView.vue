@@ -124,6 +124,8 @@ export default {
   </div>
 </template>
 
+<!-- ตั้งใจไม่ใส่ scoped: login.css มี selector ระดับหน้า (body, h1) ที่ต้องเป็น global
+     ใส่ scoped แล้ว body จะกลายเป็น body[data-v-xxx] ซึ่งไม่มีวันแมตช์ -->
 <style>
 @import '../assets/css/login.css';
 </style>                                                                                        

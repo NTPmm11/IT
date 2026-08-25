@@ -1,0 +1,57 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Backend. cwd MUST be backend/ — src/db.js calls require("dotenv").config()
+      // with no path, so dotenv reads ".env" relative to the working directory.
+      // From the workspace root it finds nothing and DB_HOST silently falls back
+      // to "localhost", so every query fails against a server that isn't there.
+      "name": "Debug Backend (API)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/index.js",
+      "cwd": "${workspaceFolder}/backend",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      // Frontend. "launch" (not "attach") — attaching needs Chrome already started
+      // with --remote-debugging-port, and that port is 9222, never the Vite port.
+      // Start `npm run dev` in frontend/ first, then run this.
+      // webRoot points at frontend/ so Vite's source maps resolve to real files
+      // and breakpoints in .vue files bind instead of showing as unverified.
+      "name": "Debug Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/src/*",
+        "/@fs/*": "/*",
+        "@/*": "${webRoot}/src/*"
+      }
+    },
+    {
+      // Whatever file is open in the editor — handy for one-off scripts such as
+      // backend/scripts/hash-password.js. cwd follows the file, so this is NOT
+      // the right way to start the API (see "Debug Backend" above for why).
+      "name": "Launch Current File",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "cwd": "${fileDirname}",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack",
+      "configurations": ["Debug Backend (API)", "Debug Frontend (Chrome)"],
+      "stopAll": true
+    }
+  ]
+}

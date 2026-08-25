@@ -111,7 +111,28 @@ function escapeHtml(str) {
 //   ต้องการแปะ HTML จริงๆ (เช่น <b>) ใส่ raw: true — ใช้เฉพาะค่าที่ backend สร้างเอง ไม่ใช่ข้อความผู้ใช้พิมพ์
 // statusText/statusColor = ใส่เมื่อมีผลพิจารณา (ข้อความตัวหนาสีเดียว ไม่ทำ pill — เอกสารทางการไม่ใช้ badge)
 // ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
+// ค่าที่ถูกเอาไปวางใน href — ยอมเฉพาะ http/https
+// กัน javascript:/data: ที่บาง mail client ยังกดได้ และกัน " ที่จะปิด attribute ก่อนเวลา
+function safeUrl(url) {
+  const text = String(url ?? "").trim();
+  if (!/^https?:\/\//i.test(text)) return "";
+  return escapeHtml(text);
+}
+
+// ค่าที่ถูกเอาไปวางใน style="color:..." — ยอมเฉพาะ hex color
+function safeColor(color) {
+  return /^#[0-9a-f]{3,8}$/i.test(String(color ?? "")) ? color : "#3b3b3b";
+}
+
 function renderEmail({ heading, fields = [], statusText, statusColor, ctaText, ctaUrl }) {
+  // ตอนนี้ผู้เรียกส่งแต่ค่าที่ระบบสร้างเอง แต่ escape ไว้ทุกช่องตั้งแต่ต้น
+  // เดิม escape แค่ f.value ช่องเดียว — วันที่มีคนส่งค่าจากผู้ใช้เข้ามาทาง heading
+  // หรือ ctaText จะกลายเป็น HTML injection ในเมลทันทีโดยไม่มีอะไรเตือน
+  const safeHeading = escapeHtml(heading);
+  const safeStatusText = statusText ? escapeHtml(statusText) : "";
+  const safeStatusColor = safeColor(statusColor);
+  const safeCtaText = escapeHtml(ctaText);
+  const safeCtaUrl = safeUrl(ctaUrl);
   const fieldRows = fields.map(f => `
         <tr>
           <td style="padding:9px 16px 9px 0;width:110px;font-size:13.5px;font-weight:600;color:#000000;vertical-align:top;white-space:nowrap;">${f.label}</td>
@@ -129,8 +150,8 @@ function renderEmail({ heading, fields = [], statusText, statusColor, ctaText, c
       </tr>
       <tr>
         <td style="padding:26px 32px 4px;">
-          <div style="font-size:16px;font-weight:700;color:#00112c;">${heading}</div>
-          ${statusText ? `<div style="font-size:14px;font-weight:700;color:${statusColor};margin-top:6px;">${statusText}</div>` : ""}
+          <div style="font-size:16px;font-weight:700;color:#00112c;">${safeHeading}</div>
+          ${safeStatusText ? `<div style="font-size:14px;font-weight:700;color:${safeStatusColor};margin-top:6px;">${safeStatusText}</div>` : ""}
         </td>
       </tr>
       <tr>
@@ -140,10 +161,10 @@ function renderEmail({ heading, fields = [], statusText, statusColor, ctaText, c
           </table>
         </td>
       </tr>
-      ${ctaUrl ? `
+      ${safeCtaUrl ? `
       <tr>
         <td style="padding:22px 32px 8px;">
-          <a href="${ctaUrl}" style="display:inline-block;background:#00075a;color:#ffffff;text-decoration:none;padding:11px 26px;border-radius:50px;font-size:14px;font-weight:600;">${ctaText}</a>
+          <a href="${safeCtaUrl}" style="display:inline-block;background:#00075a;color:#ffffff;text-decoration:none;padding:11px 26px;border-radius:50px;font-size:14px;font-weight:600;">${safeCtaText}</a>
         </td>
       </tr>` : ""}
       <tr>

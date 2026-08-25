@@ -21,7 +21,7 @@
 // ปลายทาง: services/api.js (apiFetch -> GET /change-requests/:id เอารายละเอียดมาโชว์)
 //          + components/ApprovalSection.vue (ฟอร์มอนุมัติจริง ส่ง crId ให้ผ่าน prop)
 import { apiFetch } from "../services/api.js";
-import { commonMethods } from "../services/commonActions.js";
+import { buildCrPdfBlobUrl, downloadCrPdf } from "../services/pdfExport.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 
 export default {
@@ -29,9 +29,15 @@ export default {
 
   data() {
     return {
-      crId: null,   // ยังไม่รู้เลข CR จนกว่า mounted() จะอ่านจาก URL มาใส่
-      cr: null      // รายละเอียด CR ใบนี้ (เลขที่, subject, ผู้ร้องขอ, ...) — ให้เห็นบริบทก่อนอนุมัติ
+      crId: null,       // ยังไม่รู้เลข CR จนกว่า mounted() จะอ่านจาก URL มาใส่
+      cr: null,         // รายละเอียด CR ใบนี้ (เลขที่, subject, ผู้ร้องขอ, ...) — ให้เห็นบริบทก่อนอนุมัติ
+      pdfPreviewUrl: "" // blob URL ของ PDF ที่กำลัง preview อยู่ ("" = ปิด modal)
     };
+  },
+
+  // ออกจากหน้านี้ทั้งที modal ยังเปิดค้าง -> blob ยังจองหน่วยความจำอยู่ ต้องคืนก่อน
+  beforeUnmount() {
+    this.closePdfPreview();
   },
 
   // mounted() = โค้ดที่รันอัตโนมัติ 1 ครั้ง ทันทีที่หน้าเปิดเสร็จ (ไม่ต้องมีใครกดอะไร)
@@ -48,17 +54,14 @@ export default {
 
     // ดึงรายละเอียด CR มาโชว์ — คนคลิกจากลิงก์ในเมลจะได้เห็นว่ากำลังอนุมัติใบไหน
     if (this.crId) {
-      try {
-        this.cr = await apiFetch(`/change-requests/${this.crId}`);
-      } catch (err) {
-        console.error(err);
-      }
+      await this.loadCr();
     }
 
     // มาจากปุ่ม PDF ใน ListView (ดู openCrPdf ใน ListView.vue -> push ?print=1 ต่อท้าย)
-    // -> เปิด print dialog อัตโนมัติทันทีที่ข้อมูล CR โหลดเสร็จ ไม่ต้องกดปุ่มซ้ำอีกที
-    if (this.$route.query.print === "1" && this.cr) {
-      this.$nextTick(() => this.generatePDF());
+    // -> เปิด preview ให้เลยทันทีที่ข้อมูล CR โหลดเสร็จ ไม่ต้องกดปุ่มซ้ำอีกที
+    // (ListView ซ่อนปุ่มนี้ไว้แล้วถ้ายังไม่ approved แต่กันซ้ำอีกชั้น เผื่อมีคนกดลิงก์ตรงๆ)
+    if (this.$route.query.print === "1" && this.cr?.status === "approved") {
+      this.openPdfPreview();
     }
   },
 
@@ -72,13 +75,45 @@ export default {
   },
 
   methods: {
-    // ดึงปุ่ม generatePDF (window.print()) มาจาก services/commonActions.js — ใช้ร่วมกับ FormView/ListView
-    ...commonMethods,
-
     // request_date/deploy_date มาจาก backend เป็น ISO datetime เต็ม ("2026-07-21T00:00:00.000Z")
     // ตัดเอาแค่ส่วนวันที่มาโชว์ (ไม่ต้อง parse เป็น Date object ให้ซับซ้อนเกินจำเป็น)
+    // ดึงรายละเอียด CR ใบนี้ใหม่จาก backend
+    // แยกเป็น method เพราะต้องเรียกซ้ำหลังบันทึกผลพิจารณา (ดู onApproved)
+    async loadCr() {
+      try {
+        this.cr = await apiFetch(`/change-requests/${this.crId}`);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    // ApprovalSection บันทึกผลเสร็จแล้ว emit "approved" ขึ้นมา
+    // ต้องโหลด CR ใหม่ ไม่งั้นหน้ายังโชว์ status เดิม และปุ่ม PDF (เช็ค status === 'approved')
+    // ไม่โผล่จนกว่าผู้ใช้จะ reload เอง
+    async onApproved() {
+      await this.loadCr();
+    },
+
     fmtDate(value) {
       return value ? String(value).slice(0, 10) : "-";
+    },
+
+    // PDF เป็นไฟล์จริงที่วาดเป็น vector เอง (jsPDF+autoTable ใน services/pdfExport.js)
+    // ไม่ใช่ window.print() เดิม (โผล่ print dialog ของ browser เจอ header/footer ติดมาด้วย ไม่สวย)
+    // กดได้ก็ต่อเมื่อ CR ผ่านการอนุมัติแล้วเท่านั้น — ยังไม่อนุมัติไม่มีผลพิจารณาให้ลงในเอกสาร
+    async openPdfPreview() {
+      if (!this.cr || this.cr.status !== "approved") return;
+      this.pdfPreviewUrl = await buildCrPdfBlobUrl(this.cr);
+    },
+
+    closePdfPreview() {
+      if (!this.pdfPreviewUrl) return;
+      URL.revokeObjectURL(this.pdfPreviewUrl);
+      this.pdfPreviewUrl = "";
+    },
+
+    async downloadPdf() {
+      await downloadCrPdf(this.cr);
     }
   }
 };
@@ -211,19 +246,39 @@ export default {
         </table>
       </template>
 
-      <!-- ui-action-buttons = ซ่อนอัตโนมัติตอน print (ดู base.css @media print) -->
-      <div class="ui-action-buttons">
-        <button type="button" class="btn btn-pdf" @click="generatePDF">
-          <i class="fa-solid fa-file-pdf"></i> Download PDF
+      <!-- มีให้กดได้ก็ต่อเมื่อ CR ผ่านการอนุมัติแล้วเท่านั้น (ดู openPdfPreview() ในสคริปต์) -->
+      <div class="ui-action-buttons" v-if="cr.status === 'approved'">
+        <button type="button" class="btn btn-pdf" @click="openPdfPreview">
+          <i class="fa-solid fa-file-pdf"></i> ดูตัวอย่าง PDF
         </button>
       </div>
     </template>
+
+    <!-- preview ก่อนโหลด — <iframe src="blob:..."> ให้ browser เรนเดอร์ PDF ให้เลย
+         ไม่ต้องพึ่ง viewer library เพิ่ม กดโหลดจริงค่อยเรียก downloadPdf() -->
+    <div v-if="pdfPreviewUrl" class="pdf-modal-backdrop" @click.self="closePdfPreview">
+      <div class="pdf-modal">
+        <div class="pdf-modal-header">
+          <span>ตัวอย่างเอกสาร {{ cr.cr_number }}</span>
+          <button type="button" class="pdf-modal-close" @click="closePdfPreview">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <iframe :src="pdfPreviewUrl" class="pdf-modal-frame" title="ตัวอย่าง PDF"></iframe>
+        <div class="pdf-modal-footer">
+          <button type="button" class="btn btn-cancel2" @click="closePdfPreview">ปิด</button>
+          <button type="button" class="btn btn-pdf" @click="downloadPdf">
+            <i class="fa-solid fa-download"></i> ดาวน์โหลด PDF
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
          ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
     <div class="no-print">
       <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
-      <ApprovalSection v-if="crId" :crId="crId" />
+      <ApprovalSection v-if="crId" :crId="crId" @approved="onApproved" />
       <p v-else style="text-align:center; color:#6b7280;">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
       </p>
@@ -231,6 +286,60 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 @import '../assets/css/form.css';
+
+.pdf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.pdf-modal {
+  background: #fff;
+  border-radius: 8px;
+  width: min(900px, 100%);
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pdf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #152a52;
+  color: #fff;
+  font-weight: 600;
+}
+
+.pdf-modal-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* flex:1 = กินพื้นที่ที่เหลือทั้งหมดระหว่าง header กับ footer */
+.pdf-modal-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+
+.pdf-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+}
 </style>

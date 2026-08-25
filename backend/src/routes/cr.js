@@ -39,6 +39,13 @@ const { sendMail, renderEmail } = require("../services/mailer");
 
 const router = express.Router();
 
+// ค่าที่ยอมรับได้ ตรงตาม CHECK constraint ใน database/00_full_schema.sql
+// ไม่เช็คตรงนี้ = ค่าผิดหลุดไปถึง SQL Server แล้วเด้ง constraint error กลับมาเป็น 500
+// ทั้งที่ต้นเหตุคือ input ของผู้ใช้ ควรเป็น 400 พร้อมบอกว่าผิดช่องไหน
+const PRIORITIES = ["Low", "Medium", "High", "Critical"];
+const IMPACTS = ["none", "other"];
+const CHANGE_TYPES = ["App", "DB", "Infra"];
+
 // ============================================
 // GET /api/change-requests/next-number — เลขที่เอกสารตัวถัดไป (preview ก่อน submit จริง)
 // ============================================
@@ -163,6 +170,13 @@ router.get("/", requireAuth, async (req, res, next) => {
     const conditions = [];
     const params = [];
 
+    // requester เห็นเฉพาะคำขอที่ตัวเองยื่น — approver/it_admin ต้องเห็นทุกใบเพราะต้องพิจารณา
+    // กรองที่ SQL ไม่ใช่ที่ frontend: ฝั่งหน้าเว็บกรองแล้วข้อมูลใบอื่นก็ยังถูกส่งออกมาถึง browser อยู่ดี
+    if (req.user.role === "requester") {
+      conditions.push("cr.requester_id = ?");
+      params.push(req.user.userId);
+    }
+
     if (status) {
       conditions.push("cr.status = ?");
       params.push(status);
@@ -234,7 +248,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
       `SELECT cr.cr_id, cr.cr_number, cr.request_date, cr.department, cr.contact,
               cr.priority, cr.subject, cr.problem, cr.request_detail,
               cr.impact, cr.impact_detail, cr.downtime, cr.duration, cr.deploy_date,
-              cr.status, cr.created_at,
+              cr.status, cr.created_at, cr.requester_id,
               u.full_name AS requester, s.system_name
        FROM change_requests cr
        JOIN users u   ON u.user_id = cr.requester_id
@@ -245,6 +259,13 @@ router.get("/:id", requireAuth, async (req, res, next) => {
 
     if (!cr) {
       return res.status(404).json({ error: "CR not found" });
+    }
+
+    // requester เปิดดูได้เฉพาะใบของตัวเอง (approver/it_admin ดูได้ทุกใบ)
+    // ตอบ 403 ไม่ใช่ 404 เพราะรายการใน ListView ก็กรองให้แล้ว — คนที่มาถึงตรงนี้
+    // คือคนที่เดา/แก้ URL เอง บอกไปตรงๆ ว่าไม่มีสิทธิ์ชัดกว่าแกล้งบอกว่าไม่มีใบนี้
+    if (req.user.role === "requester" && cr.requester_id !== req.user.userId) {
+      return res.status(403).json({ error: "Forbidden: ดูได้เฉพาะคำขอของตัวเอง" });
     }
 
     // CR หนึ่งใบมีได้หลายประเภทการเปลี่ยน (checkbox) และหลายขั้นตอนแผนงาน (ตาราง)
@@ -319,6 +340,37 @@ router.post("/", requireAuth, async (req, res, next) => {
     // cr_number ไม่ต้องรับจาก frontend แล้ว — backend สร้างให้เองจาก cr_id หลัง insert (ดูล่าง)
     if (!body.subject || !body.systemCode) {
       return res.status(400).json({ error: "ต้องมี subject, systemCode" });
+    }
+
+    // ตรวจค่าที่มี CHECK constraint คุมอยู่ ก่อนจะส่งลง database
+    if (body.priority != null && !PRIORITIES.includes(body.priority)) {
+      return res.status(400).json({ error: `priority ต้องเป็น ${PRIORITIES.join("/")}` });
+    }
+    if (body.impact != null && !IMPACTS.includes(body.impact)) {
+      return res.status(400).json({ error: `impact ต้องเป็น ${IMPACTS.join("/")}` });
+    }
+    // changeTypes ต้องเป็น array จริงๆ — ถ้าส่ง string มา for...of จะไล่ทีละตัวอักษร
+    // แล้ว insert ขยะลงตารางแทนที่จะเด้ง error ให้รู้ตัว
+    if (body.changeTypes != null) {
+      if (!Array.isArray(body.changeTypes)) {
+        return res.status(400).json({ error: "changeTypes ต้องเป็น array" });
+      }
+      const badType = body.changeTypes.find(t => !CHANGE_TYPES.includes(t));
+      if (badType !== undefined) {
+        return res.status(400).json({ error: `changeTypes ต้องเป็น ${CHANGE_TYPES.join("/")} เท่านั้น` });
+      }
+    }
+    // plan/rollbackPlan ต้องเป็น array — ส่ง object มา for...of จะพังเป็น 500
+    for (const key of ["plan", "rollbackPlan"]) {
+      if (body[key] != null && !Array.isArray(body[key])) {
+        return res.status(400).json({ error: `${key} ต้องเป็น array` });
+      }
+      // step เป็น NOT NULL ในตาราง — แถวที่ไม่มี step จะเด้ง constraint error เป็น 500
+      // ตอบ 400 บอกตำแหน่งแถวแทน ให้ผู้ใช้รู้ว่าต้องกลับไปกรอกแถวไหน
+      const emptyStepAt = (body[key] || []).findIndex(row => !String(row?.step ?? "").trim());
+      if (emptyStepAt !== -1) {
+        return res.status(400).json({ error: `${key} แถวที่ ${emptyStepAt + 1} ต้องระบุขั้นตอนงาน` });
+      }
     }
 
     // ส่วน "3. การประเมินผลกระทบและทรัพยากร" (impact/changeTypes/downtime/duration/deployDate)
@@ -516,7 +568,7 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       // เช็คก่อนว่า CR เลขนี้มีอยู่จริงไหม ก่อนจะเริ่ม transaction
       // (ดึง cr_number/subject/email ผู้ร้องขอมาด้วยเลย เอาไว้ส่ง e-mail แจ้งผลหลัง commit)
       const [crRows] = await dbConnection.query(
-        `SELECT cr.cr_id, cr.cr_number, cr.subject, u.email AS requesterEmail
+        `SELECT cr.cr_id, cr.cr_number, cr.subject, cr.status, u.email AS requesterEmail
          FROM change_requests cr
          JOIN users u ON u.user_id = cr.requester_id
          WHERE cr.cr_id = ?`,
@@ -524,6 +576,20 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       );
       if (!crRows[0]) {
         return res.status(404).json({ error: "CR not found" });
+      }
+
+      // CR อยู่ในสถานะที่ยัง "รอผล" อยู่จริงไหม
+      //   submitted  ส่งมาแล้ว รอพิจารณารอบแรก
+      //   more_info  เคยขอข้อมูลเพิ่ม ผู้ร้องขอส่งกลับมา รอพิจารณาอีกรอบ
+      // นอกจากนี้ปิดหมด: draft ยังไม่ได้ส่ง / approved กับ rejected ตัดสินไปแล้ว
+      // ไม่มีด่านนี้ = ยิงซ้ำได้ไม่จำกัด พลิก approved เป็น rejected ทีหลังก็ยังได้
+      const OPEN_STATUSES = ["submitted", "more_info"];
+      if (!OPEN_STATUSES.includes(crRows[0].status)) {
+        return res.status(409).json({
+          error: crRows[0].status === "draft"
+            ? "CR ใบนี้ยังเป็นแบบร่าง ยังไม่ได้ส่งเข้าขั้นตอนอนุมัติ"
+            : "CR ใบนี้ผ่านการพิจารณาไปแล้ว ไม่สามารถบันทึกผลซ้ำได้"
+        });
       }
 
       await dbConnection.beginTransaction();

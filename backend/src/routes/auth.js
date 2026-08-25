@@ -83,7 +83,10 @@ router.post("/login", async (req, res, next) => {
     const { username, password } = req.body;
 
     // ไม่กรอกมาสักช่อง -> 400 Bad Request (ฝั่ง client ส่งข้อมูลมาไม่ครบ/ผิด)
-    if (!username || !password) {
+    // เช็ค typeof === "string" ด้วย ไม่ใช่แค่ค่าว่าง: req.body มาจาก JSON ฝั่ง client
+    // ส่ง {"password": {...}} มาก็ได้ ผ่านด่าน !password แต่ไปพังทีหลังที่
+    // bcrypt.compare (Error: Illegal arguments) กับ mssql (Validation failed for parameter)
+    if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
       return res.status(400).json({ error: "ต้องกรอก username และ password" });
     }
 
@@ -98,7 +101,14 @@ router.post("/login", async (req, res, next) => {
     // database ไม่เก็บรหัสผ่านตรงๆ เก็บเป็น hash (เข้ารหัสทางเดียว ถอดกลับไม่ได้)
     // bcrypt.compare(รหัสที่กรอก, hash ใน database) = true/false ว่าตรงกันไหม
     // !user ต้องเช็คก่อน (short-circuit) เพราะถ้าไม่เจอ user ก็ไม่มี password_hash ให้เทียบ
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    // เช็ค typeof password_hash ด้วย: ถ้าแถวนั้น hash เป็น NULL (typeof null === "object")
+    // bcrypt.compare จะโยน Error: Illegal arguments: string, object แทนที่จะตอบ false
+    // -> ให้ถือว่า login ไม่ผ่านเหมือน password ผิด ไม่ใช่ 500
+    if (
+      !user ||
+      typeof user.password_hash !== "string" ||
+      !(await bcrypt.compare(password, user.password_hash))
+    ) {
       // 401 Unauthorized — ไม่บอกด้วยว่า "username ผิด" หรือ "password ผิด"
       // กันคนร้ายเดา username ที่มีจริงในระบบจากข้อความ error
       return res.status(401).json({ error: "Username หรือ password ไม่ถูกต้อง" });

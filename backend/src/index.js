@@ -79,4 +79,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`API server running at http://localhost:${PORT}`);
+  // เตือนทุกครั้งที่ start — ไม่ให้มีใครลืมว่าระบบนี้ยังไม่มี auth จริง
+  // (ดู middleware/auth.js และกล่องเตือนใน README.md)
+  console.warn("⚠️  ไม่มีการยืนยันตัวตนจริง: backend เชื่อ header X-User-Id ตรงๆ ใครก็สวมเป็น user คนไหนก็ได้ — ห้าม deploy ใช้งานจริง");
 });

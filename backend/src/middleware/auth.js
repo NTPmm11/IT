@@ -37,6 +37,13 @@ const dbPool = require("../db");
 //   req  = ข้อมูลขาเข้า (header, body, query, params)
 //   res  = ใช้ตอบกลับ (res.status(...).json(...))
 //   next = ฟังก์ชัน "ไปต่อ" — เรียกเฉยๆ = ผ่านด่าน / เรียก next(err) = โยน error ไปให้ error handler กลาง
+// ⚠️ ไม่ใช่ระบบยืนยันตัวตนจริง — ห้ามใช้บน production
+// เชื่อ header X-User-Id ที่ client ส่งมาตรงๆ โดยไม่มีอะไรพิสูจน์ว่า client เป็นคนนั้นจริง
+// ใครยิง request ถึง API ได้ ก็สวมเป็น user คนไหนก็ได้ รวมถึง it_admin:
+//     curl http://localhost:4000/api/change-requests -H "X-User-Id: 1"
+// แปลว่า requireRole() ด้านล่างกันได้แค่ผู้ใช้ผ่านหน้าเว็บปกติ ไม่ได้กันคนที่ตั้งใจปลอม
+// ของจริงต้องเป็น session token / JWT ที่ปลอมไม่ได้ แล้วค่อยเชื่อ req.user
+// (คงไว้แบบนี้เพราะเป็นโปรเจกต์ฝึก — ดูกล่องเตือนใน README.md)
 async function requireAuth(req, res, next) {
   try {
     // req.headers เก็บ header ทั้งหมด ชื่อ header จะถูกแปลงเป็นตัวเล็กเสมอ
@@ -45,6 +52,13 @@ async function requireAuth(req, res, next) {
 
     if (!userId) {
       return res.status(401).json({ error: "Missing X-User-Id header" });
+    }
+
+    // users.user_id เป็น INT — ส่งค่าที่ไม่ใช่ตัวเลขเข้าไปเทียบ SQL Server จะพังตอนแปลงชนิด
+    // แล้วโผล่ออกมาเป็น 500 ทั้งที่ต้นเหตุคือ header ที่ client ส่งมาผิด ต้องเป็น 401
+    // (ส่ง header ซ้ำสองอันก็เข้าเคสนี้ — node รวมให้เป็น "1, 2")
+    if (!/^\d+$/.test(userId)) {
+      return res.status(401).json({ error: "Invalid X-User-Id header" });
     }
 
     // "?" ใน query คือ placeholder — เอาค่าจริง (userId) มาแทนแบบปลอดภัย

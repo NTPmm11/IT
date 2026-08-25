@@ -114,7 +114,10 @@ export default {
       <div class="grid-2col" style="margin-top: 10px;">
         <div class="form-group">
           <label for="approver-name">ผู้อนุมัติ (Approver):</label>
-          <input type="text" id="approver-name" v-model="form.approver" placeholder="ชื่อผู้มีสิทธิ์อนุมัติ">
+          <!-- อ่านอย่างเดียว: backend บันทึก approver_id จาก user ที่ login เสมอ
+               (routes/cr.js ไม่รับชื่อผู้อนุมัติจาก body) พิมพ์แก้ตรงนี้ค่าจะถูกทิ้ง -->
+          <input type="text" id="approver-name" :value="form.approver" readonly
+            title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>
         <div class="form-group">
           <label for="approval-date">วันที่พิจารณา:</label>
@@ -136,7 +139,7 @@ export default {
   </form>
 </template>
 
-<style>
+<style scoped>
 .approval-fieldset {
   border: none;
 }
