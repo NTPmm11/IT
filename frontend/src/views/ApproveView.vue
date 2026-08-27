@@ -246,11 +246,18 @@ export default {
         </table>
       </template>
 
+       
+
       <!-- มีให้กดได้ก็ต่อเมื่อ CR ผ่านการอนุมัติแล้วเท่านั้น (ดู openPdfPreview() ในสคริปต์) -->
       <div class="ui-action-buttons" v-if="cr.status === 'approved'">
         <button type="button" class="btn btn-pdf" @click="openPdfPreview">
           <i class="fa-solid fa-file-pdf"></i> ดูตัวอย่าง PDF
         </button>
+         <button type="submit" class="btn btn-submit" :disabled="submitting || isSaved">
+          <i class="fa-solid fa-paper-plane"></i>
+          {{ submitting ? "กำลังส่ง..." : "ส่งคำขออนุมัติ (Submit CR)" }}
+        </button>
+  
       </div>
     </template>
 
