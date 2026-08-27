@@ -1,0 +1,155 @@
+/* ============================================
+   base.css — shared styles for every page
+   (reset, body background, buttons)
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #5a0000, #00075a);
+  min-height: 100vh;
+  padding: 30px 15px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ===== Nav ===== */
+.back-link {
+  display: inline-block;
+  margin-bottom: 15px;
+  color: #00075a;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #050505;
+  color: #eef3f3;
+}
+
+.btn-cancel:hover {
+  background: #949292;
+}
+
+.btn-draft {
+  background: #fff;
+  color: #00075a;
+  border: 1.5px solid #00075a;
+}
+
+.btn-draft:hover {
+  background: #f0f4ff;
+}
+
+.btn-pdf {
+  background: #5a0000;
+  color: #fff;
+}
+
+.btn-pdf:hover {
+  background: #7a1a1a;
+}
+
+.btn-submit {
+  background: #00075a;
+  color: #fff;
+}
+
+.btn-submit:hover {
+  background: #00112c;
+}
+
+/* Button row at the bottom of a form */
+.ui-action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 35px;
+  border-top: 2px dashed #525153;
+  padding-top: 20px;
+  width: 100%;
+}
+
+/* ===== Print (PDF button uses window.print) ===== */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    /* เดิม display:flex — .container เป็น flex item ค่า min-width:auto default
+       กันไม่ให้ shrink ต่ำกว่าความกว้างเนื้อหาจริง (950px) แม้ตั้ง max-width:100% ไว้แล้ว
+       เนื้อหาเลยล้นขอบกระดาษโดนตัดตอน print — เปลี่ยนเป็น block ตัดปัญหานี้ทั้งกระบวนตั้งแต่ต้น */
+    display: block;
+    background: #0c0c0c;
+    padding: 0;
+  }
+
+  .ui-action-buttons,
+  .btn-add-row,
+  .btn-delete-row,
+  .back-link,
+  .pagination,
+  .no-print {
+    display: none;
+  }
+
+  .container {
+    /* !important เพราะ form.css มี .container { width: 950px } ตายตัวมาทับ — ไม่ยอม
+       ให้ fixed width เดิมชนะบน print เด็ดขาด ต้องเท่าความกว้างหน้ากระดาษเท่านั้น */
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* ป้องกันข้อความยาวๆ (เช่น note ท้าย section-title) ดันความกว้างเกินหน้ากระดาษ */
+  .section-title {
+    flex-wrap: wrap;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .ui-action-buttons {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    justify-content: center;
+    width: 100%;
+  }
+}
