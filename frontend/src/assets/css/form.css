@@ -3,8 +3,8 @@
    ============================================ */
 
 .container {
-  background: #ffffffcb;
-  width: 1200px;
+  background: #d5d5d6e3;
+  width: 950px;
   padding: 60px;
   border-radius: 30px;
   box-shadow: 0 15px 35px rgba(65, 64, 64, 0.836);
@@ -37,7 +37,6 @@ input, textarea, select, button {
   font-size: 40px;
   font-weight: 800;
 }
-
 .header-section p {
   margin-top: 5px;
   color: #080808;
@@ -47,9 +46,9 @@ input, textarea, select, button {
 /* ===== Section title ===== */
 .section-title {
     background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #fafafa;
+  color: #faf8f8;
   padding: 10px 14px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   border-radius: 6px;
   margin: 25px 0 15px 0;
@@ -59,7 +58,7 @@ input, textarea, select, button {
 }
 .section-title2 {
     background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #fafafa;
+  color: #f7f7f7;
   padding: 10px 14px;
   font-size: 20px;
   font-weight: 700;
@@ -142,8 +141,22 @@ textarea {
   padding: 10px 20px;
   border: 1.5px solid #cdd1d6e1;
   border-radius: 8px;
-  font-size: 15px;
-  background-color: #e5e5e6dc;
+  font-size: 20px;
+  background-color: #ededee;
+  transition: all 0.3s;
+}
+
+input[type="text2"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 20px;
+  border: 1.5px solid #cdd1d6e1;
+  border-radius: 8px;
+  font-size: 10px;
+  background-color: #ededee;
   transition: all 0.3s;
 }
 
@@ -223,11 +236,12 @@ textarea:focus {
 
 .action-table .text-center {
   text-align: center;
+  font-size: 14px;
 }
 
 .btn-add-row {
   background: #000000;
-  color: #fffdfd;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
@@ -257,6 +271,7 @@ textarea:focus {
 .btn-submit:hover{
  background: #a9aaac;
 }
+
 
 
 /* ===== Responsive ===== */
@@ -324,3 +339,4 @@ textarea:focus {
 {
   margin-right: 26px;
 }
+
