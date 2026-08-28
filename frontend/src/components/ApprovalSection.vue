@@ -164,6 +164,7 @@ body {
   display: flex;
   justify-content: center;
 }
+
 input[type="text"], select {
   width: 100%;
   padding: 10px 14px;

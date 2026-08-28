@@ -400,7 +400,7 @@ export default {
 
       </div>
 
-     <div class="form-group" style="margin-top:28px;">
+     <div class="form-group" style="margin-top:20px;">
   <label>ระดับความสำคัญ (Priority):</label>
   <div class="options-group" style="display: flex; flex-wrap: wrap; gap: 10px;">
     <!-- แถวที่ 1: Low และ Medium -->
@@ -520,12 +520,12 @@ export default {
           <tbody>
             <tr v-for="(row, index) in rows" :key="row.uid">
               <td class="text-center">{{ index + 1 }}</td>
-              <td><input type2="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type2="date" v-model="row.startDate" required></td>
-              <td><input type2="time" v-model="row.start" required></td>
-              <td><input type2="date" v-model="row.endDate" required></td>
-              <td><input type2="time" v-model="row.end" required></td>
-              <td><input type2="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td><input type="date" v-model="row.startDate" required></td>
+              <td><input type="time" v-model="row.start" required></td>
+              <td><input type="date" v-model="row.endDate" required></td>
+              <td><input type="time" v-model="row.end" required></td>
+              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
                 <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
               </td>
@@ -559,12 +559,12 @@ export default {
         <tbody>
           <tr v-for="(row2, index) in rows2" :key="row2.uid">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type3="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
-            <td><input type3="date" v-model="row2.startDate" :required="!!row2.step"></td>
-            <td><input type3="time" v-model="row2.start" :required="!!row2.step"></td>
-            <td><input type3="date" v-model="row2.endDate" :required="!!row2.step"></td>
-            <td><input type3="time" v-model="row2.end" :required="!!row2.step"></td>
-            <td><input type3="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
+            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
+            <td><input type="date" v-model="row2.startDate" :required="!!row2.step"></td>
+            <td><input type="time" v-model="row2.start" :required="!!row2.step"></td>
+            <td><input type="date" v-model="row2.endDate" :required="!!row2.step"></td>
+            <td><input type="time" v-model="row2.end" :required="!!row2.step"></td>
+            <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
               <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
             </td>
