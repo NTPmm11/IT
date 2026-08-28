@@ -122,11 +122,11 @@ body {
   .btn-delete-row,
   .back-link,
   .pagination,
-  .no-print {
+  .no-print2 {
     display: none;
   }
 
-  .container {
+  .container2 {
     /* !important เพราะ form.css มี .container { width: 950px } ตายตัวมาทับ — ไม่ยอม
        ให้ fixed width เดิมชนะบน print เด็ดขาด ต้องเท่าความกว้างหน้ากระดาษเท่านั้น */
     width: 100% !important;
@@ -137,7 +137,7 @@ body {
   }
 
   /* ป้องกันข้อความยาวๆ (เช่น note ท้าย section-title) ดันความกว้างเกินหน้ากระดาษ */
-  .section-title {
+  .section-title2 {
     flex-wrap: wrap;
   }
 }
