@@ -48,7 +48,7 @@ input, textarea, select, button {
     background: linear-gradient(135deg, #5a0000, #00075a);
   color: #faf8f8;
   padding: 10px 14px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   border-radius: 6px;
   margin: 25px 0 15px 0;
@@ -60,7 +60,7 @@ input, textarea, select, button {
     background: linear-gradient(135deg, #5a0000, #00075a);
   color: #f7f7f7;
   padding: 10px 14px;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   border-radius: 6px;
   margin: 25px 0 15px 0;
@@ -141,24 +141,12 @@ textarea {
   padding: 10px 20px;
   border: 1.5px solid #cdd1d6e1;
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 14px;
   background-color: #ededee;
   transition: all 0.3s;
 }
 
-input[type="text2"],
-input[type="date"],
-input[type="time"],
-select,
-textarea {
-  width: 100%;
-  padding: 10px 20px;
-  border: 1.5px solid #cdd1d6e1;
-  border-radius: 8px;
-  font-size: 10px;
-  background-color: #ededee;
-  transition: all 0.3s;
-}
+
 
 
 
