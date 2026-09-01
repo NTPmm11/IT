@@ -156,7 +156,7 @@ body {
   background: linear-gradient(135deg, #5a0000, #00075a);
   color: #fafafa;
   padding: 10px 14px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   border-radius: 6px;
   margin: 25px 0 15px 0;
@@ -168,7 +168,7 @@ body {
 input[type="text"], select {
   width: 100%;
   padding: 10px 14px;
-  font-size: 14px;
+  font-size: 20px;
   border: 1px solid #CBD5E1;
   border-radius: 6px;
   background-color: #FFFFFF;
@@ -176,12 +176,11 @@ input[type="text"], select {
   transition: all 0.2s ease-in-out;
   outline: none;
   flex: center;
-  font-size: 20px;
 }
 label {
   display: block;
   margin-bottom: 15px; 
-  font-size: 26px;  /* ปรับเพิ่ม/ลดระยะห่างตรงนี้ได้ตามต้องการ เช่น 8px หรือ 12px */
+  font-size: 20px;  /* ปรับเพิ่ม/ลดระยะห่างตรงนี้ได้ตามต้องการ เช่น 8px หรือ 12px */
 }
 
 input[type="text"]:focus, textarea:focus, select:focus {
@@ -192,14 +191,40 @@ input[type="text"]:focus, textarea:focus, select:focus {
 .approval-fieldset {
   border: none;
 }
+/* เอาเส้นขอบรอบกล่องส่วนอนุมัติออก */
 
 .approval-fieldset:disabled input,
 .approval-fieldset:disabled select,
 .approval-fieldset:disabled textarea {
-  background-color: #eaedf2;
+  background-color: #bfc0c2;
   color: #6b7280;
   cursor: not-allowed;
 }
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 20px;
+  border: 1.5px solid #767477e1;
+  border-radius: 8px;
+  font-size: 18px;
+  background-color: #fbfbffa9;
+  transition: all 0.3s;
+  flex-direction: column;
+  
+}
+input[type="date"],
+input[type="time"],
+select {
+  width: 200px;
+  padding: 10px 20px;
+  border: 1.5px solid #767477e1;
+  border-radius: 8px;
+  font-size: 20px;
+  background-color: #fbfbffa9;
+  transition: all 0.3s;
+}
+
 /* ============================================
    base.css — shared styles for every page
    (reset, body background, buttons)
@@ -252,6 +277,11 @@ body {
   margin-bottom: 15px;
   font-size: 26px;
 }
+.options-group{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
   .approval-fieldset {
     border: 10px solid #ccc;
   }
@@ -264,7 +294,7 @@ body {
 
 .btn-cancel {
   background: #050505;
-  color: #eef3f3;
+  color: #b6b5c2;
 }
 
 .btn-cancel:hover {
@@ -279,15 +309,6 @@ body {
 
 .btn-draft:hover {
   background: #f0f4ff;
-}
-
-.btn-pdf {
-  background: #5a0000;
-  color: #fff;
-}
-
-.btn-pdf:hover {
-  background: #7a1a1a;
 }
 
 .btn-submit {

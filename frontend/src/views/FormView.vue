@@ -507,11 +507,11 @@ export default {
         <table class="action-table">
           <thead>
     <tr>
-      <th style="width: 40px;">ลำดับ</th>
+      <th style="width: 30px;">ลำดับ</th>
       <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">เวลาเริ่ม</th>
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
+      <th style="width: 50px;">วัน/เดือน/ปี</th>
+      <th style="width: 20px;">เวลาเริ่ม</th>
+      <th style="width: 50px;">วัน/เดือน/ปี</th>
       <th style="width: 85px;">สิ้นสุด</th>
       <th>หมายเหตุ</th>
       <th style="width: 50px;">ลบ</th>

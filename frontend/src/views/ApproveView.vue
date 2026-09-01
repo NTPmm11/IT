@@ -301,7 +301,7 @@ export default {
 <style scoped>
 @import '../assets/css/form.css';
 .no-print2 {
-  background-color: #ffffffc9;
+  background-color: #d5d5d6e3;
   padding: 20px;
   border-radius: 8px;
   margin-top: 20px;
@@ -309,24 +309,14 @@ export default {
 .section-title4 {
   background: linear-gradient(135deg, #5a0000, #00075a);
   color: #fafafa;
-  padding: 10px 14px;
+  padding: 5px 10px;
   font-size: 18px;
   font-weight: 700;
   border-radius: 6px;
-  margin: 25px 0 15px 0;
+  margin: 10px 0 15px 0;
   border-left: 5px solid #000000;
   display: flex;
   justify-content: space-between;
-}
-.pdf-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
 }
 
 .pdf-modal {
@@ -344,7 +334,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #152a52;
+  background: #4e4f52;
   color: #fff;
   font-weight: 600;
 }
@@ -356,6 +346,7 @@ export default {
   font-size: 18px;
   cursor: pointer;
 }
+
 
 /* flex:1 = กินพื้นที่ที่เหลือทั้งหมดระหว่าง header กับ footer */
 .pdf-modal-frame {
