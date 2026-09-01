@@ -270,6 +270,14 @@ textarea:focus {
 .btn-delete-row:hover {
   background: #7a1a1a;
 }
+.btn-pdf {
+  background: #5a0000;
+  color: #fff;
+}
+
+.btn-pdf:hover {
+  background: #7a1a1a;
+}
 
 .btn-submit:hover{
  background: #a9aaac;

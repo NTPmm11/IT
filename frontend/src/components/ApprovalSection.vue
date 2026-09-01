@@ -168,14 +168,14 @@ body {
 input[type="text"], select {
   width: 100%;
   padding: 10px 14px;
-  font-size: 20px;
-  border: 1px solid #CBD5E1;
-  border-radius: 6px;
-  background-color: #FFFFFF;
-  color: #1E293B;
-  transition: all 0.2s ease-in-out;
-  outline: none;
-  flex: center;
+  font-size: 16px;
+border: 1px solid #CBD5E1;
+border-radius: 6px;
+background-color: #FFFFFF;
+color: #1E293B;
+transition: all 0.2s ease-in-out;
+outline: none;
+flex: center;
 }
 label {
   display: block;
@@ -224,7 +224,6 @@ select {
   background-color: #fbfbffa9;
   transition: all 0.3s;
 }
-
 /* ============================================
    base.css — shared styles for every page
    (reset, body background, buttons)
@@ -283,9 +282,13 @@ body {
   gap: 18px;
 }
   .approval-fieldset {
-    border: 10px solid #ccc;
+    border: 10px solid #c0c0c0;
   }
-
+.approval-date {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
 
 .btn:disabled {
   opacity: 0.6;
