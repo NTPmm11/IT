@@ -506,15 +506,15 @@ export default {
       <div class="table-wrapper">
         <table class="action-table">
           <thead>
-    <tr>
-      <th style="width: 30px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 50px;">วัน/เดือน/ปี</th>
-      <th style="width: 20px;">เวลาเริ่ม</th>
-      <th style="width: 50px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">สิ้นสุด</th>
-      <th>หมายเหตุ</th>
-      <th style="width: 50px;">ลบ</th>
+      <tr>
+      <th style="width: 40px;">ลำดับ</th>
+      <th style="width: 320px;">ขั้นตอนงาน</th> <!-- เพิ่มความกว้างให้ยาวขึ้นกว่าเดิมชัดเจน -->
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">เวลาเริ่ม</th>
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">สิ้นสุด</th>
+      <th style="width: 140px;">หมายเหตุ</th>
+      <th style="width: 45px;">ลบ</th>
     </tr>
   </thead>
           <tbody>
@@ -545,15 +545,15 @@ export default {
 
       <table class="action-table">
         <thead>
-          <tr>
+         <tr>
       <th style="width: 40px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">เวลาเริ่ม</th>
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">สิ้นสุด</th>
-      <th>หมายเหตุ</th>
-      <th style="width: 50px;">ลบ</th>
+      <th style="width: 320px;">ขั้นตอนงาน</th> <!-- เพิ่มความกว้างให้ยาวขึ้นกว่าเดิมชัดเจน -->
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">เวลาเริ่ม</th>
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">สิ้นสุด</th>
+      <th style="width: 140px;">หมายเหตุ</th>
+      <th style="width: 45px;">ลบ</th>
     </tr>
   </thead>
         <tbody>

@@ -303,20 +303,29 @@ export default {
 .no-print2 {
   background-color: #d5d5d6e3;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 30px;
   margin-top: 20px;
 }
 .section-title4 {
   background: linear-gradient(135deg, #5a0000, #00075a);
   color: #fafafa;
-  padding: 5px 10px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   border-radius: 6px;
   margin: 10px 0 15px 0;
   border-left: 5px solid #000000;
   display: flex;
   justify-content: space-between;
+}
+.pdf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 }
 
 .pdf-modal {

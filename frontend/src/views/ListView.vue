@@ -372,6 +372,7 @@ p {
   margin-top: 4px;
   color: #2d3036;
   font-size: 16px;
+  justify-content: center;
 }
 
 .status-draft       { background: #e5e7eb; color: #4b5563; }

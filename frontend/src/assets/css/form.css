@@ -3,7 +3,7 @@
    ============================================ */
 
 .container {
-  background: #d5d5d6e3;
+  background: #fcfcffbd;
   width: 950px;
   padding: 60px;
   border-radius: 30px;
@@ -121,7 +121,6 @@ input, textarea, select, button {
 
 .form-group.align-top label {
   margin-top: 8px;
-  font-size: 20px;
 }
 
 label {
@@ -138,12 +137,23 @@ input[type="time"],
 select,
 textarea {
   width: 100%;
-  padding: 10px 20px;
+  padding: 5px 10px;
   border: 1.5px solid #cdd1d6e1;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 18px;
   background-color: #ededee;
   transition: all 0.3s;
+}
+.action-plan-table th, 
+.action-plan-table td {
+  padding: 8px;
+  vertical-align: middle;
+}
+
+/* ป้องกันไม่ให้ข้อความในช่องป้อนข้อมูลล้นกรอบ */
+.action-plan-table input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 
@@ -212,14 +222,14 @@ textarea:focus {
 .action-table td {
   border: 1px solid #d1d5db;
   padding: 5px;
-  font-size: 16px;
-  text-align: left;
+  font-size: 14px;
+  text-align: center;
 }
 
 .action-table th {
   background: #e5e7eb;
   color: #000000;
-  text-align: center;
+  text-align: left;
 }
 
 .action-table .text-center {
@@ -232,10 +242,15 @@ textarea:focus {
   color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 20px;
+  padding: 8px 5px;
+  font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+}
+#cr-subject {
+  width: 50% !important;        /* ปรับความกว้างให้เหลือ 50% */
+  padding: 4px 8px !important;  /* ลดระยะห่างภายในให้ช่องดูเล็กลง */
+  font-size: 14px !important;   /* ลดขนาดตัวอักษรให้เล็กลง */
 }
 
 .btn-add-row:hover {
@@ -247,8 +262,8 @@ textarea:focus {
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 20px;
+  padding: 5px 10px;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -259,7 +274,6 @@ textarea:focus {
 .btn-submit:hover{
  background: #a9aaac;
 }
-
 
 
 /* ===== Responsive ===== */
