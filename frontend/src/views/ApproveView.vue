@@ -253,11 +253,6 @@ export default {
         <button type="button" class="btn btn-pdf" @click="openPdfPreview">
           <i class="fa-solid fa-file-pdf"></i> ดูตัวอย่าง PDF
         </button>
-         <button type="submit" class="btn btn-submit" :disabled="submitting || isSaved">
-          <i class="fa-solid fa-paper-plane"></i>
-          {{ submitting ? "กำลังส่ง..." : "ส่งคำขออนุมัติ (Submit CR)" }}
-        </button>
-  
       </div>
     </template>
 
@@ -273,7 +268,7 @@ export default {
         </div>
         <iframe :src="pdfPreviewUrl" class="pdf-modal-frame" title="ตัวอย่าง PDF"></iframe>
         <div class="pdf-modal-footer">
-          <button type="button" class="btn btn-cancel2" @click="closePdfPreview">ปิด</button>
+          <button type="button" class="btn btn-cancel-maroon" @click="closePdfPreview">ปิด</button>
           <button type="button" class="btn btn-pdf" @click="downloadPdf">
             <i class="fa-solid fa-download"></i> ดาวน์โหลด PDF
           </button>
@@ -281,15 +276,12 @@ export default {
       </div>
     </div>
 
-    <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
-         ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
-
-      
-   
   </div>
   <div>
-      <div class="no-print2">
-      
+      <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
+           ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF
+           approval-box = กล่องพื้นเทาครอบส่วนอนุมัติ (แค่สไตล์ ไม่เกี่ยวกับ print) -->
+      <div class="no-print approval-box">
       <ApprovalSection v-if="crId" :crId="crId" @approved="onApproved" />
       <p v-else style="text-align:center; color:#6b7280;">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
@@ -299,23 +291,12 @@ export default {
 </template>
 
 <style scoped>
-@import '../assets/css/form.css';
-.no-print2 {
+@import '../assets/css/approve.css';
+.approval-box {
   background-color: #d5d5d6e3;
   padding: 20px;
   border-radius: 30px;
   margin-top: 20px;
-}
-.section-title4 {
-  background: linear-gradient(135deg, #5a0000, #00075a);
-  color: #fafafa;
-  font-size: 16px;
-  font-weight: 700;
-  border-radius: 6px;
-  margin: 10px 0 15px 0;
-  border-left: 5px solid #000000;
-  display: flex;
-  justify-content: space-between;
 }
 .pdf-modal-backdrop {
   position: fixed;

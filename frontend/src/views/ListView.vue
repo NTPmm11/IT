@@ -156,7 +156,7 @@ export default {
 </button>
 
 
-    <div class="section-title2">
+    <div class="section-title">
       <div>ค้นหารายการ</div>
     </div>
 
@@ -187,7 +187,7 @@ export default {
       </div>
     </form>
 
-   <div class="section-title2">
+   <div class="section-title">
   <div>{{ scopeLabel }} ({{ totalRows }})</div>
 </div>
 
@@ -293,7 +293,7 @@ export default {
 </template>
 
 <style scoped>
-@import '../assets/css/form.css';
+@import '../assets/css/list.css';
 
 .container {
   background: #ffffffb4;
@@ -303,7 +303,9 @@ export default {
   box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
 }
 
-.section-title2 {
+/* override .section-title ของ list.css เฉพาะหน้านี้ (ใหญ่กว่า/ขาวกว่า) — scoped กันชนหน้าอื่นให้เองแล้ว
+   ไม่ต้องตั้งชื่อแยกอย่าง section-title2 */
+.section-title {
    background: linear-gradient(135deg, #5a0000, #00075a);
   color: #ffffff;
   padding: 10px 14px;

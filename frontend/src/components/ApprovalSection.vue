@@ -88,7 +88,7 @@ export default {
   <form @submit.prevent="submitApproval">  
 
     <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
-    <div class="section-title4">
+    <div class="approval-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
       <span class="note" v-if="canApprove">*เฉพาะสิทธิ์ Approver / PM</span>
       <span class="note" v-else>*เฉพาะสิทธิ์ Approver / PM — คุณดูได้อย่างเดียว</span>
@@ -97,12 +97,12 @@ export default {
     <!-- fieldset disabled = ปิดทุก input/radio ข้างในทีเดียว -->
     <fieldset :disabled="!canApprove" class="approval-fieldset">
 
-      <div class="form-group4">
+      <div class="approval-group">
         <label for="approval-comment">ความเห็นของผู้ประเมิน:</label>
         <input type="text" id="approval-comment" v-model="form.comment" placeholder="บันทึกข้อเสนอแนะเพิ่มเติม....">
       </div>
 
-      <div class="form-group4">
+      <div class="approval-group">
         <label>ผลการพิจารณา:</label>
         <div class="options-group">
           <label class="option-item"><input type="radio" value="approved" v-model="form.result"> อนุมัติ (Approved)</label>
@@ -112,7 +112,7 @@ export default {
       </div>
 
       <div class="grid-2col" style="margin-top: 10px;">
-        <div class="form-group4">
+        <div class="approval-group">
           <label for="approver-name">ผู้อนุมัติ (Approver):</label>
           <!-- อ่านอย่างเดียว: backend บันทึก approver_id จาก user ที่ login เสมอ
                (routes/cr.js ไม่รับชื่อผู้อนุมัติจาก body) พิมพ์แก้ตรงนี้ค่าจะถูกทิ้ง -->
@@ -120,7 +120,7 @@ export default {
             title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>
         
-        <div class="form-group4">
+        <div class="approval-group">
           <label for="approval-date">วันที่พิจารณา:</label>
           <input type="date" id="approval-date" v-model="form.date">
         </div>
@@ -142,17 +142,7 @@ export default {
 </template>
 
 <style scoped>
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #5a0000, #00075a);
-  min-height: 100vh;
-  padding: 30px 15px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.section-title4 {
+.approval-title {
   background: linear-gradient(135deg, #5a0000, #00075a);
   color: #fafafa;
   padding: 10px 14px;
@@ -165,41 +155,12 @@ body {
   justify-content: center;
 }
 
-input[type="text"], select {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 16px;
-border: 1px solid #CBD5E1;
-border-radius: 6px;
-background-color: #FFFFFF;
-color: #1E293B;
-transition: all 0.2s ease-in-out;
-outline: none;
-flex: center;
-}
 label {
   display: block;
-  margin-bottom: 15px; 
-  font-size: 20px;  /* ปรับเพิ่ม/ลดระยะห่างตรงนี้ได้ตามต้องการ เช่น 8px หรือ 12px */
+  margin-bottom: 15px;
+  font-size: 20px;
 }
 
-input[type="text"]:focus, textarea:focus, select:focus {
-  border-color: #465f86;
-  box-shadow: 0 0 0 3px rgba(30, 30, 31, 0.15);
-
-}
-.approval-fieldset {
-  border: none;
-}
-/* เอาเส้นขอบรอบกล่องส่วนอนุมัติออก */
-
-.approval-fieldset:disabled input,
-.approval-fieldset:disabled select,
-.approval-fieldset:disabled textarea {
-  background-color: #bfc0c2;
-  color: #6b7280;
-  cursor: not-allowed;
-}
 input[type="text"],
 select,
 textarea {
@@ -209,10 +170,10 @@ textarea {
   border-radius: 8px;
   font-size: 18px;
   background-color: #fbfbffa9;
+  outline: none;
   transition: all 0.3s;
-  flex-direction: column;
-  
 }
+
 input[type="date"],
 input[type="time"],
 select {
@@ -224,168 +185,34 @@ select {
   background-color: #fbfbffa9;
   transition: all 0.3s;
 }
-/* ============================================
-   base.css — shared styles for every page
-   (reset, body background, buttons)
-   ============================================ */
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #465f86;
+  box-shadow: 0 0 0 3px rgba(30, 30, 31, 0.15);
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #5a0000, #00075a);
-  min-height: 100vh;
-  padding: 30px 15px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* ===== Nav ===== */
-.back-link {
-  display: inline-block;
-  margin-bottom: 15px;
-  color: #00075a;
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
-/* ===== Buttons ===== */
-.btn {
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-size: 14.5px;
-  font-weight: 600;
-  cursor: pointer;
+.approval-fieldset {
   border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  transition: all 0.2s;
 }
-.form-group4 {
+
+.approval-fieldset:disabled input,
+.approval-fieldset:disabled select,
+.approval-fieldset:disabled textarea {
+  background-color: #bfc0c2;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.approval-group {
   margin-bottom: 15px;
   font-size: 26px;
 }
-.options-group{
+
+.options-group {
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
 }
-  .approval-fieldset {
-    border: 10px solid #c0c0c0;
-  }
-.approval-date {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-cancel {
-  background: #050505;
-  color: #b6b5c2;
-}
-
-.btn-cancel:hover {
-  background: #949292;
-}
-
-.btn-draft {
-  background: #fff;
-  color: #00075a;
-  border: 1.5px solid #00075a;
-}
-
-.btn-draft:hover {
-  background: #f0f4ff;
-}
-
-.btn-submit {
-  background: #00075a;
-  color: #fff;
-}
-
-.btn-submit:hover {
-  background: #00112c;
-}
-
-/* Button row at the bottom of a form */
-.ui-action-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-top: 35px;
-  border-top: 2px dashed #525153;
-  padding-top: 20px;
-  width: 100%;
-}
-
-/* ===== Print (PDF button uses window.print) ===== */
-@page {
-  size: A4;
-  margin: 12mm;
-}
-
-@media print {
-  body {
-    /* เดิม display:flex — .container เป็น flex item ค่า min-width:auto default
-       กันไม่ให้ shrink ต่ำกว่าความกว้างเนื้อหาจริง (950px) แม้ตั้ง max-width:100% ไว้แล้ว
-       เนื้อหาเลยล้นขอบกระดาษโดนตัดตอน print — เปลี่ยนเป็น block ตัดปัญหานี้ทั้งกระบวนตั้งแต่ต้น */
-    display: block;
-    background: #0c0c0c;
-    padding: 0;
-  }
-
-  .ui-action-buttons,
-  .btn-add-row,
-  .btn-delete-row,
-  .back-link,
-  .pagination,
-  .no-print {
-    display: none;
-  }
-
-  .container {
-    /* !important เพราะ form.css มี .container { width: 950px } ตายตัวมาทับ — ไม่ยอม
-       ให้ fixed width เดิมชนะบน print เด็ดขาด ต้องเท่าความกว้างหน้ากระดาษเท่านั้น */
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  /* ป้องกันข้อความยาวๆ (เช่น note ท้าย section-title) ดันความกว้างเกินหน้ากระดาษ */
-  .section-title {
-    flex-wrap: wrap;
-  }
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-  .ui-action-buttons {
-    flex-direction: column-reverse;
-  }
-
-  .btn {
-    justify-content: center;
-    width: 100%;
-  }
-}
-
 </style>
