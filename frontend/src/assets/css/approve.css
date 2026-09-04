@@ -1,6 +1,9 @@
 /* ============================================
-   form.css — form.html and approve.html
-   ============================================ */
+   approve.css — เฉพาะ ApproveView.vue
+   ============================================
+   สำเนาเริ่มต้นจาก form.css (ก่อนหน้านี้ ApproveView/ListView ใช้ไฟล์เดียวกันกับ FormView
+   แก้หน้าไหนหน้าหนึ่งเลยกระทบอีกสองหน้าโดยไม่ตั้งใจ) — ตอนนี้แยกเป็นไฟล์ของตัวเอง
+   แก้ที่นี่กระทบเฉพาะหน้า Approve เท่านั้น */
 
 .container {
   background: #fcfcffbd;
@@ -131,7 +134,7 @@ textarea {
   background-color: #ededee;
   transition: all 0.3s;
 }
-.action-plan-table th, 
+.action-plan-table th,
 .action-plan-table td {
   padding: 8px;
   vertical-align: middle;
@@ -142,11 +145,6 @@ textarea {
   width: 100%;
   box-sizing: border-box;
 }
-
-
-
-
-
 
 input[readonly] {
   background-color: #dfeafc9a;
@@ -332,8 +330,7 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
-.btn-submit .fa-solid 
+.btn-submit .fa-solid
 {
   margin-right: 26px;
 }
-

@@ -85,10 +85,10 @@ export default {
 </script>
 
 <template>
-  <form @submit.prevent="submitApproval">
+  <form @submit.prevent="submitApproval">  
 
     <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
-    <div class="section-title">
+    <div class="approval-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
       <span class="note" v-if="canApprove">*เฉพาะสิทธิ์ Approver / PM</span>
       <span class="note" v-else>*เฉพาะสิทธิ์ Approver / PM — คุณดูได้อย่างเดียว</span>
@@ -97,12 +97,12 @@ export default {
     <!-- fieldset disabled = ปิดทุก input/radio ข้างในทีเดียว -->
     <fieldset :disabled="!canApprove" class="approval-fieldset">
 
-      <div class="form-group">
+      <div class="approval-group">
         <label for="approval-comment">ความเห็นของผู้ประเมิน:</label>
         <input type="text" id="approval-comment" v-model="form.comment" placeholder="บันทึกข้อเสนอแนะเพิ่มเติม....">
       </div>
 
-      <div class="form-group">
+      <div class="approval-group">
         <label>ผลการพิจารณา:</label>
         <div class="options-group">
           <label class="option-item"><input type="radio" value="approved" v-model="form.result"> อนุมัติ (Approved)</label>
@@ -112,18 +112,20 @@ export default {
       </div>
 
       <div class="grid-2col" style="margin-top: 10px;">
-        <div class="form-group">
+        <div class="approval-group">
           <label for="approver-name">ผู้อนุมัติ (Approver):</label>
           <!-- อ่านอย่างเดียว: backend บันทึก approver_id จาก user ที่ login เสมอ
                (routes/cr.js ไม่รับชื่อผู้อนุมัติจาก body) พิมพ์แก้ตรงนี้ค่าจะถูกทิ้ง -->
           <input type="text" id="approver-name" :value="form.approver" readonly
             title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>
-        <div class="form-group">
+        
+        <div class="approval-group">
           <label for="approval-date">วันที่พิจารณา:</label>
           <input type="date" id="approval-date" v-model="form.date">
         </div>
       </div>
+      
 
       <div class="ui-action-buttons" v-if="canApprove">
         <button type="submit" class="btn btn-submit" :disabled="submitting">
@@ -140,6 +142,57 @@ export default {
 </template>
 
 <style scoped>
+.approval-title {
+  background: linear-gradient(135deg, #5a0000, #00075a);
+  color: #fafafa;
+  padding: 10px 14px;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: 6px;
+  margin: 25px 0 15px 0;
+  border-left: 5px solid #000000;
+  display: flex;
+  justify-content: center;
+}
+
+label {
+  display: block;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 20px;
+  border: 1.5px solid #767477e1;
+  border-radius: 8px;
+  font-size: 18px;
+  background-color: #fbfbffa9;
+  outline: none;
+  transition: all 0.3s;
+}
+
+input[type="date"],
+input[type="time"],
+select {
+  width: 200px;
+  padding: 10px 20px;
+  border: 1.5px solid #767477e1;
+  border-radius: 8px;
+  font-size: 20px;
+  background-color: #fbfbffa9;
+  transition: all 0.3s;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #465f86;
+  box-shadow: 0 0 0 3px rgba(30, 30, 31, 0.15);
+}
+
 .approval-fieldset {
   border: none;
 }
@@ -147,8 +200,19 @@ export default {
 .approval-fieldset:disabled input,
 .approval-fieldset:disabled select,
 .approval-fieldset:disabled textarea {
-  background-color: #eaedf2;
+  background-color: #bfc0c2;
   color: #6b7280;
   cursor: not-allowed;
+}
+
+.approval-group {
+  margin-bottom: 15px;
+  font-size: 26px;
+}
+
+.options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
 }
 </style>

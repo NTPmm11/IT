@@ -1,6 +1,10 @@
 /* ============================================
-   form.css — form.html and approve.html
-   ============================================ */
+   list.css — เฉพาะ ListView.vue
+   ============================================
+   สำเนาเริ่มต้นจาก form.css (ก่อนหน้านี้ ApproveView/ListView ใช้ไฟล์เดียวกันกับ FormView
+   แก้หน้าไหนหน้าหนึ่งเลยกระทบอีกสองหน้าโดยไม่ตั้งใจ) — ตอนนี้แยกเป็นไฟล์ของตัวเอง
+   แก้ที่นี่กระทบเฉพาะหน้า List เท่านั้น (rule ส่วนที่ ListView.vue override เองอยู่แล้ว
+   เช่น .container, .section-title ยังคงชนะ rule ในไฟล์นี้เหมือนเดิม เพราะเขียนอยู่ทีหลังใน scoped style) */
 
 .container {
   background: #fcfcffbd;
@@ -131,7 +135,7 @@ textarea {
   background-color: #ededee;
   transition: all 0.3s;
 }
-.action-plan-table th, 
+.action-plan-table th,
 .action-plan-table td {
   padding: 8px;
   vertical-align: middle;
@@ -142,11 +146,6 @@ textarea {
   width: 100%;
   box-sizing: border-box;
 }
-
-
-
-
-
 
 input[readonly] {
   background-color: #dfeafc9a;
@@ -316,15 +315,6 @@ textarea:focus {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }
-.btn-cancel-maroon {
-  background-color: #3f0110;
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(43, 1, 11, 0.678);
-  transform: translateY(-1px);
-}
-.btn-cancel-maroon:hover{
- background: #a9aaac;
-}
 .btn-submit {
   background-color: #030249;
   color: #ffffff;
@@ -332,8 +322,7 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
-.btn-submit .fa-solid 
+.btn-submit .fa-solid
 {
   margin-right: 26px;
 }
-

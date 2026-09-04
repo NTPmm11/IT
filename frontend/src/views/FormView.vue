@@ -7,7 +7,7 @@
 //
 // ภาพรวมการทำงาน (ของเดิมที่ยังใช้อยู่):
 // 1. ทุกช่องกรอกผูกกับตัวแปรใน form ผ่าน v-model
-// 2. ตาราง action plan เก็บเป็น array ชื่อ rows แล้วให้ v-for วาดแถวตามข้อมูล
+// 2. ตาราง action plan / rollback plan เก็บเป็น array ชื่อ planRows / rollbackRows แล้วให้ v-for วาดแถวตามข้อมูล
 //    - เพิ่มแถว = push เข้า array / ลบแถว = splice ออก -> Vue วาดจอให้เอง
 //
 // ของใหม่ที่ LAB นี้ต้องทำ:
@@ -63,11 +63,11 @@ export default {
         deployDate: ""      // เป้าหมาย deploy
       },
 
-      // ตาราง action plan — 1 object ใน array = 1 แถวในตาราง
+      // ตาราง action plan / rollback plan — 1 object ใน array = 1 แถวในตาราง
       // startDate/endDate แยกกันคนละช่อง (ของเดิมใช้ชื่อ Date ซ้ำกัน 2 ช่อง เลยเผลอผูกพร้อมกัน)
       // uid = กุญแจถาวรประจำแถว ใช้เป็น :key แทน index (ดู makeRow)
-      rows: [makeRow()],
-      rows2: [makeRow()],
+      planRows: [makeRow()],
+      rollbackRows: [makeRow()],
 
       // ตัวเลือก dropdown ระบบ — LAB 6 จะโหลดจาก API มาใส่ตัวนี้
       // (เดิม form.html วาดด้วย v-for="s in systems" รอไว้แล้ว)
@@ -150,28 +150,29 @@ export default {
       }
     },
 
-    // ปุ่ม "+ เพิ่มขั้นตอนงาน" (@click="addRow")
-    addRow() {
-      this.rows.push(makeRow());
+    // ปุ่ม "+ เพิ่มขั้นตอนงาน" ของ Action Plan (@click="addPlanRow")
+    addPlanRow() {
+      this.planRows.push(makeRow());
     },
 
-    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow(index)")
-    deleteRow(index) {
-      if (this.rows.length > 1) {
-        this.rows.splice(index, 1);
+    // ปุ่ม "ลบ" ท้ายแถว Action Plan (@click="deletePlanRow(index)")
+    deletePlanRow(index) {
+      if (this.planRows.length > 1) {
+        this.planRows.splice(index, 1);
       } else {
         alert("ต้องมีแผนดำเนินงานอย่างน้อย 1 ขั้นตอน");
       }
     },
 
-    addRow2() {
-      this.rows2.push(makeRow());
+    // ปุ่ม "+ เพิ่มขั้นตอนงาน" ของ Roll Back Plan (@click="addRollbackRow")
+    addRollbackRow() {
+      this.rollbackRows.push(makeRow());
     },
 
-    // ปุ่ม "ลบ" ท้ายแถว (@click="deleteRow2(index)")
-    deleteRow2(index) {
-      if (this.rows2.length > 1) {
-        this.rows2.splice(index, 1);
+    // ปุ่ม "ลบ" ท้ายแถว Roll Back Plan (@click="deleteRollbackRow(index)")
+    deleteRollbackRow(index) {
+      if (this.rollbackRows.length > 1) {
+        this.rollbackRows.splice(index, 1);
       } else {
         alert("ต้องมีแผนดำเนินงานอย่างน้อย 1 ขั้นตอน");
       }
@@ -215,7 +216,7 @@ export default {
       return { step: row.step, start, end, owner: row.owner, note: row.note };
     },
 
-    // ตารางแผนเริ่มด้วยแถวเปล่า 1 แถวเสมอ และ deleteRow ไม่ยอมให้ลบแถวสุดท้าย
+    // ตารางแผนเริ่มด้วยแถวเปล่า 1 แถวเสมอ และ deletePlanRow/deleteRollbackRow ไม่ยอมให้ลบแถวสุดท้าย
     // ส่งดิบๆ = ทุก CR ได้แถวว่างติดลง cr_action_plans / cr_rollback_plans
     // เลยกรองแถวที่ไม่มีอะไรกรอกเลยทิ้งก่อนส่ง (แถวที่กรอกบางช่องยังส่งไป ให้ backend ตอบว่าขาดอะไร)
     planRowsToSend(rows) {
@@ -243,8 +244,8 @@ export default {
         duration: this.form.duration,
         deployDate: this.form.deployDate,
         changeTypes: this.form.changeTypes,
-        plan: this.planRowsToSend(this.rows),
-        rollbackPlan: this.planRowsToSend(this.rows2),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
+        plan: this.planRowsToSend(this.planRows),
+        rollbackPlan: this.planRowsToSend(this.rollbackRows),   // "แผนการกู้คืน" — backend เก็บลง cr_rollback_plans (คู่กับ cr_action_plans)
         status
       };
     },
@@ -400,18 +401,29 @@ export default {
 
       </div>
 
-      <div class="form-group" style="margin-top: 10px;">
-        <label>ระดับความสำคัญ (Priority):</label>
-        <div class="options-group">
-          <label class="option-item"><input type="radio" value="Low" v-model="form.priority"> Low
-            (ไม่กระทบงานหลัก)</label>
-          <label class="option-item"><input type="radio" value="Medium" v-model="form.priority"> Medium
-            (มีระบบสำรอง)</label>
-          <label class="option-item"><input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)</label>
-          <label class="option-item"><input type="radio" value="Critical" v-model="form.priority"> Critical
-            (ระบบหยุดทำงาน)</label>
-        </div>
-      </div>
+     <div class="form-group" style="margin-top:20px;">
+  <label>ระดับความสำคัญ (Priority):</label>
+  <div class="options-group" style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <!-- แถวที่ 1: Low และ Medium -->
+    <div style="display: flex; gap: 15px; width: 100%;">
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Low" v-model="form.priority"> Low (ไม่กระทบงานหลัก)
+      </label>
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Medium" v-model="form.priority"> Medium (มีระบบสำรอง)
+      </label>
+    </div>
+    <!-- แถวที่ 2: High และ Critical -->
+    <div style="display: flex; gap: 20px; width: 100%;">
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="High" v-model="form.priority"> High (เร่งด่วน)
+      </label>
+      <label class="option-item" style="flex: 1;">
+        <input type="radio" value="Critical" v-model="form.priority"> Critical (ระบบหยุดทำงาน)
+      </label>
+    </div>
+  </div>
+</div>
 
       <!-- [ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
       <div class="section-title">
@@ -495,78 +507,78 @@ export default {
       <div class="table-wrapper">
         <table class="action-table">
           <thead>
-    <tr>
+      <tr>
       <th style="width: 40px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">เวลาเริ่ม</th>
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">สิ้นสุด</th>
-      <th>หมายเหตุ</th>
-      <th style="width: 50px;">ลบ</th>
+      <th style="width: 320px;">ขั้นตอนงาน</th> <!-- เพิ่มความกว้างให้ยาวขึ้นกว่าเดิมชัดเจน -->
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">เวลาเริ่ม</th>
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">สิ้นสุด</th>
+      <th style="width: 140px;">หมายเหตุ</th>
+      <th style="width: 45px;">ลบ</th>
     </tr>
   </thead>
           <tbody>
-            <tr v-for="(row, index) in rows" :key="row.uid">
+            <tr v-for="(planRow, index) in planRows" :key="planRow.uid">
               <td class="text-center">{{ index + 1 }}</td>
-              <td><input type="text" v-model="row.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="row.startDate" required></td>
-              <td><input type="time" v-model="row.start" required></td>
-              <td><input type="date" v-model="row.endDate" required></td>
-              <td><input type="time" v-model="row.end" required></td>
-              <td><input type="text" v-model="row.note" placeholder="หมายเหตุ"></td>
+              <td><input type="text" v-model="planRow.step" placeholder="ระบุขั้นตอนงาน" required></td>
+              <td><input type="date" v-model="planRow.startDate" required></td>
+              <td><input type="time" v-model="planRow.start" required></td>
+              <td><input type="date" v-model="planRow.endDate" required></td>
+              <td><input type="time" v-model="planRow.end" required></td>
+              <td><input type="text" v-model="planRow.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
-                <button type="button" class="btn-delete-row" @click="deleteRow(index)">ลบ</button>
+                <button type="button" class="btn-delete-row" @click="deletePlanRow(index)">ลบ</button>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <button type="button" class="btn-add-row" @click="addRow">
+        <button type="button" class="btn-add-row" @click="addPlanRow">
           + เพิ่มขั้นตอนงาน
         </button>
       </div>
 
-      <div class="section-title2">
+      <div class="section-title">
         <div>แผนการกู้คืน (Roll Back Plan)</div>
         <span class="note">*ไม่บังคับ — กรอกเมื่อมีแผนกู้คืน</span>
       </div>
 
       <table class="action-table">
         <thead>
-          <tr>
+         <tr>
       <th style="width: 40px;">ลำดับ</th>
-      <th style="width: 250px;">ขั้นตอนงาน</th> <!-- ขยายความกว้างช่องนี้ให้ยาวขึ้น -->
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">เวลาเริ่ม</th>
-      <th style="width: 95px;">วัน/เดือน/ปี</th>
-      <th style="width: 85px;">สิ้นสุด</th>
-      <th>หมายเหตุ</th>
-      <th style="width: 50px;">ลบ</th>
+      <th style="width: 320px;">ขั้นตอนงาน</th> <!-- เพิ่มความกว้างให้ยาวขึ้นกว่าเดิมชัดเจน -->
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">เวลาเริ่ม</th>
+      <th style="width: 90px;">วัน/เดือน/ปี</th>
+      <th style="width: 75px;">สิ้นสุด</th>
+      <th style="width: 140px;">หมายเหตุ</th>
+      <th style="width: 45px;">ลบ</th>
     </tr>
   </thead>
         <tbody>
-          <tr v-for="(row2, index) in rows2" :key="row2.uid">
+          <tr v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
             <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="row2.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
-            <td><input type="date" v-model="row2.startDate" :required="!!row2.step"></td>
-            <td><input type="time" v-model="row2.start" :required="!!row2.step"></td>
-            <td><input type="date" v-model="row2.endDate" :required="!!row2.step"></td>
-            <td><input type="time" v-model="row2.end" :required="!!row2.step"></td>
-            <td><input type="text" v-model="row2.note" placeholder="หมายเหตุ"></td>
+            <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
+            <td><input type="date" v-model="rollbackRow.startDate" :required="!!rollbackRow.step"></td>
+            <td><input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step"></td>
+            <td><input type="date" v-model="rollbackRow.endDate" :required="!!rollbackRow.step"></td>
+            <td><input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step"></td>
+            <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
-              <button type="button" class="btn-delete-row" @click="deleteRow2(index)">ลบ</button>
+              <button type="button" class="btn-delete-row" @click="deleteRollbackRow(index)">ลบ</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <button type="button" class="btn-add-row" @click="addRow2">
+      <button type="button" class="btn-add-row" @click="addRollbackRow">
         + เพิ่มขั้นตอนงาน
       </button>
 
       <div class="ui-action-buttons">
-        <button type="button" class="btn btn-cancel2" @click="cancelForm">
+        <button type="button" class="btn btn-cancel-maroon" @click="cancelForm">
           <i class="fa-solid fa-xmark"></i> ยกเลิก (Cancel)
         </button>
 

@@ -246,6 +246,8 @@ export default {
         </table>
       </template>
 
+       
+
       <!-- มีให้กดได้ก็ต่อเมื่อ CR ผ่านการอนุมัติแล้วเท่านั้น (ดู openPdfPreview() ในสคริปต์) -->
       <div class="ui-action-buttons" v-if="cr.status === 'approved'">
         <button type="button" class="btn btn-pdf" @click="openPdfPreview">
@@ -266,7 +268,7 @@ export default {
         </div>
         <iframe :src="pdfPreviewUrl" class="pdf-modal-frame" title="ตัวอย่าง PDF"></iframe>
         <div class="pdf-modal-footer">
-          <button type="button" class="btn btn-cancel2" @click="closePdfPreview">ปิด</button>
+          <button type="button" class="btn btn-cancel-maroon" @click="closePdfPreview">ปิด</button>
           <button type="button" class="btn btn-pdf" @click="downloadPdf">
             <i class="fa-solid fa-download"></i> ดาวน์โหลด PDF
           </button>
@@ -274,10 +276,12 @@ export default {
       </div>
     </div>
 
-    <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
-         ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF -->
-    <div class="no-print">
-      <!-- v-if/v-else = มีเลข crId แล้ว โชว์ฟอร์มอนุมัติ / ไม่มี โชว์ข้อความแทน -->
+  </div>
+  <div>
+      <!-- no-print = ซ่อนตอน print (ดู base.css @media print) — เป็นฟอร์มพิจารณาที่ต้องกดจริง
+           ไม่ใช่ส่วนหนึ่งของเอกสาร CR ที่จะเก็บเป็น PDF
+           approval-box = กล่องพื้นเทาครอบส่วนอนุมัติ (แค่สไตล์ ไม่เกี่ยวกับ print) -->
+      <div class="no-print approval-box">
       <ApprovalSection v-if="crId" :crId="crId" @approved="onApproved" />
       <p v-else style="text-align:center; color:#6b7280;">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
@@ -287,8 +291,13 @@ export default {
 </template>
 
 <style scoped>
-@import '../assets/css/form.css';
-
+@import '../assets/css/approve.css';
+.approval-box {
+  background-color: #d5d5d6e3;
+  padding: 20px;
+  border-radius: 30px;
+  margin-top: 20px;
+}
 .pdf-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -315,7 +324,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #152a52;
+  background: #4e4f52;
   color: #fff;
   font-weight: 600;
 }
@@ -327,6 +336,7 @@ export default {
   font-size: 18px;
   cursor: pointer;
 }
+
 
 /* flex:1 = กินพื้นที่ที่เหลือทั้งหมดระหว่าง header กับ footer */
 .pdf-modal-frame {

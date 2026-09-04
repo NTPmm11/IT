@@ -128,4 +128,4 @@ export default {
      ใส่ scoped แล้ว body จะกลายเป็น body[data-v-xxx] ซึ่งไม่มีวันแมตช์ -->
 <style>
 @import '../assets/css/login.css';
-</style>
+</style>                                                                                        
