@@ -201,6 +201,8 @@ textarea:focus {
 
 .action-table {
   width: 100%;
+  min-width: 935px;
+  table-layout: fixed;
   border-collapse: collapse;
   margin-top: 10px;
 }
