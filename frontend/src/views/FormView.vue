@@ -521,12 +521,17 @@ export default {
 .action-table th:nth-child(7), .action-table td:nth-child(7) { width: 14%; }
 .action-table th:nth-child(8), .action-table td:nth-child(8) { width: 45px; }
 
-.action-table td :deep(.date-th-input),
+.action-table td :deep(.date-th-wrap),
 .action-table td input[type="time"] {
   font-size: 10px;
   width: 100%;
   box-sizing: border-box;
   padding: 4px 2px;
+}
+
+.action-table td :deep(.date-th-input) {
+  padding: 0;
+  font-size: inherit;
 }
 
 .section3-fieldset {

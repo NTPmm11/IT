@@ -116,35 +116,62 @@ export default {
 </template>
 
 <style scoped>
+/* .date-th-wrap เป็นกล่อง input จริง (border/background/radius) เหมือนช่องอื่นๆ ทั้งหมด
+   ส่วน .date-th-input ข้างในเป็นแค่ตัวพิมพ์ข้อความ ไม่มี border/background ของตัวเอง
+   กันปัญหากล่องกว้าง/สูงไม่เท่าช่องข้างเคียง (ถ้าไปเพิ่ม padding บน input ตรงๆ ภายใต้ content-box
+   จะทำให้กล่องรวมกว้างเกิน width:100% ของช่องอื่น) */
 .date-th-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid #cdd1d6e1;
+  border-radius: 8px;
+  background-color: #ededee;
+  transition: all 0.3s;
+}
+
+.date-th-wrap:focus-within {
+  border-color: #00075a;
+  background-color: #fff;
+}
+
+.date-th-wrap:has(.date-th-input:disabled) {
+  background-color: #eaedf2;
+  cursor: not-allowed;
 }
 
 .date-th-input {
-  padding-right: 28px !important;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 5px 10px;
+  font-size: 18px;
+}
+
+.date-th-input:disabled {
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .date-th-pick-btn {
-  position: absolute;
-  right: 3px;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 4px;
   background: none;
   color: #00075a;
   cursor: pointer;
-  line-height: 1;
-  padding: 3px;
-  transition: background-color 0.2s;
+  padding: 4px 6px 4px 2px;
 }
 
 .date-th-pick-btn:hover:not(:disabled) {
-  background-color: rgba(0, 7, 90, 0.1);
+  color: #030249;
 }
 
 .date-th-pick-btn:disabled {
