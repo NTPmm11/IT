@@ -605,7 +605,7 @@ router.post("/:id/approval", requireAuth, requireRole("approver", "it_admin"),
       const statusValue = result === "more-info" ? "more_info" : result;
       // แถวที่ 2: อัปเดตสถานะปัจจุบันของใบ CR เอง ให้ตรงกับผลล่าสุด
       await dbConnection.query(
-        "UPDATE change_requests SET status = ?, updated_at = GETDATE() WHERE cr_id = ?",
+        "UPDATE change_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE cr_id = ?",
         [statusValue, crId]
       );
 
