@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: it-change-request-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: FIREBASE_PROJECT_ID
+        value: cr-project-b10b1
+      - key: FRONTEND_URL
+        value: https://cr-project-b10b1.web.app
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
