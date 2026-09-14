@@ -166,7 +166,7 @@ textarea:focus {
 
 /* ===== Radio / checkbox groups ===== */
 .options-group {
-  display: flex;
+  display: auto;
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
@@ -237,7 +237,7 @@ textarea:focus {
   margin-top: 10px;
 }
 #cr-subject {
-  width: 50% !important;        /* ปรับความกว้างให้เหลือ 50% */
+  width: 100% !important;        /* ปรับความกว้างให้เหลือ 50% */
   padding: 4px 8px !important;  /* ลดระยะห่างภายในให้ช่องดูเล็กลง */
   font-size: 18px !important;   /* ลดขนาดตัวอักษรให้เล็กลง */
 }
@@ -357,4 +357,34 @@ textarea:focus {
 
 .action-plan-table th, .rollback-plan-table th {
   background-color: #f3f4f6;
+}
+
+/* 1. จัดโครงสร้างตารางให้อยู่ในกรอบและกำหนดความกว้างแต่ละคอลัมน์ */
+.action-plan-table, .rollback-plan-table {
+  width: 100%;
+  table-layout: fixed; /* บังคับสัดส่วนคอลัมน์ไม่ให้เพี้ยน */
+  border-collapse: collapse;
+}
+
+/* กำหนดสัดส่วน: ขยายช่องขั้นตอนงานให้กว้างขึ้น */
+.action-plan-table th:nth-child(1), .rollback-plan-table th:nth-child(1) { width: 5%; }   /* ลำดับ */
+.action-plan-table th:nth-child(2), .rollback-plan-table th:nth-child(2) { width: 38%; }  /* ขั้นตอนงาน (พื้นที่กว้างขึ้น) */
+.action-plan-table th:nth-child(3), .rollback-plan-table th:nth-child(3) { width: 16%; }  /* วัน/เดือน/ปี (เริ่มต้น) */
+.action-plan-table th:nth-child(4), .rollback-plan-table th:nth-child(4) { width: 10%; }  /* เวลาเริ่ม */
+.action-plan-table th:nth-child(5), .rollback-plan-table th:nth-child(5) { width: 16%; }  /* วัน/เดือน/ปี (สิ้นสุด) */
+.action-plan-table th:nth-child(6), .rollback-plan-table th:nth-child(6) { width: 10%; }  /* เวลาสิ้นสุด */
+.action-plan-table th:nth-child(7), .rollback-plan-table th:nth-child(7) { width: 0%; display: none; } /* ซ่อนช่องหมายเหตุเพื่อเพิ่มพื้นที่ */
+.action-plan-table th:nth-child(8), .rollback-plan-table th:nth-child(8) { width: 5%; }   /* ปุ่มลบ */
+
+/* 2. กำหนดขนาดตัวอักษรเฉพาะช่องวันที่ (ตามโค้ดเดิมของคุณ) ให้แสดงผลครบถ้วน */
+.action-plan-table td input[type="date"],
+.action-plan-table td input[type="text"]:nth-child(n),
+.rollback-plan-table td input[type="date"],
+.rollback-plan-table td input[type="text"],
+.action-plan-table .date-input,
+.rollback-plan-table .date-input {
+  font-size: 10px; 
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 2px;
 }
