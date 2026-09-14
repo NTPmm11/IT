@@ -1,7 +1,10 @@
 # ระบบ Change Request (CR)
 
 ฟอร์มขอเปลี่ยนแปลงระบบงาน — โปรเจคหัดเขียน full-stack:
-Vue 3 + Vite + Vue Router (หน้าบ้าน) / Node.js + Express + SQL Server (หลังบ้าน)
+Vue 3 + Vite + Vue Router (หน้าบ้าน) / Node.js + Express + Cloud Firestore (หลังบ้าน)
+
+**สถานะปัจจุบัน:** API ย้ายไป Firestore แล้ว ดู [คู่มือตั้งค่าและย้ายข้อมูล](backend/FIREBASE.md) ก่อนรัน
+คู่มือ LAB และคำอธิบาย SQL ด้านล่างเป็นเอกสารการเรียนรุ่นเดิม; ไฟล์ `database/` ใช้เป็นข้อมูลอ้างอิงและต้นทาง migration เท่านั้น
 
 > ## ⚠️ ห้ามนำไป deploy ใช้งานจริง
 >

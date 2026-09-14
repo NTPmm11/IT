@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // This app accesses Firestore through the backend Admin SDK and IAM only.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
