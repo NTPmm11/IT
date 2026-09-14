@@ -1,8 +1,3 @@
-/* ============================================
-   base.css — shared styles for every page
-   (reset, body background, buttons)
-   ============================================ */
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -19,7 +14,6 @@ body {
   align-items: flex-start;
 }
 
-/* ===== Nav ===== */
 .back-link {
   display: inline-block;
   margin-bottom: 15px;
@@ -32,7 +26,6 @@ body {
   text-decoration: underline;
 }
 
-/* ===== Buttons ===== */
 .btn {
   padding: 10px 20px;
   border-radius: 50px;
@@ -89,7 +82,6 @@ body {
   background: #00112c;
 }
 
-/* Button row at the bottom of a form */
 .ui-action-buttons {
   display: flex;
   justify-content: center;
@@ -101,7 +93,6 @@ body {
   width: 100%;
 }
 
-/* ===== Print (PDF button uses window.print) ===== */
 @page {
   size: A4;
   margin: 12mm;
@@ -109,9 +100,6 @@ body {
 
 @media print {
   body {
-    /* เดิม display:flex — .container เป็น flex item ค่า min-width:auto default
-       กันไม่ให้ shrink ต่ำกว่าความกว้างเนื้อหาจริง (950px) แม้ตั้ง max-width:100% ไว้แล้ว
-       เนื้อหาเลยล้นขอบกระดาษโดนตัดตอน print — เปลี่ยนเป็น block ตัดปัญหานี้ทั้งกระบวนตั้งแต่ต้น */
     display: block;
     background: #0c0c0c;
     padding: 0;
@@ -127,8 +115,6 @@ body {
   }
 
   .container {
-    /* !important เพราะ form.css มี .container { width: 950px } ตายตัวมาทับ — ไม่ยอม
-       ให้ fixed width เดิมชนะบน print เด็ดขาด ต้องเท่าความกว้างหน้ากระดาษเท่านั้น */
     width: 100% !important;
     max-width: 100% !important;
     padding: 0;
@@ -136,13 +122,11 @@ body {
     box-shadow: none;
   }
 
-  /* ป้องกันข้อความยาวๆ (เช่น note ท้าย section-title) ดันความกว้างเกินหน้ากระดาษ */
   .section-title {
     flex-wrap: wrap;
   }
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 768px) {
   .ui-action-buttons {
     flex-direction: column-reverse;

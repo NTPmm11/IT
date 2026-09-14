@@ -1,20 +1,3 @@
-// ============================================
-// services/mailer.js — ส่ง e-mail แจ้งเตือน CR
-// ============================================
-//
-// ไม่มี SMTP จริงใน .env (SMTP_HOST) -> ใช้ Ethereal (กล่องจดหมายปลอมสำหรับ dev)
-// Ethereal สร้าง inbox ชั่วคราวให้อัตโนมัติ ไม่ต้องมี credential จริง
-// ดูอีเมลที่ "ส่งไปแล้ว" ได้จาก preview URL ที่ log ออก console ตอน sendMail
-//
-// ใช้งานจริง: ใส่ SMTP_HOST/PORT/USER/PASS ใน .env แล้วจะสลับไปส่งผ่านนั้นแทนทันที
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง (require ไฟล์นี้): routes/cr.js เท่านั้น — เรียก sendMail() ตอน submit CR ใหม่
-//   (แจ้ง approver) และตอนบันทึกผลพิจารณา (แจ้งผู้ร้องขอ) พร้อม renderEmail() ห่อ HTML สวยๆ ให้
-// ปลายทาง: require("nodemailer") ยิงออก SMTP จริง (ตาม .env) หรือ Ethereal (fake inbox ตอน dev)
-// แยกออกมาเป็นไฟล์ต่างหาก (ไม่เขียนสดใน cr.js) เพราะ "การส่งเมล" เป็นคนละหน้าที่กับ "จัดการ CR"
-// — cr.js ตัดสินใจว่า "ควรส่งเมลไหม/ส่งหาใคร" ส่วนไฟล์นี้ตัดสินใจว่า "จะส่งยังไง" (SMTP ไหน, ล้มแล้วทำไง)
-
 const nodemailer = require("nodemailer");
 
 let transporterPromise;
@@ -50,7 +33,6 @@ function getTransporter() {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// to รับได้ทั้ง string เดียวหรือ array ของ email
 async function sendMail({ to, subject, html }) {
   const raw = Array.isArray(to) ? to : [to];
   const recipients = raw.filter(Boolean).filter(addr => {
@@ -67,9 +49,6 @@ async function sendMail({ to, subject, html }) {
 
   try {
     const transporter = await getTransporter();
-    // MAIL_FROM แยกจาก SMTP_USER เพราะ internal relay บางที่ (เช่น onemail.oneeclick.co)
-    // ยอม relay แบบไม่ auth ได้ — from เลยเป็นคนละ address กับ SMTP_USER ก็ได้ (หรือไม่มี SMTP_USER เลยก็ได้)
-    // Gmail จะบังคับ from = SMTP_USER เท่านั้น เลย fallback ไปใช้ SMTP_USER ถ้าไม่ได้ตั้ง MAIL_FROM ไว้
     const fromEmail = process.env.MAIL_FROM || process.env.SMTP_USER || "no-reply@cr-system.local";
     const fromName = process.env.MAIL_FROM_NAME || "CR System";
     const from = `"${fromName}" <${fromEmail}>`;
@@ -83,51 +62,27 @@ async function sendMail({ to, subject, html }) {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) console.log(`[mailer] preview: ${previewUrl}`);
   } catch (err) {
-    // แจ้งเตือนอีเมลพลาด ไม่ควรทำให้ request หลักล้มตาม — แค่ log ไว้
     console.error("[mailer] sendMail failed:", err.message);
   }
 }
 
-// renderEmail() escape ค่าใน fields[].value ให้อัตโนมัติอยู่แล้ว (ดู fieldRows ด้านล่าง)
-// export ตัวนี้ไว้เผื่อไฟล์อื่นต้องแปะ HTML ดิบเอง (fields[].value + raw:true) — ตอนนั้นค่อยเรียกเอง
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (ch) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[ch]));
 }
 
-// สร้าง HTML e-mail หน้าตาแบบ "ใบเอกสาร" ให้เข้าธีมกับฟอร์มจริงในเว็บ ไม่ใช่การ์ด SaaS ทั่วไป
-// (inline CSS ทั้งหมด — mail client ส่วนใหญ่ตัด <style> ทิ้ง)
-//
-// สี/ฟอนต์/เลย์เอาต์ทั้งหมดยกมาจาก frontend/src/assets/css จริง ไม่ได้เลือกเอง:
-//   letterhead (เส้นคั่นล่างหนา, จัดกลาง)  ลอกมาจาก .header-section
-//   field label:value 2 คอลัมน์              ลอกมาจาก .form-group
-//   สี navy #00075a / maroon #5a0000         ตัวเว็บทั้งระบบใช้สีนี้อยู่แล้ว
-//   ปุ่ม pill navy                            ลอกมาจาก .btn-submit
-//
-// heading  = หัวเรื่องของอีเมลนี้
-// fields   = [{ label, value, raw }] แถว label:value (เช่น เลขที่เอกสาร, เรื่อง)
-//   value ถูก escape ให้อัตโนมัติเสมอ (กัน HTML injection โดยที่ผู้เรียกไม่ต้องจำ escapeHtml เอง)
-//   ต้องการแปะ HTML จริงๆ (เช่น <b>) ใส่ raw: true — ใช้เฉพาะค่าที่ backend สร้างเอง ไม่ใช่ข้อความผู้ใช้พิมพ์
-// statusText/statusColor = ใส่เมื่อมีผลพิจารณา (ข้อความตัวหนาสีเดียว ไม่ทำ pill — เอกสารทางการไม่ใช้ badge)
-// ctaText/ctaUrl = ปุ่มลิงก์ (ใส่ก็ได้ไม่ใส่ก็ได้)
-// ค่าที่ถูกเอาไปวางใน href — ยอมเฉพาะ http/https
-// กัน javascript:/data: ที่บาง mail client ยังกดได้ และกัน " ที่จะปิด attribute ก่อนเวลา
 function safeUrl(url) {
   const text = String(url ?? "").trim();
   if (!/^https?:\/\//i.test(text)) return "";
   return escapeHtml(text);
 }
 
-// ค่าที่ถูกเอาไปวางใน style="color:..." — ยอมเฉพาะ hex color
 function safeColor(color) {
   return /^#[0-9a-f]{3,8}$/i.test(String(color ?? "")) ? color : "#3b3b3b";
 }
 
 function renderEmail({ heading, fields = [], statusText, statusColor, ctaText, ctaUrl }) {
-  // ตอนนี้ผู้เรียกส่งแต่ค่าที่ระบบสร้างเอง แต่ escape ไว้ทุกช่องตั้งแต่ต้น
-  // เดิม escape แค่ f.value ช่องเดียว — วันที่มีคนส่งค่าจากผู้ใช้เข้ามาทาง heading
-  // หรือ ctaText จะกลายเป็น HTML injection ในเมลทันทีโดยไม่มีอะไรเตือน
   const safeHeading = escapeHtml(heading);
   const safeStatusText = statusText ? escapeHtml(statusText) : "";
   const safeStatusColor = safeColor(statusColor);

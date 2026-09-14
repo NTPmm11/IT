@@ -27,8 +27,6 @@ async function names(cr) {
 async function list(user, filters) {
   let query = db.collection('change_requests');
   if (user.role === 'requester') query = query.where('requester_id', '==', user.userId);
-  // Substring search stays compatible with the UI. This reads all visible requests;
-  // add pagination/search indexing when the dataset grows.
   const requests = rows(await query.get()).filter((cr) =>
     (!filters.status || cr.status === filters.status) &&
     (!filters.date || cr.request_date === filters.date) &&

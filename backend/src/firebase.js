@@ -1,11 +1,9 @@
-// Server-side Firestore client. Credentials must never be sent to the frontend.
 require("dotenv").config();
 const { initializeApp, getApps, applicationDefault, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
 function normalizePrivateKey(rawKey) {
   let key = rawKey.trim();
-  // Strip surrounding quotes that sometimes end up in pasted env values.
   if (
     (key.startsWith('"') && key.endsWith('"')) ||
     (key.startsWith("'") && key.endsWith("'"))

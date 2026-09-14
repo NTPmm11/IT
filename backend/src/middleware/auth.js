@@ -1,4 +1,3 @@
-// Training auth only: X-User-Id can be forged. Replace with verified tokens before production.
 const store = require("../services/store");
 
 async function requireAuth(req, res, next) {
@@ -20,7 +19,7 @@ async function requireAuth(req, res, next) {
     }
 
     req.user = { userId: user.user_id, username: user.username, role: user.role };
-    next();   // = "ด่านนี้ผ่าน เชิญไปต่อ"
+    next();
   } catch (err) {
     next(err);
   }

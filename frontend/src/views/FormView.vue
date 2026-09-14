@@ -1,12 +1,9 @@
 <script>
-// ============================================
-// FormView.vue — เดิมคือ form.html + js/form.js
-// ============================================
-
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
 import ApprovalSection from "../components/ApprovalSection.vue";
 import StatusModal from "../components/StatusModal.vue";
+import DateInputTH from "../components/DateInputTH.vue";
 
 let rowUid = 0;
 function makeRow() {
@@ -14,7 +11,7 @@ function makeRow() {
 }
 
 export default {
-  components: { ApprovalSection, StatusModal },
+  components: { ApprovalSection, StatusModal, DateInputTH },
 
   data() {
     return {
@@ -260,7 +257,6 @@ export default {
     </button>
 
     <form @submit.prevent="handleSubmit">
-      <!-- [ 1. ข้อมูลทั่วไป ] -->
       <div class="section-title">
         <div>1. ข้อมูลทั่วไป (General Information)</div>
       </div>
@@ -268,7 +264,7 @@ export default {
       <div class="grid-2col">
         <div class="form-group">
           <label for="cr-request-date">วันที่ร้องขอ:</label>
-          <input type="date" id="cr-request-date" v-model="form.requestDate">
+          <DateInputTH id="cr-request-date" v-model="form.requestDate" />
         </div>
 
         <div class="form-group">
@@ -320,7 +316,6 @@ export default {
         </div>
       </div>
 
-      <!-- [ 2. รายละเอียดการขอเปลี่ยนระบบ ] -->
       <div class="section-title">
         <div>2. รายละเอียดการขอเปลี่ยนระบบ (Change Details)</div>
         <span class="note">*ส่วนสำหรับผู้ร้องขอกรอก</span>
@@ -344,7 +339,6 @@ export default {
           placeholder="ระบุรายละเอียด เงื่อนไข หรือขั้นตอนของระบบใหม่ที่ต้องการให้พัฒนา..."></textarea>
       </div>
 
-      <!-- [ 3. การประเมินผลกระทบ ] -->
       <div class="section-title">
         <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
         <span class="note" v-if="canEditImpact">*เฉพาะสิทธิ์ IT / Admin</span>
@@ -379,12 +373,11 @@ export default {
           </div>
           <div class="form-group">
             <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
-            <input type="date" id="cr-deploy-date" v-model="form.deployDate" :required="canEditImpact">
+            <DateInputTH id="cr-deploy-date" v-model="form.deployDate" :required="canEditImpact" />
           </div>
         </div>
       </fieldset>
 
-      <!-- [ 4. แผนดำเนินงาน ] -->
       <div class="section-title">
         <div>แผนดำเนินงาน (Action Plan)</div>
         <span class="note">*โปรดระบุขั้นตอนและกำหนดเวลาปฏิบัติงาน</span>
@@ -408,9 +401,9 @@ export default {
             <tr v-for="(planRow, index) in planRows" :key="planRow.uid">
               <td class="text-center">{{ index + 1 }}</td>
               <td><input type="text" v-model="planRow.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><input type="date" v-model="planRow.startDate" required></td>
+              <td><DateInputTH v-model="planRow.startDate" required /></td>
               <td><input type="time" v-model="planRow.start" required></td>
-              <td><input type="date" v-model="planRow.endDate" required></td>
+              <td><DateInputTH v-model="planRow.endDate" required /></td>
               <td><input type="time" v-model="planRow.end" required></td>
               <td><input type="text" v-model="planRow.note" placeholder="หมายเหตุ"></td>
               <td class="text-center">
@@ -447,9 +440,9 @@ export default {
           <tr v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
             <td class="text-center">{{ index + 1 }}</td>
             <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
-            <td><input type="date" v-model="rollbackRow.startDate" :required="!!rollbackRow.step"></td>
+            <td><DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" /></td>
             <td><input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step"></td>
-            <td><input type="date" v-model="rollbackRow.endDate" :required="!!rollbackRow.step"></td>
+            <td><DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" /></td>
             <td><input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step"></td>
             <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
             <td class="text-center">
@@ -497,7 +490,6 @@ export default {
 <style scoped>
 @import '../assets/css/form.css';
 
-/* กำหนดให้ตารางอยู่ในกรอบและจัดสัดส่วน */
 .action-table {
   width: 100%;
   border-collapse: collapse;
@@ -520,18 +512,16 @@ export default {
   font-size: 13px;
 }
 
-/* กำหนดความกว้างคอลัมน์ (ขยายพื้นที่ "ขั้นตอนงาน" ให้กว้างเป็นพิเศษ) */
-.action-table th:nth-child(1), .action-table td:nth-child(1) { width: 45px; }   /* ลำดับ */
-.action-table th:nth-child(2), .action-table td:nth-child(2) { width: 32%; }  /* ขั้นตอนงาน */
-.action-table th:nth-child(3), .action-table td:nth-child(3) { width: 15%; }  /* วัน/เดือน/ปี (เริ่มต้น) */
-.action-table th:nth-child(4), .action-table td:nth-child(4) { width: 10%; }  /* เวลาเริ่ม */
-.action-table th:nth-child(5), .action-table td:nth-child(5) { width: 15%; }  /* วัน/เดือน/ปี (สิ้นสุด) */
-.action-table th:nth-child(6), .action-table td:nth-child(6) { width: 10%; }  /* เวลาสิ้นสุด */
-.action-table th:nth-child(7), .action-table td:nth-child(7) { width: 14%; }  /* หมายเหตุ */
-.action-table th:nth-child(8), .action-table td:nth-child(8) { width: 45px; }  /* ลบ */
+.action-table th:nth-child(1), .action-table td:nth-child(1) { width: 45px; }
+.action-table th:nth-child(2), .action-table td:nth-child(2) { width: 32%; }
+.action-table th:nth-child(3), .action-table td:nth-child(3) { width: 15%; }
+.action-table th:nth-child(4), .action-table td:nth-child(4) { width: 10%; }
+.action-table th:nth-child(5), .action-table td:nth-child(5) { width: 15%; }
+.action-table th:nth-child(6), .action-table td:nth-child(6) { width: 10%; }
+.action-table th:nth-child(7), .action-table td:nth-child(7) { width: 14%; }
+.action-table th:nth-child(8), .action-table td:nth-child(8) { width: 45px; }
 
-/* กำหนดขนาดตัวอักษรช่องวันที่และเวลาในตารางให้แสดงผลพอดี */
-.action-table td input[type="date"],
+.action-table td :deep(.date-th-input),
 .action-table td input[type="time"] {
   font-size: 10px;
   width: 100%;

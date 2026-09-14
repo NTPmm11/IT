@@ -133,7 +133,6 @@
  *       403: { description: role ไม่มีสิทธิ์ }
  *       404: { description: CR not found }
  */
-// Firestore routes preserve the existing frontend API contract.
 const express = require('express');
 const store = require('../services/store');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -188,8 +187,6 @@ router.post('/', requireAuth, wrap(async (req, res) => {
   const error = validate(req.body);
   if (error) return res.status(400).json({ error });
   const result = await store.create(req.body, req.user);
-  // Await notification after commit so a serverless runtime does not freeze it.
-  // Notification errors must not make a successfully saved CR appear to have failed.
   if (req.body.status !== 'draft') {
     try {
       await sendMail({

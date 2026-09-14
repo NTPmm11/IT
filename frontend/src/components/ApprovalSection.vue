@@ -1,24 +1,4 @@
 <script>
-// ============================================
-// ApprovalSection.vue — ส่วนตรวจสอบและอนุมัติ (ใช้ร่วมใน FormView / ApproveView)
-// ============================================
-//
-// รับเลข CR ผ่าน prop crId แล้วยิง POST /change-requests/:id/approval
-//
-// สิทธิ์: อ่าน role จาก localStorage.user
-//   - approver / it_admin  -> กรอก + กดบันทึกได้
-//   - requester            -> เห็นทุกช่องแต่ disabled ทั้งหมด (ดูได้อย่างเดียว)
-// backend กันซ้ำอีกชั้นด้วย requireRole("approver", "it_admin") อยู่แล้ว
-//
-// ── เชื่อมกับไฟล์ไหนบ้าง ──
-// ต้นทาง (import ไฟล์นี้): views/FormView.vue (ต่อท้ายฟอร์มหลัง submit สำเร็จ) และ
-//                          views/ApproveView.vue (เปิดตรงจากลิงก์ในเมล /approve?crId=)
-//                          ทั้งสองส่ง prop crId เข้ามา — component นี้ไม่รู้จัก URL/route เลย
-// ปลายทาง: services/api.js (apiFetch) -> backend routes/cr.js POST /:id/approval
-//          + components/StatusModal.vue (โชว์ผลสำเร็จ/พลาด)
-// แยกเป็น component ต่างหาก (ไม่เขียนสดใน FormView/ApproveView) เพราะ "ฟอร์มอนุมัติ" หน้าตา
-// เดียวกันเป๊ะ ต้องใช้ซ้ำ 2 ที่ — เขียนซ้ำสองรอบเสี่ยงแก้ไม่ครบเวลามีบั๊ก/เปลี่ยนฟิลด์
-
 import { apiFetch } from "../services/api.js";
 import StatusModal from "./StatusModal.vue";
 
@@ -37,25 +17,22 @@ export default {
       user,
       form: {
         comment: "",
-        result: "",     // approved / rejected / more-info
+        result: "",
         approver: user.fullName || "",
         date: ""
       },
-      submitting: false, // true ระหว่างรอ backend ตอบ — คุมปุ่ม disable/ข้อความ
+      submitting: false,
       modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
   computed: {
-    // requester = ดูได้อย่างเดียว
     canApprove() {
       return ["approver", "it_admin"].includes(this.user.role);
     }
   },
 
   methods: {
-    // UX: submitting คุมปุ่ม disable/ข้อความระหว่างรอ backend ตอบ กันคนกดซ้ำ
-    // สำเร็จ/พลาด ใช้ StatusModal แทน alert() ทั้งคู่
     async submitApproval() {
       if (!this.form.result) {
         this.modal = { show: true, variant: "error", title: "ยังเลือกผลไม่ครบ", message: "กรุณาเลือกผลการพิจารณา" };
@@ -85,16 +62,14 @@ export default {
 </script>
 
 <template>
-  <form @submit.prevent="submitApproval">  
+  <form @submit.prevent="submitApproval">
 
-    <!-- [ 5. การตรวจสอบและอนุมัติ ] -->
     <div class="approval-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
       <span class="note" v-if="canApprove">*เฉพาะสิทธิ์ Approver / PM</span>
       <span class="note" v-else>*เฉพาะสิทธิ์ Approver / PM — คุณดูได้อย่างเดียว</span>
     </div>
 
-    <!-- fieldset disabled = ปิดทุก input/radio ข้างในทีเดียว -->
     <fieldset :disabled="!canApprove" class="approval-fieldset">
 
       <div class="approval-group">
@@ -114,8 +89,6 @@ export default {
       <div class="grid-2col" style="margin-top: 10px;">
         <div class="approval-group">
           <label for="approver-name">ผู้อนุมัติ (Approver):</label>
-          <!-- อ่านอย่างเดียว: backend บันทึก approver_id จาก user ที่ login เสมอ
-               (routes/cr.js ไม่รับชื่อผู้อนุมัติจาก body) พิมพ์แก้ตรงนี้ค่าจะถูกทิ้ง -->
           <input type="text" id="approver-name" :value="form.approver" readonly
             title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>

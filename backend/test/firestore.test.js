@@ -1,11 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-// Refuse to run destructive fixtures against a real project.
 if (!process.env.FIRESTORE_EMULATOR_HOST) throw new Error('Firestore emulator is required');
 process.env.FIREBASE_PROJECT_ID = 'demo-cr-migration';
 const db = require('../src/db');
 const bcrypt = require('bcryptjs');
-// No real email is sent during verification.
 const mailer = require('../src/services/mailer');
 const notifications = [];
 mailer.sendMail = async (message) => { notifications.push(message); };
@@ -23,7 +21,6 @@ test('Firestore-backed API compatibility and atomic updates', async (t) => {
       cr_rollback_plans: [],
       cr_approvals: [{ cr_id: 42, approval_id: 10, approver_id: 7, result: 'approved', created_at: '2026-09-14 10:00:00' }],
     };
-    // Supply source fixtures; never connect to the user's actual MySQL database in tests.
     const sourcePath = require.resolve('../scripts/mysql-source.cjs');
     require.cache[sourcePath] = { id: sourcePath, filename: sourcePath, loaded: true, exports: {
       getConnection: async () => ({ beginTransaction: async () => {}, commit: async () => {},
@@ -133,7 +130,6 @@ test('Firestore-backed API compatibility and atomic updates', async (t) => {
   });
   await t.test('more-info mapping and notification failures preserve committed work', async () => {
     mailer.sendMail = async () => { throw new Error('Simulated email failure'); };
-    // Also fail recipient lookup after commit; saving the request must still succeed.
     const store = require('../src/services/store');
     const original = store.approverEmails;
     store.approverEmails = async () => { throw new Error('Simulated lookup failure'); };

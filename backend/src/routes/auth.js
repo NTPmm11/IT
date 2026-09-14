@@ -1,6 +1,6 @@
 
 const express = require("express");
-const bcrypt = require("bcryptjs");     // ตัวเทียบรหัสผ่านกับ hash
+const bcrypt = require("bcryptjs");
 const store = require("../services/store");
 
 const router = express.Router();

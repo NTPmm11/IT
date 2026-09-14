@@ -1,4 +1,3 @@
-// One-time import into EMPTY target collections. Stop API writes while importing.
 require('dotenv').config();
 const sql = require('./mysql-source.cjs');
 const db = require('../src/db');
@@ -23,7 +22,6 @@ async function main({ apply = false } = {}) {
     console.log('Dry run only. Stop API writes, then use --apply to import into an empty Firestore database.');
     return;
   }
-  // A single batch is atomic; refuse oversized imports rather than leave partial data.
   const total = data.users.length + data.systems.length + data.change_requests.length + data.cr_approvals.length + 1;
   if (total > 450) throw new Error('Import exceeds 450 documents. Use a staged migration for larger datasets.');
   for (const collection of ['users', 'systems', 'change_requests', 'counters']) {

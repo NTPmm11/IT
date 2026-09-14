@@ -1,7 +1,3 @@
-/* ============================================
-   login.css — index.html only
-   ============================================ */
-
 body {
   align-items: center;
   padding: 15px;
@@ -37,7 +33,6 @@ h1 {
   font-size: 16px;
 }
 
-/* .card prefix beats form.css's global input[type="text"] rule */
 .card .input-group input {
   width: 100%;
   padding: 14px 14px 14px 45px;
