@@ -282,7 +282,7 @@ export default {
   </button>
 </div>
 
-    
+
 
     <div class="ui-action-buttons">
       <button type="button" class="btn btn-pdf" @click="generatePDF">
@@ -404,4 +404,9 @@ p {
   background: #e0e3e6;
 }
 
+@media print {
+  .ui-action-buttons {
+    display: none !important;
+  }
+}
 </style>
