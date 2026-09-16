@@ -493,50 +493,6 @@ export default {
 <style scoped>
 @import '../assets/css/form.css';
 
-.action-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 12px;
-  table-layout: fixed;
-}
-
-.action-table th, 
-.action-table td {
-  border: 1px solid #e5e7eb;
-  padding: 6px 8px;
-  vertical-align: middle;
-}
-
-.action-table th {
-  background-color: #f3f4f6;
-  font-size: 13px;
-}
-
-.action-table th:nth-child(1), .action-table td:nth-child(1) { width: 45px; }
-.action-table th:nth-child(2), .action-table td:nth-child(2) { width: 32%; }
-.action-table th:nth-child(3), .action-table td:nth-child(3) { width: 15%; }
-.action-table th:nth-child(4), .action-table td:nth-child(4) { width: 10%; }
-.action-table th:nth-child(5), .action-table td:nth-child(5) { width: 15%; }
-.action-table th:nth-child(6), .action-table td:nth-child(6) { width: 10%; }
-.action-table th:nth-child(7), .action-table td:nth-child(7) { width: 14%; }
-.action-table th:nth-child(8), .action-table td:nth-child(8) { width: 45px; }
-
-.action-table td :deep(.date-th-wrap),
-.action-table td input[type="time"] {
-  font-size: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 4px 2px;
-}
-
-.action-table td :deep(.date-th-input) {
-  padding: 0;
-  font-size: inherit;
-}
-
 .section3-fieldset {
   border: none;
   padding: 0;
