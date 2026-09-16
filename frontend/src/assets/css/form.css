@@ -197,6 +197,10 @@ textarea:focus {
   text-align: center;
 }
 
+.action-table td {
+  background: #ffffff;
+}
+
 .action-table th {
   background: #e5e7eb;
   color: #000000;
@@ -217,7 +221,7 @@ textarea:focus {
 }
 
 .action-table tr.row-datetime td {
-  background: #f9fafb;
+  background: #ffffff;
   padding-top: 4px;
   padding-bottom: 6px;
 }
