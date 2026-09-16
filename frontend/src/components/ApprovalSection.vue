@@ -49,7 +49,7 @@ export default {
             approvalDate: this.form.date
           })
         });
-        this.modal = { show: true, variant: "success", title: "บันทึกสำเร็จ", message: "บันทึกผลการพิจารณาเรียบร้อยแล้ว!" };
+        this.modal = { show: true, variant: "success", title: "ส่งคำตอบอนุมัติเรียบร้อย", message: "ระบบได้บันทึกผลการพิจารณาและส่งคำตอบอนุมัติเรียบร้อยแล้ว" };
         this.$emit("approved", this.form.result);
       } catch (err) {
         this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };

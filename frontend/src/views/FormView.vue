@@ -1,7 +1,6 @@
 <script>
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
-import ApprovalSection from "../components/ApprovalSection.vue";
 import StatusModal from "../components/StatusModal.vue";
 import DateInputTH from "../components/DateInputTH.vue";
 
@@ -11,7 +10,7 @@ function makeRow() {
 }
 
 export default {
-  components: { ApprovalSection, StatusModal, DateInputTH },
+  components: { StatusModal, DateInputTH },
 
   data() {
     return {
@@ -36,7 +35,6 @@ export default {
       planRows: [makeRow()],
       rollbackRows: [makeRow()],
       systems: [],
-      submittedCrId: null,
       submittedCrNumber: "",
       savedCrId: null,
       previewCrNumber: "",
@@ -180,15 +178,13 @@ export default {
         });
 
         this.savedCrId = data.crId;
-        this.submittedCrId = data.crId;
         this.submittedCrNumber = data.crNumber;
         this.modal = {
           show: true,
           variant: "success",
-          title: "ส่งคำขอสำเร็จ",
+          title: "ส่งคำขออนุมัติแล้ว",
           message: `ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว\nเลขที่เอกสาร: ${data.crNumber}`
         };
-        setTimeout(() => this.$router.push("/list"), 2500);
       } catch (err) {
         this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };
       } finally {
@@ -224,15 +220,6 @@ export default {
       Object.assign(this.$data, this.$options.data.call(this));
       this.initForm();
       this.$nextTick(() => this.$el.scrollIntoView({ behavior: "smooth" }));
-    },
-
-    closeModal() {
-      this.modal.show = false;
-      if (this.submittedCrId) {
-        this.$nextTick(() => {
-          this.$refs.approvalSection?.$el.scrollIntoView({ behavior: "smooth" });
-        });
-      }
     }
   }
 };
@@ -481,12 +468,8 @@ export default {
       </p>
     </form>
 
-    <div class="no-print">
-      <ApprovalSection v-if="submittedCrId" ref="approvalSection" :crId="submittedCrId" />
-    </div>
-
     <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
-      @close="closeModal" />
+      @close="modal.show = false" />
   </div>
 </template>
 
