@@ -188,17 +188,17 @@ router.post('/', requireAuth, wrap(async (req, res) => {
   if (error) return res.status(400).json({ error });
   const result = await store.create(req.body, req.user);
   if (req.body.status !== 'draft') {
-    try {
-      await sendMail({
-        to: await store.approverEmails(),
+    store.approverEmails()
+      .then((to) => sendMail({
+        to,
         subject: `[CR] มีคำขอใหม่รอพิจารณา: ${result.crNumber}`,
         html: renderEmail({ heading: 'มีคำขอ Change Request ใหม่รอพิจารณา',
           fields: [{ label: 'เลขที่เอกสาร', value: result.crNumber }, { label: 'เรื่อง', value: req.body.subject }],
           ctaText: 'ไปหน้าพิจารณา',
           ctaUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/approve?crId=${result.crId}`,
         }),
-      });
-    } catch { console.error('[mailer] CR saved, but notification failed'); }
+      }))
+      .catch(() => console.error('[mailer] CR saved, but notification failed'));
   }
   res.status(201).json(result);
 }));
@@ -209,17 +209,18 @@ router.post('/:id/approval', requireAuth, requireRole('approver', 'it_admin'), w
   if (!['approved', 'rejected', 'more-info'].includes(result)) return res.status(400).json({ error: 'result ต้องเป็น approved/rejected/more-info' });
   if ([comment, approvalDate].some((v) => v != null && typeof v !== 'string')) return res.status(400).json({ error: 'comment and approvalDate must be strings' });
   const cr = await store.approve(req.params.id, req.body, req.user);
-  try {
-    const user = await store.getUser(cr.requester_id);
-    const resultText = { approved: 'อนุมัติ', rejected: 'ไม่อนุมัติ', 'more-info': 'ขอข้อมูลเพิ่มเติม' }[result];
-    await sendMail({ to: user?.email,
-      subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
-      html: renderEmail({ heading: `ผลการพิจารณาคำขอ ${cr.cr_number}`, statusText: resultText,
-        statusColor: { approved: '#16a34a', rejected: '#dc2626', 'more-info': '#d97706' }[result],
-        fields: [{ label: 'เรื่อง', value: cr.subject }, ...(comment ? [{ label: 'ความเห็น', value: comment }] : [])],
-      }),
-    });
-  } catch { console.error('[mailer] Approval saved, but notification failed'); }
+  store.getUser(cr.requester_id)
+    .then((user) => {
+      const resultText = { approved: 'อนุมัติ', rejected: 'ไม่อนุมัติ', 'more-info': 'ขอข้อมูลเพิ่มเติม' }[result];
+      return sendMail({ to: user?.email,
+        subject: `[CR] ผลการพิจารณา ${cr.cr_number}: ${resultText}`,
+        html: renderEmail({ heading: `ผลการพิจารณาคำขอ ${cr.cr_number}`, statusText: resultText,
+          statusColor: { approved: '#16a34a', rejected: '#dc2626', 'more-info': '#d97706' }[result],
+          fields: [{ label: 'เรื่อง', value: cr.subject }, ...(comment ? [{ label: 'ความเห็น', value: comment }] : [])],
+        }),
+      });
+    })
+    .catch(() => console.error('[mailer] Approval saved, but notification failed'));
   res.status(201).json({ ok: true });
 }));
 module.exports = router;
