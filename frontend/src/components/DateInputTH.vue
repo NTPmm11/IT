@@ -85,6 +85,7 @@ export default {
       autocomplete="off"
       maxlength="10"
       pattern="\d{2}/\d{2}/\d{4}"
+      title="กรุณากรอกวันที่ให้ครบรูปแบบ วว/ดด/ปปปป (ปี ค.ศ. 4 หลัก) เช่น 18/09/2026"
       :required="required"
       :disabled="disabled"
     >
