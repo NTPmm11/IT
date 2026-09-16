@@ -203,9 +203,52 @@ textarea:focus {
   text-align: left;
 }
 
+.action-table th:first-child {
+  width: 50px;
+}
+
+.action-table th:last-child {
+  width: 70px;
+}
+
 .action-table .text-center {
   text-align: center;
   font-size: 14px;
+}
+
+.action-table tr.row-datetime td {
+  background: #f9fafb;
+  padding-top: 4px;
+  padding-bottom: 6px;
+}
+
+.datetime-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.datetime-group .dt-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-left: 6px;
+}
+
+.datetime-group .dt-label:first-child {
+  margin-left: 0;
+}
+
+.datetime-group .date-th-wrap {
+  flex: 0 1 130px;
+  width: auto;
+}
+
+.datetime-group input[type="time"] {
+  flex: 0 1 90px;
+  width: auto;
 }
 
 .btn-add-row {

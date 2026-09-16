@@ -36,7 +36,6 @@ export default {
       planRows: [makeRow()],
       rollbackRows: [makeRow()],
       systems: [],
-      userRole: "",
       submittedCrId: null,
       submittedCrNumber: "",
       savedCrId: null,
@@ -55,9 +54,6 @@ export default {
   },
 
   computed: {
-    canEditImpact() {
-      return this.userRole === "it_admin";
-    },
     isSaved() {
       return this.savedCrId !== null;
     }
@@ -70,7 +66,6 @@ export default {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       this.form.requester = user.fullName || "";
       this.form.department = user.department || "";
-      this.userRole = user.role || "";
       this.form.requestDate = new Date().toLocaleDateString("sv-SE");
 
       try {
@@ -118,19 +113,17 @@ export default {
       if (!contact || (!emailRe.test(contact) && !phoneRe.test(contact))) {
         return "อีเมล/เบอร์โทร ไม่ถูกต้อง (ใส่อีเมล หรือเบอร์โทรขึ้นต้น 0 จำนวน 9-10 หลัก)";
       }
-      if (this.canEditImpact) {
-        if (this.form.changeTypes.length === 0) {
-          return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
-        }
-        if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
-          return "กรุณาระบุระบบที่ได้รับผลกระทบ";
-        }
-        if (!this.form.duration.trim()) {
-          return "กรุณาระบุระยะเวลาที่คาดใช้";
-        }
-        if (!this.form.deployDate) {
-          return "กรุณาระบุเป้าหมาย Deploy";
-        }
+      if (this.form.changeTypes.length === 0) {
+        return "กรุณาเลือกประเภทการเปลี่ยนอย่างน้อย 1 อย่าง";
+      }
+      if (this.form.impact === "other" && !this.form.impactDetail.trim()) {
+        return "กรุณาระบุระบบที่ได้รับผลกระทบ";
+      }
+      if (!this.form.duration.trim()) {
+        return "กรุณาระบุระยะเวลาที่คาดใช้";
+      }
+      if (!this.form.deployDate) {
+        return "กรุณาระบุเป้าหมาย Deploy";
       }
       return "";
     },
@@ -341,11 +334,9 @@ export default {
 
       <div class="section-title">
         <div>3. การประเมินผลกระทบและทรัพยากร (Impact & Resource Assessment)</div>
-        <span class="note" v-if="canEditImpact">*เฉพาะสิทธิ์ IT / Admin</span>
-        <span class="note" v-else>*เฉพาะสิทธิ์ IT / Admin — คุณดูได้อย่างเดียว</span>
       </div>
 
-      <fieldset :disabled="!canEditImpact" class="section3-fieldset">
+      <fieldset class="section3-fieldset">
         <div class="form-group">
           <label>ประเภทการเปลี่ยน:</label>
           <div class="options-group">
@@ -360,7 +351,7 @@ export default {
           <div class="options-group">
             <label class="option-item"><input type="radio" value="none" v-model="form.impact"> ไม่มีผลกระทบส่วนอื่น</label>
             <label class="option-item"><input type="radio" value="other" v-model="form.impact"> กระทบระบบอื่น (ระบุ):</label>
-            <input type="text" v-model="form.impactDetail" :disabled="!canEditImpact || form.impact !== 'other'"
+            <input type="text" v-model="form.impactDetail" :disabled="form.impact !== 'other'"
               placeholder="ระบุระบบที่ได้รับผลกระทบ...">
             <label class="option-item"><input type="checkbox" v-model="form.downtime"> ต้องปิดระบบชั่วคราว (Downtime)</label>
           </div>
@@ -369,11 +360,11 @@ export default {
         <div class="grid-2col" style="margin-top: 10px;">
           <div class="form-group">
             <label for="cr-duration">ระยะเวลาที่คาดใช้:</label>
-            <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" :required="canEditImpact">
+            <input type="text" id="cr-duration" v-model="form.duration" placeholder="ระบุจำนวนวันทำการ เช่น 2 วัน" required>
           </div>
           <div class="form-group">
             <label for="cr-deploy-date">เป้าหมาย Deploy:</label>
-            <DateInputTH id="cr-deploy-date" v-model="form.deployDate" :required="canEditImpact" />
+            <DateInputTH id="cr-deploy-date" v-model="form.deployDate" required />
           </div>
         </div>
       </fieldset>
@@ -389,27 +380,33 @@ export default {
             <tr>
               <th>ลำดับ</th>
               <th>ขั้นตอนงาน</th>
-              <th>วัน/เดือน/ปี</th>
-              <th>เวลาเริ่ม</th>
-              <th>วัน/เดือน/ปี</th>
-              <th>สิ้นสุด</th>
               <th>หมายเหตุ</th>
               <th>ลบ</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(planRow, index) in planRows" :key="planRow.uid">
-              <td class="text-center">{{ index + 1 }}</td>
-              <td><input type="text" v-model="planRow.step" placeholder="ระบุขั้นตอนงาน" required></td>
-              <td><DateInputTH v-model="planRow.startDate" required /></td>
-              <td><input type="time" v-model="planRow.start" required></td>
-              <td><DateInputTH v-model="planRow.endDate" required /></td>
-              <td><input type="time" v-model="planRow.end" required></td>
-              <td><input type="text" v-model="planRow.note" placeholder="หมายเหตุ"></td>
-              <td class="text-center">
-                <button type="button" class="btn-delete-row" @click="deletePlanRow(index)">ลบ</button>
-              </td>
-            </tr>
+            <template v-for="(planRow, index) in planRows" :key="planRow.uid">
+              <tr>
+                <td rowspan="2" class="text-center">{{ index + 1 }}</td>
+                <td><input type="text" v-model="planRow.step" placeholder="ระบุขั้นตอนงาน" required></td>
+                <td><input type="text" v-model="planRow.note" placeholder="หมายเหตุ"></td>
+                <td rowspan="2" class="text-center">
+                  <button type="button" class="btn-delete-row" @click="deletePlanRow(index)">ลบ</button>
+                </td>
+              </tr>
+              <tr class="row-datetime">
+                <td colspan="2">
+                  <div class="datetime-group">
+                    <span class="dt-label">เริ่ม</span>
+                    <DateInputTH v-model="planRow.startDate" required />
+                    <input type="time" v-model="planRow.start" required>
+                    <span class="dt-label">สิ้นสุด</span>
+                    <DateInputTH v-model="planRow.endDate" required />
+                    <input type="time" v-model="planRow.end" required>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
 
@@ -428,27 +425,33 @@ export default {
           <tr>
             <th>ลำดับ</th>
             <th>ขั้นตอนงาน</th>
-            <th>วัน/เดือน/ปี</th>
-            <th>เวลาเริ่ม</th>
-            <th>วัน/เดือน/ปี</th>
-            <th>สิ้นสุด</th>
             <th>หมายเหตุ</th>
             <th>ลบ</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
-            <td class="text-center">{{ index + 1 }}</td>
-            <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
-            <td><DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" /></td>
-            <td><input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step"></td>
-            <td><DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" /></td>
-            <td><input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step"></td>
-            <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
-            <td class="text-center">
-              <button type="button" class="btn-delete-row" @click="deleteRollbackRow(index)">ลบ</button>
-            </td>
-          </tr>
+          <template v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
+            <tr>
+              <td rowspan="2" class="text-center">{{ index + 1 }}</td>
+              <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
+              <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
+              <td rowspan="2" class="text-center">
+                <button type="button" class="btn-delete-row" @click="deleteRollbackRow(index)">ลบ</button>
+              </td>
+            </tr>
+            <tr class="row-datetime">
+              <td colspan="2">
+                <div class="datetime-group">
+                  <span class="dt-label">เริ่ม</span>
+                  <DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" />
+                  <input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step">
+                  <span class="dt-label">สิ้นสุด</span>
+                  <DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" />
+                  <input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step">
+                </div>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
 
@@ -550,13 +553,5 @@ export default {
 .saved-hint a {
   color: #00075a;
   font-weight: 600;
-}
-
-.section3-fieldset:disabled input,
-.section3-fieldset:disabled select,
-.section3-fieldset:disabled textarea {
-  background-color: #eaedf2;
-  color: #6b7280;
-  cursor: not-allowed;
 }
 </style>
