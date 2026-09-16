@@ -185,6 +185,7 @@ export default {
           title: "ส่งคำขออนุมัติแล้ว",
           message: `ระบบได้ส่งคำขอ Change Request (CR) เข้าสู่ขั้นตอนการอนุมัติแล้ว\nเลขที่เอกสาร: ${data.crNumber}`
         };
+        setTimeout(() => this.$router.push("/list"), 2500);
       } catch (err) {
         this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };
       } finally {

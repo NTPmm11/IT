@@ -51,6 +51,7 @@ export default {
         });
         this.modal = { show: true, variant: "success", title: "ส่งคำตอบอนุมัติเรียบร้อย", message: "ระบบได้บันทึกผลการพิจารณาและส่งคำตอบอนุมัติเรียบร้อยแล้ว" };
         this.$emit("approved", this.form.result);
+        setTimeout(() => this.$router.push("/list"), 2500);
       } catch (err) {
         this.modal = { show: true, variant: "error", title: "บันทึกไม่สำเร็จ", message: err.message };
       } finally {
