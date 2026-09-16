@@ -262,7 +262,8 @@ export default {
 
 .container {
   background: #ffffffb4;
-  width: 950px;
+  width: 100%;
+  max-width: 950px;
   padding: 35px;
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(10, 10, 10, 0.836);
@@ -282,7 +283,8 @@ export default {
 }
 
 .list-container {
-  width: 950px;
+  width: 100%;
+  max-width: 950px;
 }
 
 .filter-grid {
@@ -367,6 +369,13 @@ p {
 @media print {
   .ui-action-buttons {
     display: none !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 22px 16px;
+    border-radius: 16px;
   }
 }
 </style>

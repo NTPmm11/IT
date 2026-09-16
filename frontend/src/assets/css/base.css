@@ -9,9 +9,11 @@ body {
   background: linear-gradient(135deg, #5a0000, #00075a);
   min-height: 100vh;
   padding: 30px 15px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, p, label, span, div {
+  overflow-wrap: break-word;
 }
 
 .back-link {

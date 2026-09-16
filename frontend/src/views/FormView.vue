@@ -408,44 +408,46 @@ export default {
         <span class="note">*ไม่บังคับ — กรอกเมื่อมีแผนกู้คืน</span>
       </div>
 
-      <table class="action-table">
-        <thead>
-          <tr>
-            <th>ลำดับ</th>
-            <th>ขั้นตอนงาน</th>
-            <th>หมายเหตุ</th>
-            <th>ลบ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
+      <div class="table-wrapper">
+        <table class="action-table">
+          <thead>
             <tr>
-              <td rowspan="2" class="text-center">{{ index + 1 }}</td>
-              <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
-              <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
-              <td rowspan="2" class="text-center">
-                <button type="button" class="btn-delete-row" @click="deleteRollbackRow(index)">ลบ</button>
-              </td>
+              <th>ลำดับ</th>
+              <th>ขั้นตอนงาน</th>
+              <th>หมายเหตุ</th>
+              <th>ลบ</th>
             </tr>
-            <tr class="row-datetime">
-              <td colspan="2">
-                <div class="datetime-group">
-                  <span class="dt-label">เริ่ม</span>
-                  <DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" />
-                  <input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step">
-                  <span class="dt-label">สิ้นสุด</span>
-                  <DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" />
-                  <input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step">
-                </div>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <template v-for="(rollbackRow, index) in rollbackRows" :key="rollbackRow.uid">
+              <tr>
+                <td rowspan="2" class="text-center">{{ index + 1 }}</td>
+                <td><input type="text" v-model="rollbackRow.step" placeholder="ระบุขั้นตอนงาน (ไม่บังคับ)"></td>
+                <td><input type="text" v-model="rollbackRow.note" placeholder="หมายเหตุ"></td>
+                <td rowspan="2" class="text-center">
+                  <button type="button" class="btn-delete-row" @click="deleteRollbackRow(index)">ลบ</button>
+                </td>
+              </tr>
+              <tr class="row-datetime">
+                <td colspan="2">
+                  <div class="datetime-group">
+                    <span class="dt-label">เริ่ม</span>
+                    <DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" />
+                    <input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step">
+                    <span class="dt-label">สิ้นสุด</span>
+                    <DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" />
+                    <input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step">
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
 
-      <button type="button" class="btn-add-row" @click="addRollbackRow">
-        + เพิ่มขั้นตอนงาน
-      </button>
+        <button type="button" class="btn-add-row" @click="addRollbackRow">
+          + เพิ่มขั้นตอนงาน
+        </button>
+      </div>
 
       <div class="ui-action-buttons">
         <button type="button" class="btn btn-cancel-maroon" @click="cancelForm">

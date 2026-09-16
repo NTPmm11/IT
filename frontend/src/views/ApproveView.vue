@@ -151,56 +151,60 @@ export default {
         <div class="section-title">
           <div>แผนดำเนินงาน (Action Plan)</div>
         </div>
-        <table class="action-table">
-          <thead>
-            <tr>
-              <th style="width: 40px;">ลำดับ</th>
-              <th>ขั้นตอนงาน</th>
-              <th>เริ่ม</th>
-              <th>สิ้นสุด</th>
-              <th>ผู้รับผิดชอบ</th>
-              <th>หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, i) in cr.plan" :key="'plan-' + i">
-              <td class="text-center">{{ i + 1 }}</td>
-              <td>{{ row.step }}</td>
-              <td>{{ row.start_date }}</td>
-              <td>{{ row.end_date }}</td>
-              <td>{{ row.owner || "-" }}</td>
-              <td>{{ row.note || "-" }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="action-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">ลำดับ</th>
+                <th>ขั้นตอนงาน</th>
+                <th>เริ่ม</th>
+                <th>สิ้นสุด</th>
+                <th>ผู้รับผิดชอบ</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, i) in cr.plan" :key="'plan-' + i">
+                <td class="text-center">{{ i + 1 }}</td>
+                <td>{{ row.step }}</td>
+                <td>{{ row.start_date }}</td>
+                <td>{{ row.end_date }}</td>
+                <td>{{ row.owner || "-" }}</td>
+                <td>{{ row.note || "-" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </template>
 
       <template v-if="cr.rollbackPlan && cr.rollbackPlan.length">
         <div class="section-title">
           <div>แผนการกู้คืน (Roll Back Plan)</div>
         </div>
-        <table class="action-table">
-          <thead>
-            <tr>
-              <th style="width: 40px;">ลำดับ</th>
-              <th>ขั้นตอนงาน</th>
-              <th>เริ่ม</th>
-              <th>สิ้นสุด</th>
-              <th>ผู้รับผิดชอบ</th>
-              <th>หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, i) in cr.rollbackPlan" :key="'rb-' + i">
-              <td class="text-center">{{ i + 1 }}</td>
-              <td>{{ row.step }}</td>
-              <td>{{ row.start_date }}</td>
-              <td>{{ row.end_date }}</td>
-              <td>{{ row.owner || "-" }}</td>
-              <td>{{ row.note || "-" }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="action-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">ลำดับ</th>
+                <th>ขั้นตอนงาน</th>
+                <th>เริ่ม</th>
+                <th>สิ้นสุด</th>
+                <th>ผู้รับผิดชอบ</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, i) in cr.rollbackPlan" :key="'rb-' + i">
+                <td class="text-center">{{ i + 1 }}</td>
+                <td>{{ row.step }}</td>
+                <td>{{ row.start_date }}</td>
+                <td>{{ row.end_date }}</td>
+                <td>{{ row.owner || "-" }}</td>
+                <td>{{ row.note || "-" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </template>
 
 
