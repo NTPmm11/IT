@@ -425,9 +425,11 @@ export default {
                   <div class="datetime-group">
                     <span class="dt-label">เริ่ม</span>
                     <DateInputTH v-model="rollbackRow.startDate" :required="!!rollbackRow.step" />
+                    <span class="dt-label">เวลาเริ่ม</span>
                     <input type="time" v-model="rollbackRow.start" :required="!!rollbackRow.step">
                     <span class="dt-label">สิ้นสุด</span>
                     <DateInputTH v-model="rollbackRow.endDate" :required="!!rollbackRow.step" />
+                    <span class="dt-label">เวลาสิ้นสุด</span>
                     <input type="time" v-model="rollbackRow.end" :required="!!rollbackRow.step">
                   </div>
                 </td>
