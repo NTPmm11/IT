@@ -59,7 +59,6 @@ async function create(body, user) {
   const matches = await db.collection('systems').where('system_code', '==', body.systemCode).limit(1).get();
   if (matches.empty) throw fail(400, 'Unknown systemCode');
   const systemId = matches.docs[0].data().system_id;
-  const admin = user.role === 'it_admin';
   return db.runTransaction(async (tx) => {
     const counterRef = db.doc('counters/change_requests');
     const counter = (await tx.get(counterRef)).data();
@@ -72,11 +71,11 @@ async function create(body, user) {
       requester_id: user.userId, department: body.department || null, system_id: systemId,
       contact: body.contact || null, priority: body.priority || 'Low', subject: body.subject,
       problem: body.problem || null, request_detail: body.requestDetail || null,
-      impact: admin ? body.impact || 'none' : 'none', impact_detail: admin ? body.impactDetail || null : null,
-      downtime: admin && body.downtime ? 1 : 0, duration: admin ? body.duration || null : null,
-      deploy_date: admin ? body.deployDate || null : null,
+      impact: body.impact || 'none', impact_detail: body.impactDetail || null,
+      downtime: body.downtime ? 1 : 0, duration: body.duration || null,
+      deploy_date: body.deployDate || null,
       status: body.status === 'draft' ? 'draft' : 'submitted',
-      changeTypes: admin ? body.changeTypes || [] : [],
+      changeTypes: body.changeTypes || [],
       plan: plan(body.plan || []), rollbackPlan: plan(body.rollbackPlan || []),
       created_at: now, updated_at: now,
     });

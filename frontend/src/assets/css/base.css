@@ -131,7 +131,7 @@ h1, h2, h3, p, label, span, div {
 
 @media (max-width: 768px) {
   .ui-action-buttons {
-    flex-direction: column-reverse;
+    flex-direction: column-reverse; 
   }
 
   .btn {
