@@ -237,8 +237,8 @@ export default {
   </div>
   <div>
       <div class="no-print approval-box">
-      <ApprovalSection v-if="crId" :crId="crId" @approved="onApproved" />
-      <p v-else style="text-align:center; color:#6b7280;">
+      <ApprovalSection v-if="crId && cr" :crId="crId" :status="cr.status" :approvals="cr.approvals" @approved="onApproved" />
+      <p v-else-if="!crId" style="text-align:center; color:#6b7280;">
         ไม่พบเลข CR — กรุณาเข้าหน้านี้ผ่านการ Submit ฟอร์ม
       </p>
     </div>

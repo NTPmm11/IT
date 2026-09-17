@@ -8,7 +8,9 @@ export default {
   components: { StatusModal },
 
   props: {
-    crId: { type: [String, Number], required: true }
+    crId: { type: [String, Number], required: true },
+    status: { type: String, default: "" },
+    approvals: { type: Array, default: () => [] }
   },
 
   data() {
@@ -29,10 +31,23 @@ export default {
   computed: {
     canApprove() {
       return ["approver", "it_admin"].includes(this.user.role);
+    },
+
+    isPending() {
+      return ["submitted", "more_info"].includes(this.status);
+    },
+
+    latestApproval() {
+      return this.approvals.length ? this.approvals[this.approvals.length - 1] : null;
     }
   },
 
   methods: {
+    resultLabel(result) {
+      const labels = { approved: "อนุมัติ (Approved)", rejected: "ไม่อนุมัติ (Rejected)", "more-info": "ขอข้อมูลเพิ่ม (More Info)" };
+      return labels[result] || result || "-";
+    },
+
     async submitApproval() {
       if (!this.form.result) {
         this.modal = { show: true, variant: "error", title: "ยังเลือกผลไม่ครบ", message: "กรุณาเลือกผลการพิจารณา" };
@@ -63,7 +78,7 @@ export default {
 </script>
 
 <template>
-  <form @submit.prevent="submitApproval">
+  <form v-if="isPending" @submit.prevent="submitApproval">
 
     <div class="approval-title">
       <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
@@ -93,13 +108,13 @@ export default {
           <input type="text" id="approver-name" :value="form.approver" readonly
             title="ระบบใช้ชื่อผู้ใช้ที่เข้าสู่ระบบอยู่ แก้ไม่ได้">
         </div>
-        
+
         <div class="approval-group">
           <label for="approval-date">วันที่พิจารณา:</label>
           <input type="date" id="approval-date" v-model="form.date">
         </div>
       </div>
-      
+
 
       <div class="ui-action-buttons" v-if="canApprove">
         <button type="submit" class="btn btn-submit" :disabled="submitting">
@@ -113,6 +128,37 @@ export default {
     <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
       @close="modal.show = false" />
   </form>
+
+  <div v-else>
+    <div class="approval-title">
+      <div>ส่วนการตรวจสอบและอนุมัติ (Approval Status)</div>
+      <span class="note">ผลการพิจารณาถูกบันทึกแล้ว ไม่สามารถแก้ไขได้</span>
+    </div>
+
+    <fieldset disabled class="approval-fieldset">
+      <div class="approval-group">
+        <label>ความเห็นของผู้ประเมิน:</label>
+        <input type="text" :value="latestApproval && latestApproval.comment || '-'" readonly>
+      </div>
+
+      <div class="approval-group">
+        <label>ผลการพิจารณา:</label>
+        <input type="text" :value="latestApproval ? resultLabel(latestApproval.result) : '-'" readonly>
+      </div>
+
+      <div class="grid-2col" style="margin-top: 10px;">
+        <div class="approval-group">
+          <label>ผู้อนุมัติ (Approver):</label>
+          <input type="text" :value="latestApproval && latestApproval.approver || '-'" readonly>
+        </div>
+
+        <div class="approval-group">
+          <label>วันที่พิจารณา:</label>
+          <input type="text" :value="latestApproval && latestApproval.approval_date || '-'" readonly>
+        </div>
+      </div>
+    </fieldset>
+  </div>
 </template>
 
 <style scoped>
