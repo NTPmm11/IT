@@ -53,9 +53,10 @@ input, textarea, select, button {
 }
 
 .section-title span.note {
-  font-size: 18px;
-  color: #fefdffe5;
+  font-size: 13px;
+  color: #c7c7c7;
   font-weight: normal;
+  align-self: center;
 }
 
 
@@ -229,6 +230,49 @@ textarea:focus {
   padding-bottom: 6px;
 }
 
+.plan-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.plan-card {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.plan-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.plan-card-index {
+  font-weight: 700;
+  font-size: 15px;
+  color: #00075a;
+}
+
+.plan-card-body .form-group {
+  margin-bottom: 14px;
+}
+
+.plan-card-body .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.plan-card-body .datetime-group {
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
 .datetime-group {
   display: flex;
   flex-wrap: wrap;
@@ -330,6 +374,10 @@ textarea:focus {
 
   .header-section p {
     font-size: 15px;
+  }
+
+  .plan-card {
+    padding: 12px;
   }
 }
 
