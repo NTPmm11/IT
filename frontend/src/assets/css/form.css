@@ -153,6 +153,19 @@ textarea:focus {
   outline: none;
 }
 
+select option {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+select option:hover,
+select option:checked,
+select option:focus {
+  background-color: #000000;
+  color: #ffffff;
+  box-shadow: 0 0 10px 100px #000000 inset;
+}
+
 .options-group {
   display: auto;
   flex-wrap: wrap;
