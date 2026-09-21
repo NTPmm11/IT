@@ -397,6 +397,48 @@ export default {
   justify-content: flex-start;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.page-btn {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(32, 32, 32, 0.863);
+  transition: all 0.25s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #2b2b2b;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.page-btn:disabled {
+  background: #9ca3af;
+  color: #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.page-btn.active {
+  background: linear-gradient(135deg, #5a0000, #00075a);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.678);
+}
+
 .row-click {
   cursor: pointer;
 }
