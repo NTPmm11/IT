@@ -17,7 +17,8 @@ export default {
       statusOptions: STATUS_LABEL,
       currentPage: 1,
       pageSize: 10,
-      printing: false
+      printing: false,
+      statusMenuOpen: false
     };
   },
 
@@ -27,11 +28,20 @@ export default {
       return;
     }
     this.search();
+    document.addEventListener("click", this.handleStatusMenuOutsideClick);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener("click", this.handleStatusMenuOutsideClick);
   },
 
   computed: {
     totalRows() {
       return this.rows.length;
+    },
+
+    selectedStatusLabel() {
+      return this.statusOptions[this.filters.status] || "-- ทั้งหมด --";
     },
 
     seesOwnOnly() {
@@ -55,6 +65,17 @@ export default {
 
     statusLabel(status) {
       return STATUS_LABEL[status] || status;
+    },
+
+    chooseStatus(value) {
+      this.filters.status = value;
+      this.statusMenuOpen = false;
+    },
+
+    handleStatusMenuOutsideClick(event) {
+      if (this.statusMenuOpen && this.$refs.statusSelect && !this.$refs.statusSelect.contains(event.target)) {
+        this.statusMenuOpen = false;
+      }
     },
 
     async search() {
@@ -144,10 +165,19 @@ export default {
 
       <div class="form-group">
         <label for="f-status">สถานะ:</label>
-        <select id="f-status" v-model="filters.status">
-          <option value="">-- ทั้งหมด --</option>
-          <option v-for="(label, value) in statusOptions" :key="value" :value="value">{{ label }}</option>
-        </select>
+        <div class="custom-select" :class="{ open: statusMenuOpen }" ref="statusSelect">
+          <button type="button" id="f-status" class="custom-select-trigger" @click="statusMenuOpen = !statusMenuOpen">
+            <span>{{ selectedStatusLabel }}</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <ul class="custom-select-options" v-if="statusMenuOpen">
+            <li :class="{ active: filters.status === '' }" @click="chooseStatus('')">-- ทั้งหมด --</li>
+            <li v-for="(label, value) in statusOptions" :key="value" :class="{ active: filters.status === value }"
+              @click="chooseStatus(value)">
+              {{ label }}
+            </li>
+          </ul>
+        </div>
       </div>
 
       <div class="ui-action-buttons filter-actions">
@@ -259,6 +289,75 @@ export default {
 
 <style scoped>
 @import '../assets/css/list.css';
+
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 1.5px solid #cdd1d6e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1.125rem;
+  color: #1a0101;
+  background-color: #ededee;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s;
+}
+
+.custom-select-trigger i {
+  color: #565b66;
+  transition: transform 0.2s;
+}
+
+.custom-select.open .custom-select-trigger,
+.custom-select-trigger:focus {
+  border-color: #00075a;
+  background-color: #fff;
+  outline: none;
+}
+
+.custom-select.open .custom-select-trigger i {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  list-style: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px 0;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.custom-select-options li {
+  padding: 8px 14px;
+  font-size: 1.0625rem;
+  color: #000000;
+  cursor: pointer;
+}
+
+.custom-select-options li:hover,
+.custom-select-options li.active {
+  background-color: #000000;
+  color: #ffffff;
+}
 
 .container {
   background: #ffffffb4;
