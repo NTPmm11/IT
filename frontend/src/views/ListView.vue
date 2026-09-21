@@ -16,7 +16,7 @@ export default {
       userRole: JSON.parse(localStorage.getItem("user") || "{}").role || "",
       statusOptions: STATUS_LABEL,
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 20,
       printing: false,
       statusMenuOpen: false
     };
