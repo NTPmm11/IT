@@ -178,28 +178,43 @@ textarea:focus {
 
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 30px;
   font-size: 1.25rem;
+  background: #fbfbffe6;
+  border: 1px solid #e2e3e9;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(30, 30, 40, 0.08);
 }
 
 .action-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .action-table th,
 .action-table td {
-  border: 1px solid #d1d5db;
-  padding: 5px;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 8px;
   font-size: 0.875rem;
   text-align: center;
 }
 
-.action-table th {
-  background: #e5e7eb;
+.action-table thead th {
+  background: #eef0f5;
   color: #000000;
   text-align: left;
+  border-bottom: 2px solid #d7d9e0;
+}
+
+.action-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.action-table tbody tr:nth-child(even) {
+  background: #f6f7fac9;
 }
 
 .action-table .text-center {

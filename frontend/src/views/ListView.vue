@@ -361,9 +361,7 @@ p {
   background: #f5e6e6;
 }
 .table-wrapper {
-  overflow-x: auto;
   margin-top: 15px;
-  background: #e0e3e6;
 }
 
 @media print {
