@@ -1,5 +1,5 @@
 .container {
-  background: #fcfcffbd;
+  background: #ffffffd3;
   width: 100%;
   max-width: 950px;
   min-width: 0;
@@ -32,6 +32,7 @@ input, textarea, select, button {
   color: #00112c;
   font-size: 1.25rem;
   font-weight: 800;
+  font-size : 22px;
 }
 .header-section p {
   margin-top: 5px;
