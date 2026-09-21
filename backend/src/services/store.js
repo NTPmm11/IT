@@ -31,7 +31,7 @@ async function list(user, filters) {
     (!filters.status || cr.status === filters.status) &&
     (!filters.date || cr.request_date === filters.date) &&
     (!filters.crNumber || cr.cr_number.toLowerCase().includes(filters.crNumber.toLowerCase()))
-  ).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  ).sort((a, b) => b.cr_id - a.cr_id);
   return Promise.all(requests.map(async (cr) => {
     const item = await names(cr);
     return Object.fromEntries(['cr_id', 'cr_number', 'request_date', 'subject', 'priority', 'status', 'requester', 'system_name'].map((key) => [key, item[key]]));
