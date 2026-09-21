@@ -46,19 +46,19 @@
 }
 
 .home-card i {
-  font-size: 26px;
+  font-size: 1.625rem;
   color: #470a0a;
   width: 36px;
   text-align: center;
 }
 
 .home-card h3 {
-  font-size: 24px;
+  font-size: 1.5rem;
   margin-bottom: 4px;
 }
 
 .home-card p {
-  font-size: 16px;
+  font-size: 1rem;
   color: rgb(59, 45, 97);
 }
 

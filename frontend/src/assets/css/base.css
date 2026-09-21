@@ -4,6 +4,23 @@
   padding: 0;
 }
 
+html {
+  font-size: 100%;
+}
+
+/* Scales every rem-based font-size down uniformly on smaller screens */
+@media (max-width: 768px) {
+  html {
+    font-size: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 82.5%;
+  }
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #5a0000, #00075a);
@@ -21,7 +38,7 @@ h1, h2, h3, p, label, span, div {
   margin-bottom: 15px;
   color: #00075a;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .back-link:hover {
@@ -31,7 +48,7 @@ h1, h2, h3, p, label, span, div {
 .btn {
   padding: 10px 20px;
   border-radius: 50px;
-  font-size: 14.5px;
+  font-size: 0.90625rem;
   font-weight: 600;
   cursor: pointer;
   border: none;

@@ -11,7 +11,7 @@
 
 body {
   font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #1E293B;
 }
 
@@ -24,26 +24,26 @@ input, textarea, select, button {
   padding-bottom: 30px;
   margin-bottom: 30px;
   font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 26px;
+  font-size: 1.625rem;
   color: #1E293B;
 }
 
 .header-section h1 {
   color: #00112c;
-  font-size: 40px;
+  font-size: 2.5rem;
   font-weight: 800;
 }
 .header-section p {
   margin-top: 5px;
   color: #080808;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .section-title {
     background: linear-gradient(135deg, #5a0000, #00075a);
   color: #faf8f8;
   padding: 10px 14px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   border-radius: 6px;
   margin: 25px 0 15px 0;
@@ -53,7 +53,7 @@ input, textarea, select, button {
 }
 
 .section-title span.note {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #fefdffe5;
   font-weight: normal;
 }
@@ -66,11 +66,11 @@ input, textarea, select, button {
 }
 
 .options-group {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 .option-item {
-  font-size: 28px;
+  font-size: 1.75rem;
   color: #011641;
   cursor: pointer;
 }
@@ -106,7 +106,7 @@ label {
   font-weight: 600;
   color: #1a0101;
   text-align: left;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 input[type="text"],
@@ -118,7 +118,7 @@ textarea {
   padding: 5px 10px;
   border: 1.5px solid #cdd1d6e1;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 1.125rem;
   background-color: #ededee;
   transition: all 0.3s;
 }
@@ -138,7 +138,7 @@ input[readonly] {
   color: #04225f;
   cursor: not-allowed;
   border-style: dashed;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 input:focus,
@@ -165,7 +165,7 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #011641;
   cursor: pointer;
 }
@@ -179,7 +179,7 @@ textarea:focus {
 .table-wrapper {
   overflow-x: auto;
   margin-bottom: 30px;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .action-table {
@@ -192,7 +192,7 @@ textarea:focus {
 .action-table td {
   border: 1px solid #d1d5db;
   padding: 5px;
-  font-size: 14px;
+  font-size: 0.875rem;
   text-align: center;
 }
 
@@ -204,7 +204,7 @@ textarea:focus {
 
 .action-table .text-center {
   text-align: center;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .btn-add-row {
@@ -213,14 +213,14 @@ textarea:focus {
   border: none;
   border-radius: 8px;
   padding: 8px 5px;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
 }
 #cr-subject {
   width: 50% !important;
   padding: 4px 8px !important;
-  font-size: 14px !important;
+  font-size: 0.875rem !important;
 }
 
 .btn-add-row:hover {
@@ -233,7 +233,7 @@ textarea:focus {
   border: none;
   border-radius: 6px;
   padding: 5px 10px;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -274,11 +274,11 @@ textarea:focus {
   }
 
   .header-section h1 {
-    font-size: 26px;
+    font-size: 1.625rem;
   }
 
   .header-section p {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
 
@@ -291,7 +291,7 @@ textarea:focus {
   border: 1.5px solid #5e5f61;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;

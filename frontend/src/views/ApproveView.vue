@@ -249,9 +249,13 @@ export default {
 @import '../assets/css/approve.css';
 .approval-box {
   background-color: #d5d5d6e3;
+  width: 100%;
+  max-width: 850px;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 20px;
   border-radius: 30px;
-  margin-top: 20px;
+  margin: 20px auto 0;
 }
 .pdf-modal-backdrop {
   position: fixed;
