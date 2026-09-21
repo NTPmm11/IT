@@ -153,17 +153,73 @@ textarea:focus {
   outline: none;
 }
 
-select option {
-  background-color: #ffffff;
-  color: #000000;
+.custom-select {
+  position: relative;
+  width: 100%;
 }
 
-select option:hover,
-select option:checked,
-select option:focus {
+.custom-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 1.5px solid #cdd1d6e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1.125rem;
+  color: #1a0101;
+  background-color: #ededee;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s;
+}
+
+.custom-select-trigger i {
+  color: #565b66;
+  transition: transform 0.2s;
+}
+
+.custom-select.open .custom-select-trigger,
+.custom-select-trigger:focus {
+  border-color: #00075a;
+  background-color: #fff;
+  outline: none;
+}
+
+.custom-select.open .custom-select-trigger i {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  list-style: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px 0;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.custom-select-options li {
+  padding: 8px 14px;
+  font-size: 1.0625rem;
+  color: #000000;
+  cursor: pointer;
+}
+
+.custom-select-options li:hover,
+.custom-select-options li.active {
   background-color: #000000;
   color: #ffffff;
-  box-shadow: 0 0 10px 100px #000000 inset;
 }
 
 .options-group {

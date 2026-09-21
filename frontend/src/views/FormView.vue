@@ -39,8 +39,20 @@ export default {
       savedCrId: null,
       previewCrNumber: "",
       submitting: false,
+      systemMenuOpen: false,
       modal: { show: false, variant: "success", title: "", message: "" }
     };
+  },
+
+  computed: {
+    isSaved() {
+      return this.savedCrId !== null;
+    },
+
+    selectedSystemLabel() {
+      const found = this.systems.find(s => s.system_code === this.form.system);
+      return found ? found.system_name : "-- เลือกโครงการ/ระบบงาน --";
+    }
   },
 
   mounted() {
@@ -49,16 +61,26 @@ export default {
       return;
     }
     this.initForm();
+    document.addEventListener("click", this.handleSystemMenuOutsideClick);
   },
 
-  computed: {
-    isSaved() {
-      return this.savedCrId !== null;
-    }
+  beforeUnmount() {
+    document.removeEventListener("click", this.handleSystemMenuOutsideClick);
   },
 
   methods: {
     ...commonMethods,
+
+    chooseSystem(code) {
+      this.form.system = code;
+      this.systemMenuOpen = false;
+    },
+
+    handleSystemMenuOutsideClick(event) {
+      if (this.systemMenuOpen && this.$refs.systemSelect && !this.$refs.systemSelect.contains(event.target)) {
+        this.systemMenuOpen = false;
+      }
+    },
 
     async initForm() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -105,6 +127,9 @@ export default {
     },
 
     validateForm() {
+      if (!this.form.system) {
+        return "กรุณาเลือกโครงการ/ระบบงาน";
+      }
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const phoneRe = /^0\d{8,9}$/;
       const contact = this.form.contact.trim();
@@ -261,12 +286,19 @@ export default {
 
         <div class="form-group">
           <label for="cr-system">ระบบที่เกี่ยวข้อง:</label>
-          <select id="cr-system" v-model="form.system" required>
-            <option value="">-- เลือกโครงการ/ระบบงาน --</option>
-            <option v-for="s in systems" :key="s.system_code" :value="s.system_code">
-              {{ s.system_name }}
-            </option>
-          </select>
+          <div class="custom-select" :class="{ open: systemMenuOpen }" ref="systemSelect">
+            <button type="button" id="cr-system" class="custom-select-trigger" @click="systemMenuOpen = !systemMenuOpen">
+              <span>{{ selectedSystemLabel }}</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <ul class="custom-select-options" v-if="systemMenuOpen">
+              <li :class="{ active: form.system === '' }" @click="chooseSystem('')">-- เลือกโครงการ/ระบบงาน --</li>
+              <li v-for="s in systems" :key="s.system_code" :class="{ active: form.system === s.system_code }"
+                @click="chooseSystem(s.system_code)">
+                {{ s.system_name }}
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div class="form-group">
