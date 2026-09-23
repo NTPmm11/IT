@@ -48,6 +48,9 @@ async function buildCrPdf(cr) {
   doc.addFileToVFS("Sarabun-Bold.ttf", boldBase64);
   doc.addFont("Sarabun-Bold.ttf", "Sarabun", "bold");
   doc.setFont("Sarabun", "normal");
+  // ค่า default (1.15) ออกแบบมาสำหรับตัวอักษรละติน ทำให้สระบน/ล่างและวรรณยุกต์ของ
+  // ภาษาไทยที่ซ้อนกันหลายบรรทัดถูกตัดหรือทับกัน จึงต้องเพิ่มระยะบรรทัดให้พอดี
+  doc.setLineHeightFactor(1.5);
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -170,7 +173,9 @@ async function buildCrPdf(cr) {
   if (approval) {
     doc.setFontSize(10.5);
     const commentLines = doc.splitTextToSize(String(approval.comment || "-"), usableWidth - 40);
-    const boxH = 27 + commentLines.length * 5.5;
+    const hasSignature = typeof approval.signature === "string" && approval.signature.startsWith("data:image/png;base64,");
+    const signatureH = hasSignature ? 20 : 0;
+    const boxH = 27 + commentLines.length * 7 + signatureH;
 
     if (y > pageHeight - boxH - 10) {
       doc.addPage();
@@ -195,6 +200,15 @@ async function buildCrPdf(cr) {
     doc.text(commentLines, marginX + 32, y + 14);
 
     const signY = y + boxH - 11;
+    if (hasSignature) {
+      const imgW = 45;
+      const imgH = 16;
+      try {
+        doc.addImage(approval.signature, "PNG", marginX + usableWidth / 2 - imgW / 2, signY - imgH - 1, imgW, imgH);
+      } catch {
+        // ลายเซ็นเสียหายหรืออ่านไม่ได้ ข้ามการวาดรูปแต่ยังแสดงเส้นและชื่อได้ตามปกติ
+      }
+    }
     doc.line(marginX + usableWidth / 2 - 40, signY, marginX + usableWidth / 2 + 40, signY);
     doc.setFontSize(9);
     doc.text("ลงชื่อผู้พิจารณา", marginX + usableWidth / 2, signY + 4.5, { align: "center" });

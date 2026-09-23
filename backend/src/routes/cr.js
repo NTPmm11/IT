@@ -126,6 +126,7 @@
  *               result: { type: string, enum: [approved, rejected, more-info] }
  *               comment: { type: string }
  *               approvalDate: { type: string, format: date }
+ *               signature: { type: string, description: "ลายเซ็นแบบ PNG data URL" }
  *     responses:
  *       201: { description: บันทึกผลสำเร็จ }
  *       400: { description: Invalid CR id หรือ result ไม่ถูกต้อง }
@@ -205,9 +206,11 @@ router.post('/', requireAuth, wrap(async (req, res) => {
 
 router.post('/:id/approval', requireAuth, requireRole('approver', 'it_admin'), wrap(async (req, res) => {
   if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid CR id' });
-  const { result, comment, approvalDate } = req.body || {};
+  const { result, comment, approvalDate, signature } = req.body || {};
   if (!['approved', 'rejected', 'more-info'].includes(result)) return res.status(400).json({ error: 'result ต้องเป็น approved/rejected/more-info' });
-  if ([comment, approvalDate].some((v) => v != null && typeof v !== 'string')) return res.status(400).json({ error: 'comment and approvalDate must be strings' });
+  if ([comment, approvalDate, signature].some((v) => v != null && typeof v !== 'string')) return res.status(400).json({ error: 'comment, approvalDate and signature must be strings' });
+  if (signature && !/^data:image\/png;base64,/.test(signature)) return res.status(400).json({ error: 'signature ต้องเป็น PNG data URL' });
+  if (signature && signature.length > 500000) return res.status(400).json({ error: 'signature มีขนาดใหญ่เกินไป' });
   const cr = await store.approve(req.params.id, req.body, req.user);
   store.getUser(cr.requester_id)
     .then((user) => {

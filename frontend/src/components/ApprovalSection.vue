@@ -1,11 +1,12 @@
 <script>
 import { apiFetch } from "../services/api.js";
 import StatusModal from "./StatusModal.vue";
+import SignaturePad from "./SignaturePad.vue";
 
 export default {
   name: "ApprovalSection",
 
-  components: { StatusModal },
+  components: { StatusModal, SignaturePad },
 
   props: {
     crId: { type: [String, Number], required: true },
@@ -21,7 +22,8 @@ export default {
         comment: "",
         result: "",
         approver: user.fullName || "",
-        date: ""
+        date: "",
+        signature: ""
       },
       submitting: false,
       modal: { show: false, variant: "success", title: "", message: "" }
@@ -54,6 +56,11 @@ export default {
         return;
       }
 
+      if (!this.form.signature) {
+        this.modal = { show: true, variant: "error", title: "ยังไม่ได้เซ็นชื่อ", message: "กรุณาเซ็นลายเซ็นก่อนบันทึกผลอนุมัติ" };
+        return;
+      }
+
       this.submitting = true;
       try {
         await apiFetch(`/change-requests/${this.crId}/approval`, {
@@ -61,7 +68,8 @@ export default {
           body: JSON.stringify({
             result: this.form.result,
             comment: this.form.comment,
-            approvalDate: this.form.date
+            approvalDate: this.form.date,
+            signature: this.form.signature
           })
         });
         this.modal = { show: true, variant: "success", title: "ส่งคำตอบอนุมัติเรียบร้อย", message: "ระบบได้บันทึกผลการพิจารณาและส่งคำตอบอนุมัติเรียบร้อยแล้ว" };
@@ -115,6 +123,10 @@ export default {
         </div>
       </div>
 
+      <div class="approval-group">
+        <label>ลายเซ็นผู้พิจารณา:</label>
+        <SignaturePad v-model="form.signature" :disabled="!canApprove" />
+      </div>
 
       <div class="ui-action-buttons" v-if="canApprove">
         <button type="submit" class="btn btn-submit" :disabled="submitting">
@@ -155,6 +167,14 @@ export default {
         <div class="approval-group">
           <label>วันที่พิจารณา:</label>
           <input type="text" :value="latestApproval && latestApproval.approval_date || '-'" readonly>
+        </div>
+      </div>
+
+      <div class="approval-group">
+        <label>ลายเซ็นผู้พิจารณา:</label>
+        <div class="signature-readonly">
+          <img v-if="latestApproval && latestApproval.signature" :src="latestApproval.signature" alt="ลายเซ็นผู้พิจารณา">
+          <span v-else class="note">ไม่มีลายเซ็นบันทึกไว้</span>
         </div>
       </div>
     </fieldset>
@@ -234,5 +254,26 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
+}
+
+.signature-readonly {
+  border: 1.5px solid #767477e1;
+  border-radius: 8px;
+  background-color: #fbfbffa9;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.signature-readonly img {
+  max-height: 100px;
+  max-width: 100%;
+}
+
+.signature-readonly .note {
+  font-size: 16px;
+  color: #6b7280;
 }
 </style>

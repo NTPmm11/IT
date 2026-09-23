@@ -47,7 +47,7 @@ async function detail(id, user) {
   const approvals = rows(await ref.collection('approvals').get())
     .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
   return { ...await names(cr), approvals: await Promise.all(approvals.map(async (a) => ({
-    result: a.result, comment: a.comment, approval_date: a.approval_date,
+    result: a.result, comment: a.comment, approval_date: a.approval_date, signature: a.signature || null,
     approver: (await getUser(a.approver_id))?.full_name || '',
   }))) };
 }
@@ -96,7 +96,8 @@ async function approve(id, body, user) {
     }
     const now = new Date().toISOString();
     tx.create(approvalRef, { approver_id: user.userId, result: body.result,
-      comment: body.comment || null, approval_date: body.approvalDate || null, created_at: now });
+      comment: body.comment || null, approval_date: body.approvalDate || null,
+      signature: body.signature || null, created_at: now });
     tx.update(ref, { status: body.result === 'more-info' ? 'more_info' : body.result, updated_at: now });
     return cr;
   });
