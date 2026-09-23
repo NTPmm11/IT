@@ -255,7 +255,7 @@ export default {
   <div class="container" id="app">
     <div class="header-section">
       <h1>CHANGE REQUEST FORM (CR)</h1>
-      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน (Web Portal Schema)</p>
+      <p>ระบบยื่นคำขออนุมัติการเปลี่ยนแปลงและปรับปรุงระบบงาน</p>
     </div>
 
     <button type="button" class="btn-back" @click="$router.push('/home')">
