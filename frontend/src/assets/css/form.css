@@ -30,14 +30,13 @@ input, textarea, select, button {
 
 .header-section h1 {
   color: #00112c;
-  font-size: 1.25rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  font-size : 26px;
 }
 .header-section p {
   margin-top: 5px;
   color: #080808;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 
 .section-title {
@@ -439,11 +438,11 @@ textarea:focus {
   }
 
   .header-section h1 {
-    font-size: 1.25rem;
+    font-size: 1.625rem;
   }
 
   .header-section p {
-    font-size: 1.125rem;
+    font-size: 0.9375rem;
   }
 
   .plan-card {
