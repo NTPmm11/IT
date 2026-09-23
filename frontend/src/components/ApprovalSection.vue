@@ -195,6 +195,12 @@ export default {
   justify-content: center;
 }
 
+.approval-title .note {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
 label {
   display: block;
   margin-bottom: 15px;
