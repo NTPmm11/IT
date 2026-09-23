@@ -106,4 +106,14 @@ async function approverEmails() {
   return rows(await db.collection('users').where('role', 'in', ['approver', 'it_admin']).get())
     .filter(active).map((u) => u.email).filter(Boolean);
 }
-module.exports = { getUser, findUser, systems, nextNumber, list, detail, create, approve, approverEmails };
+async function remove(id) {
+  const ref = db.collection('change_requests').doc(String(Number(id)));
+  const cr = (await ref.get()).data();
+  if (!cr) throw fail(404, 'CR not found');
+  const approvals = await ref.collection('approvals').get();
+  const batch = db.batch();
+  approvals.docs.forEach((doc) => batch.delete(doc.ref));
+  batch.delete(ref);
+  await batch.commit();
+}
+module.exports = { getUser, findUser, systems, nextNumber, list, detail, create, approve, approverEmails, remove };

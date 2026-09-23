@@ -2,8 +2,11 @@
 import { apiFetch } from "../services/api.js";
 import { commonMethods } from "../services/commonActions.js";
 import { STATUS_LABEL } from "../services/constants.js";
+import StatusModal from "../components/StatusModal.vue";
 
 export default {
+  components: { StatusModal },
+
   data() {
     return {
       filters: {
@@ -18,7 +21,12 @@ export default {
       currentPage: 1,
       pageSize: 20,
       printing: false,
-      statusMenuOpen: false
+      statusMenuOpen: false,
+      deleteTarget: null,
+      deletePassword: "",
+      deleting: false,
+      deleteError: "",
+      modal: { show: false, variant: "success", title: "", message: "" }
     };
   },
 
@@ -46,6 +54,12 @@ export default {
 
     seesOwnOnly() {
       return this.userRole === "requester";
+    },
+    isAdmin() {
+      return this.userRole === "it_admin";
+    },
+    columnCount() {
+      return this.isAdmin ? 9 : 8;
     },
     scopeLabel() {
       return this.seesOwnOnly ? "คำขอของฉัน" : "รายการทั้งหมด";
@@ -130,6 +144,42 @@ export default {
       window.addEventListener("focus", restore);
 
       window.print();
+    },
+
+    openDeleteConfirm(row) {
+      this.deleteTarget = row;
+      this.deletePassword = "";
+      this.deleteError = "";
+    },
+
+    closeDeleteConfirm() {
+      if (this.deleting) return;
+      this.deleteTarget = null;
+      this.deletePassword = "";
+      this.deleteError = "";
+    },
+
+    async confirmDelete() {
+      if (!this.deletePassword) {
+        this.deleteError = "กรุณากรอกรหัสผ่านเพื่อยืนยัน";
+        return;
+      }
+      this.deleting = true;
+      this.deleteError = "";
+      try {
+        await apiFetch(`/change-requests/${this.deleteTarget.cr_id}`, {
+          method: "DELETE",
+          body: JSON.stringify({ password: this.deletePassword })
+        });
+        this.rows = this.rows.filter((r) => r.cr_id !== this.deleteTarget.cr_id);
+        this.deleteTarget = null;
+        this.deletePassword = "";
+        this.modal = { show: true, variant: "success", title: "ลบสำเร็จ", message: "ลบประวัติคำขอเรียบร้อยแล้ว" };
+      } catch (err) {
+        this.deleteError = err.message;
+      } finally {
+        this.deleting = false;
+      }
     }
   }
 };
@@ -204,15 +254,16 @@ export default {
         <th class="text-center">ความสำคัญ</th>
         <th class="text-center">สถานะ</th>
         <th class="text-center">PDF</th>
+        <th v-if="isAdmin" class="text-center">จัดการ</th>
       </tr>
     </thead>
     <tbody>
       <tr v-if="loading">
-        <td colspan="8" class="text-center" style="padding: 20px;">กำลังโหลด...</td>
+        <td :colspan="columnCount" class="text-center" style="padding: 20px;">กำลังโหลด...</td>
       </tr>
 
       <tr v-else-if="rows.length === 0">
-        <td colspan="8" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
+        <td :colspan="columnCount" class="text-center" style="padding: 20px; color: #6b7280;">ไม่พบข้อมูล</td>
       </tr>
 
       <tr
@@ -244,6 +295,16 @@ export default {
             <i class="fa-solid fa-file-pdf"></i>
           </button>
           <span v-else style="color:#9ca3af;">–</span>
+        </td>
+        <td v-if="isAdmin" class="text-center">
+          <button
+            type="button"
+            class="btn-icon-delete"
+            title="ลบประวัติ CR นี้"
+            @click.stop="openDeleteConfirm(row)"
+          >
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </td>
       </tr>
     </tbody>
@@ -284,6 +345,36 @@ export default {
         <i class="fa-solid fa-file-pdf"></i> Download PDF ย้อนหลัง
       </button>
     </div>
+
+    <div v-if="deleteTarget" class="delete-modal-backdrop" @click.self="closeDeleteConfirm">
+      <div class="delete-modal">
+        <div class="delete-modal-header">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>ยืนยันการลบ {{ deleteTarget.cr_number }}</span>
+        </div>
+        <p class="delete-modal-text">
+          การลบจะไม่สามารถกู้คืนข้อมูลคำขอนี้ได้อีก กรุณากรอกรหัสผ่านบัญชีของคุณเพื่อยืนยัน
+        </p>
+        <input
+          type="password"
+          v-model="deletePassword"
+          class="delete-modal-input"
+          placeholder="รหัสผ่านของคุณ"
+          :disabled="deleting"
+          @keyup.enter="confirmDelete"
+        >
+        <p v-if="deleteError" class="delete-modal-error">{{ deleteError }}</p>
+        <div class="delete-modal-actions">
+          <button type="button" class="btn btn-cancel" :disabled="deleting" @click="closeDeleteConfirm">ยกเลิก</button>
+          <button type="button" class="btn btn-delete-confirm" :disabled="deleting" @click="confirmDelete">
+            {{ deleting ? "กำลังลบ..." : "ยืนยันลบ" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <StatusModal :show="modal.show" :variant="modal.variant" :title="modal.title" :message="modal.message"
+      @close="modal.show = false" />
   </div>
 </template>
 
@@ -503,6 +594,93 @@ p {
 }
 .table-wrapper {
   margin-top: 15px;
+}
+
+.btn-icon-delete {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-icon-delete:hover {
+  background: #fde2e2;
+}
+
+.delete-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.delete-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: min(420px, 100%);
+  padding: 24px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #991b1b;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.delete-modal-text {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.delete-modal-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #cdd1d6e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.delete-modal-input:focus {
+  border-color: #991b1b;
+  outline: none;
+}
+
+.delete-modal-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-delete-confirm {
+  background: #991b1b;
+  color: #fff;
+}
+
+.btn-delete-confirm:hover:not(:disabled) {
+  background: #7f1d1d;
 }
 
 @media print {

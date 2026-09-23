@@ -134,7 +134,36 @@
  *       403: { description: role ไม่มีสิทธิ์ }
  *       404: { description: CR not found }
  */
+/**
+ * @openapi
+ * /api/change-requests/{id}:
+ *   delete:
+ *     summary: ลบ CR ถาวร พร้อมประวัติการพิจารณา (it_admin เท่านั้น ต้องยืนยันด้วยรหัสผ่าน)
+ *     tags: [Change Requests]
+ *     security: [{ XUserId: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [password]
+ *             properties:
+ *               password: { type: string, description: "รหัสผ่านบัญชีผู้ดูแลระบบ เพื่อยืนยันการลบ" }
+ *     responses:
+ *       204: { description: ลบสำเร็จ }
+ *       400: { description: Invalid CR id หรือไม่ได้กรอกรหัสผ่าน }
+ *       401: { description: ไม่ได้ login หรือรหัสผ่านไม่ถูกต้อง }
+ *       403: { description: role ไม่มีสิทธิ์ }
+ *       404: { description: CR not found }
+ */
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const store = require('../services/store');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { sendMail, renderEmail } = require('../services/mailer');
@@ -225,5 +254,17 @@ router.post('/:id/approval', requireAuth, requireRole('approver', 'it_admin'), w
     })
     .catch(() => console.error('[mailer] Approval saved, but notification failed'));
   res.status(201).json({ ok: true });
+}));
+
+router.delete('/:id', requireAuth, requireRole('it_admin'), wrap(async (req, res) => {
+  if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid CR id' });
+  const { password } = req.body || {};
+  if (typeof password !== 'string' || !password) return res.status(400).json({ error: 'ต้องกรอกรหัสผ่านเพื่อยืนยันการลบ' });
+  const user = await store.getUser(req.user.userId);
+  if (!user || typeof user.password_hash !== 'string' || !(await bcrypt.compare(password, user.password_hash))) {
+    return res.status(401).json({ error: 'รหัสผ่านไม่ถูกต้อง' });
+  }
+  await store.remove(req.params.id);
+  res.status(204).end();
 }));
 module.exports = router;
