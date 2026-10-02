@@ -20,7 +20,6 @@ export default {
       statusOptions: STATUS_LABEL,
       currentPage: 1,
       pageSize: 20,
-      printing: false,
       statusMenuOpen: false,
       deleteTarget: null,
       deletePassword: "",
@@ -68,7 +67,6 @@ export default {
       return Math.ceil(this.rows.length / this.pageSize) || 1;
     },
     pagedRows() {
-      if (this.printing) return this.rows;
       const start = (this.currentPage - 1) * this.pageSize;
       return this.rows.slice(start, start + this.pageSize);
     }
@@ -126,24 +124,6 @@ export default {
     changePage(page) {
       if (page < 1 || page > this.totalPages) return;
       this.currentPage = page;
-    },
-
-    async generatePDF() {
-      this.printing = true;
-      await this.$nextTick();
-
-      let restored = false;
-      const restore = () => {
-        if (restored) return;
-        restored = true;
-        this.printing = false;
-        window.removeEventListener("afterprint", restore);
-        window.removeEventListener("focus", restore);
-      };
-      window.addEventListener("afterprint", restore);
-      window.addEventListener("focus", restore);
-
-      window.print();
     },
 
     openDeleteConfirm(row) {
@@ -339,12 +319,6 @@ export default {
 </div>
 
 
-
-    <div class="ui-action-buttons">
-      <button type="button" class="btn btn-pdf" @click="generatePDF">
-        <i class="fa-solid fa-file-pdf"></i> Download PDF ย้อนหลัง
-      </button>
-    </div>
 
     <div v-if="deleteTarget" class="delete-modal-backdrop" @click.self="closeDeleteConfirm">
       <div class="delete-modal">
@@ -544,20 +518,6 @@ export default {
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
-}
-.btn-pdf {
-  background: #000000;
-  color: #ffffff !important;
-  border: none !important;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-pdf:hover {
-background-color: #707070;
 }
 h1 {
   margin-bottom: 0;
