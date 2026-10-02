@@ -460,6 +460,7 @@ export default {
   margin-top: 0;
   padding-top: 0;
   justify-content: flex-start;
+  margin-bottom: 20px; /* เท่ากับ margin-bottom ของ .form-group ให้ปุ่มตรงกับช่องสถานะ */
 }
 
 .pagination {
